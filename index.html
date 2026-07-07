@@ -6,7 +6,66 @@
 <title>Kits de Motores · Inteligencia de Reposición — Peru Tractor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
+// ====== EXPORTACIÓN A EXCEL (SheetJS) ======
+function _hoy(){const d=new Date();return d.toISOString().slice(0,10);}
+function _descargar(header, rows, sheetName, filename){
+  if(typeof XLSX==='undefined'){alert('No se pudo cargar el generador de Excel. Revisa tu conexión.');return;}
+  const ws=XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws['!cols']=header.map((hh,i)=>{
+    let w=String(hh).length;
+    rows.forEach(r=>{const v=r[i]==null?'':String(r[i]); if(v.length>w)w=v.length;});
+    return {wch:Math.min(60,Math.max(9,w+2))};
+  });
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0,31));
+  XLSX.writeFile(wb, filename);
+}
+// Export del motor abierto
+function exportMotor(kind){
+  const e=ENGINES[curIdx], it=e.items, m=e.label;
+  let header, rows, sName, fname;
+  if(kind==='compra'){
+    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','A COMPRAR'];
+    rows=it.filter(r=>r[7]>0).sort((a,b)=>b[7]-a[7]).map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[7]]);
+    sName='Compra'; fname=`Compra_${m}_${_hoy()}.xlsx`;
+    if(!rows.length){alert('Este motor no tiene ítems por comprar.');return;}
+  } else if(kind==='traslado'){
+    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','TRASLADAR DE ARRIOLA'];
+    rows=it.filter(r=>r[6]>0).sort((a,b)=>b[6]-a[6]).map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[6]]);
+    sName='Traslados'; fname=`Traslados_${m}_${_hoy()}.xlsx`;
+    if(!rows.length){alert('Este motor no tiene traslados sugeridos.');return;}
+  } else {
+    const stName={C:'Comprar',T:'Trasladar',S:'Suficiente'};
+    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','Reposición (neg=exceso)','A comprar','A trasladar','Estado'];
+    rows=it.map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[4],r[7],r[6],stName[r[8]]||'—']);
+    sName='Kit completo'; fname=`Kit_${m}_${_hoy()}.xlsx`;
+  }
+  _descargar(header, rows, sName, fname);
+}
+// Compra consolidada de TODOS los motores (asume 1 kit de cada; excluye la vista Consolidado)
+function exportCompraTotal(){
+  const map={};
+  ENGINES.forEach(e=>{
+    if(e.id==='CONS')return; // evitar doble conteo con los submotores reales
+    e.items.filter(r=>r[7]>0).forEach(r=>{
+      if(!map[r[0]])map[r[0]]={cod:r[0],desc:r[1],total:0,det:[]};
+      map[r[0]].total+=r[7];
+      map[r[0]].det.push(e.label.replace('Motor ','')+' ×'+r[7]);
+    });
+  });
+  const arr=Object.values(map).sort((a,b)=>b.total-a.total);
+  if(!arr.length){alert('No hay ítems por comprar.');return;}
+  const header=['Código SAP','Descripción','TOTAL A COMPRAR','N.° de motores','Detalle por motor'];
+  const rows=arr.map(x=>[x.cod,x.desc,x.total,x.det.length,x.det.join(' · ')]);
+  // fila de total
+  const totalUds=arr.reduce((a,x)=>a+x.total,0);
+  rows.push(['','TOTAL GENERAL',totalUds,'','']);
+  _descargar(header, rows, 'Compra total', `Compra_TOTAL_11_motores_${_hoy()}.xlsx`);
+}
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
  --bg:#eaeef7; --bg2:#f4f6fc; --card:#ffffff; --ink:#141a2e; --ink2:#6b7590; --ink3:#98a1bd;
@@ -140,7 +199,7 @@ h1,h2,h3,.mono,.num-f{font-family:'Orbitron',sans-serif}
 .back:hover{background:#f6f7fc;transform:translateX(-2px)}
 .d-hero{display:flex;align-items:center;gap:16px;margin:18px 0 6px}
 .d-hero .avatar{width:58px;height:58px;border-radius:16px;display:grid;place-items:center;font-family:'Orbitron';
- font-weight:700;font-size:14px;color:#fff;background:var(--grad,linear-gradient(135deg,var(--morado),var(--morado-d)));box-shadow:var(--sh)}
+ font-weight:700;font-size:13px;letter-spacing:-.3px;text-align:center;line-height:1;color:#fff;background:var(--grad,linear-gradient(135deg,var(--morado),var(--morado-d)));box-shadow:var(--sh)}
 .d-hero h2{font-size:24px;letter-spacing:.3px}
 .d-hero .meta{font-size:12.5px;color:var(--ink2);margin-top:3px}
 .d-hero .meta b{color:var(--morado)}
@@ -231,6 +290,93 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
 @media(max-width:720px){.gkpis{grid-template-columns:repeat(2,1fr)}.hero-txt h1{font-size:21px}.foot{flex-direction:column;align-items:flex-start}.foot .brand{text-align:left}}
 @media(max-width:520px){.gkpis{grid-template-columns:1fr 1fr}.dkpis{grid-template-columns:1fr 1fr}}
 
+/* ====== TARJETAS DE MOTOR — versión clara ====== */
+.ecard{padding:0;overflow:hidden}
+.ec-top{display:flex;align-items:center;gap:12px;padding:16px 16px 12px}
+.ec-avatar{width:44px;height:44px;border-radius:12px;font-size:11px;letter-spacing:-.3px;text-align:center;line-height:1;padding:2px}
+.ec-status{margin:0 16px;padding:12px 14px;border-radius:12px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600}
+.ec-status .s-ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:0 0 auto}
+.ec-status .s-ic svg{width:17px;height:17px}
+.ec-status.red{background:#fdeeee;color:#b3272c}
+.ec-status.red .s-ic{background:#f9d5d6;color:#c1292e}
+.ec-status.green{background:#e6f7f1;color:#087a63}
+.ec-status.green .s-ic{background:#c9efe3;color:#0a8f77}
+.ec-status b{font-family:'Orbitron';font-size:15px}
+.ec-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin:14px 0 0;background:var(--line2);border-top:1px solid var(--line2)}
+.ec-mini .m{background:#fff;padding:11px 8px;text-align:center}
+.ec-mini .m .n{font-family:'Orbitron';font-size:17px;font-weight:700;line-height:1}
+.ec-mini .m .l{font-size:10px;color:var(--ink3);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.ec-mini .m.c .n{color:var(--rojo)} .ec-mini .m.t .n{color:var(--azul)} .ec-mini .m.e .n{color:#c9821a}
+.ec-mini .m .n.zero{color:var(--ink3)!important}
+.ec-cta{display:none}
+.ec-flag{top:16px;right:16px}
+/* ====== VISTA DETALLE — panel de ACCIÓN ====== */
+.d-lower{grid-template-columns:1.7fr 1fr}
+.act-wrap{display:flex;flex-direction:column;gap:14px}
+.act-sec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-sm);overflow:hidden}
+.act-sec.on-c{border-left:4px solid var(--rojo)} .act-sec.on-t{border-left:4px solid var(--azul)}
+.act-sec.on-e{border-left:4px solid var(--amber)} .act-sec.on-s{border-left:4px solid var(--teal)}
+.act-h{display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;user-select:none}
+.act-h .ah-ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto}
+.act-h .ah-ic svg{width:18px;height:18px}
+.on-c .ah-ic{background:#fdeaea;color:#c1292e} .on-t .ah-ic{background:#e9f0ff;color:#2f5fe0}
+.on-e .ah-ic{background:#fff3dd;color:#a56a12} .on-s .ah-ic{background:#e4f7f1;color:#0a8f77}
+.act-h .ah-tt{flex:1}
+.act-h .ah-tt h4{font-family:'Orbitron';font-size:13.5px;letter-spacing:.2px}
+.act-h .ah-tt p{font-size:11.5px;color:var(--ink3);margin-top:2px}
+.act-h .ah-count{font-family:'Orbitron';font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;background:#f1f4fb;color:var(--ink2)}
+.on-c .ah-count{background:#fdeaea;color:#c1292e} .on-t .ah-count{background:#e9f0ff;color:#2f5fe0}
+.act-h .chev{width:18px;height:18px;color:var(--ink3);transition:transform .25s;flex:0 0 auto}
+.act-sec.collapsed .chev{transform:rotate(-90deg)}
+.act-sec.collapsed .act-body{display:none}
+.act-body{border-top:1px solid var(--line2)}
+.act-row{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:1px solid var(--line2);transition:background .12s}
+.act-row:last-child{border-bottom:none}
+.act-row:hover{background:#f8faff}
+.ar-code{font-family:'Orbitron';font-weight:600;font-size:12px;color:var(--ink);background:#f4f6fc;
+ border:1px solid var(--line);padding:5px 9px;border-radius:8px;white-space:nowrap;flex:0 0 auto;min-width:104px;text-align:center}
+.ar-desc{flex:1;font-size:13px;color:var(--ink);min-width:0}
+.ar-desc .sub{font-size:11px;color:var(--ink3);margin-top:1px}
+.ar-qty{flex:0 0 auto;text-align:right;font-family:'Orbitron';font-weight:700;font-size:15px;min-width:92px}
+.ar-qty .u{font-family:'Exo 2';font-size:11px;font-weight:600;color:var(--ink3);display:block;margin-top:1px}
+.on-c .ar-qty{color:var(--rojo)} .on-t .ar-qty{color:var(--azul)} .on-e .ar-qty{color:#c9821a} .on-s .ar-qty{color:var(--teal)}
+.act-empty{padding:26px 18px;text-align:center;color:var(--ink3);font-size:12.5px}
+.act-more{padding:12px 18px;text-align:center;font-size:12px;font-weight:600;color:var(--morado);cursor:pointer;border-top:1px solid var(--line2)}
+.act-more:hover{background:#f7f6ff}
+
+/* ====== FILA-FICHA clara (necesita / tienes / arriola → acción) ====== */
+.act-row{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.act-row:last-child{border-bottom:none}
+.act-row:hover{background:#f8faff}
+.ar-code{align-self:flex-start;margin-top:2px}
+.ar-main{flex:1;min-width:180px}
+.ar-name{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:8px;line-height:1.25}
+.ar-stats{display:flex;gap:8px;flex-wrap:wrap}
+.stat{background:#f6f8fd;border:1px solid var(--line);border-radius:9px;padding:5px 11px;text-align:center;min-width:66px}
+.stat .v{font-family:'Orbitron';font-weight:700;font-size:15px;display:block;line-height:1.05;color:var(--ink)}
+.stat .v.muted{color:#b8c0d6}
+.stat .k{font-size:9px;color:var(--ink3);text-transform:uppercase;letter-spacing:.4px;font-weight:600;display:block;margin-top:3px}
+.ar-act{flex:0 0 auto;min-width:118px;text-align:center;border-radius:12px;padding:9px 14px}
+.ar-act span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;display:block}
+.ar-act b{display:block;font-family:'Orbitron';font-size:22px;line-height:1;margin-top:3px}
+.ar-act.c{background:#fdeaea;color:#c1292e} .ar-act.t{background:#e9f0ff;color:#2f5fe0}
+.ar-act.e{background:#fff3dd;color:#a56a12} .ar-act.s{background:#e4f7f1;color:#0a8f77}
+@media(max-width:520px){.ar-act{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:8px}.ar-act b{margin-top:0;font-size:18px}}
+
+/* ====== BOTONES EXPORT EXCEL ====== */
+.xls-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 18px;border-top:1px solid var(--line2);background:#fbfcfe}
+.xls-bar .lbl{font-size:12px;font-weight:600;color:var(--ink2);display:flex;align-items:center;gap:7px}
+.xls-bar .lbl svg{width:16px;height:16px;color:#0a8f77}
+.xls-btn{display:inline-flex;align-items:center;gap:7px;font-family:'Exo 2';font-size:12px;font-weight:600;
+ padding:8px 13px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;
+ box-shadow:var(--sh-sm);transition:.18s}
+.xls-btn:hover{border-color:#0a8f77;color:#0a8f77;transform:translateY(-1px)}
+.xls-btn svg{width:15px;height:15px;color:#0a8f77}
+.xls-btn.solid{background:linear-gradient(135deg,#0bb89a,#0a9e84);color:#fff;border:none;box-shadow:0 10px 22px -10px rgba(11,184,154,.7)}
+.xls-btn.solid svg{color:#fff}
+.xls-btn.solid:hover{color:#fff;transform:translateY(-2px)}
+.sec-h .xls-btn{margin-left:auto}
+
 </style>
 </head>
 <body>
@@ -282,7 +428,7 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
 
 <!-- VISTA LISTA -->
 <section id="viewList">
-  <div class="sec-h"><h2>Motores</h2><span class="hint">toca un motor para ver el detalle · lo que falta, lo que sobra y lo que se traslada</span></div>
+  <div class="sec-h"><h2>Motores</h2><span class="hint">toca un motor para ver el detalle</span><span class="line"></span><button class="xls-btn solid" onclick="exportCompraTotal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Compra total · Excel</button></div>
   <div class="grid" id="engineGrid"></div>
 </section>
 
@@ -309,19 +455,18 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
   <div id="aiOut" class="ai-out hidden"></div>
 
   <div class="d-lower">
-    <div class="panel">
-      <div class="tabs" id="dTabs"></div>
-      <div class="search"><div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="dSearch" type="text" placeholder="Buscar por código o descripción…" oninput="renderTable()"></div></div>
-      <div class="tbl-scroll">
-        <table>
-          <thead><tr>
-            <th>Código SAP</th><th>Descripción</th><th class="num">Nec.</th>
-            <th class="num">Stock ALM01</th><th class="num">Arriola</th>
-            <th class="num">Reposición</th><th class="num">Comprar</th><th class="num">Trasladar</th><th>Estado</th>
-          </tr></thead>
-          <tbody id="dRows"></tbody>
-        </table>
+    <div>
+      <div class="panel" style="margin-bottom:14px">
+        <div class="tabs" id="dTabs"></div>
+        <div class="search"><div class="box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input id="dSearch" type="text" placeholder="Buscar por código o descripción…" oninput="renderActions()"></div></div>
+        <div class="xls-bar">
+          <span class="lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Descargar Excel:</span>
+          <button class="xls-btn" onclick="exportMotor('compra')">Solo compra</button>
+          <button class="xls-btn" onclick="exportMotor('traslado')">Solo traslados</button>
+          <button class="xls-btn" onclick="exportMotor('completo')">Kit completo (con stock)</button>
+        </div>
       </div>
+      <div class="act-wrap" id="actWrap"></div>
     </div>
     <div class="panel chart-card">
       <h4>Composición del kit</h4>
@@ -391,40 +536,30 @@ function gradFor(g){
   $('#gkpis').innerHTML=cards;
 })();
 
-// GRID de motores
+// GRID de motores — tarjeta clara: estado prominente + 3 mini-datos
 function renderGrid(){
   $('#engineGrid').innerHTML=ENGINES.map((e,i)=>{
     const k=e.kpi, tot=k.items||1, g=gradFor(e.grupo);
-    const wC=(k.comprar_items/tot*100), wT=(k.trasl_items/tot*100), wS=(k.suf_items/tot*100);
-    const flag = k.kits_principal>0
-       ? `<span class="ec-flag ok">✓ ${k.kits_principal} armable(s)</span>`
-       : `<span class="ec-flag warn">${k.comprar_items} por comprar</span>`;
-    const kitsCls = k.kits_principal>0?'ok':'zero';
+    const armable=k.kits_principal>0;
+    const status = armable
+      ? `<div class="ec-status green"><div class="s-ic">${ICON.check}</div><div>Kit armable · <b>${k.kits_principal}</b> completo(s) con stock ALM01</div></div>`
+      : `<div class="ec-status red"><div class="s-ic">${ICON.cart}</div><div>Faltan <b>${k.comprar_items}</b> ítems para poder armar el kit</div></div>`;
+    const mini=(cls,n,l)=>`<div class="m ${cls}"><div class="n ${n===0?'zero':''}">${n}</div><div class="l">${l}</div></div>`;
     return `<div class="ecard" style="--grad:${g}" onclick="openEngine(${i})">
-      ${flag}
       <div class="ec-top">
         <div class="ec-avatar" style="--grad:${g}">${e.icon}</div>
         <div class="ec-hd">
           <div class="grp">${e.grupo}</div>
           <h3>${e.label.replace('Motor ','')}</h3>
-          <div class="coti">${e.coti!=='—'?'Cot. '+e.coti:'Kit de motor'}</div>
+          <div class="coti">${e.coti!=='—'?'Cot. '+e.coti:'Kit de motor'} · ${k.items} ítems</div>
         </div>
       </div>
-      <div class="ec-bar">
-        <i style="width:${wC}%;background:${COL.C}"></i>
-        <i style="width:${wT}%;background:${COL.T}"></i>
-        <i style="width:${wS}%;background:${COL.S}"></i>
+      ${status}
+      <div class="ec-mini">
+        ${mini('c',k.comprar_items,'Comprar')}
+        ${mini('t',k.trasl_items,'Trasladar')}
+        ${mini('e',k.exceso_items,'Exceso')}
       </div>
-      <div class="ec-stats">
-        <span class="pill c">${k.comprar_items} comprar</span>
-        <span class="pill t">${k.trasl_items} trasladar</span>
-        <span class="pill e">${k.exceso_items} exceso</span>
-      </div>
-      <div class="ec-foot">
-        <span class="lbl">Kits armables (ALM01)</span>
-        <span class="kits ${kitsCls}">${k.kits_principal}</span>
-      </div>
-      <span class="ec-cta">${svg('<path d="M5 12h14M13 6l6 6-6 6"/>')}</span>
     </div>`;
   }).join('');
 }
@@ -460,43 +595,71 @@ function openEngine(i){
   $('#viewList').classList.add('hidden');
   $('#viewDetail').classList.remove('hidden');
   window.scrollTo({top:0,behavior:'smooth'});
-  renderTable(); drawChart();
+  renderActions(); drawChart();
 }
 function setTab(id){curTab=id;
   document.querySelectorAll('#dTabs .tab').forEach(t=>t.classList.remove('active'));
   [...document.querySelectorAll('#dTabs .tab')].find(t=>t.getAttribute('onclick').includes("'"+id+"'")).classList.add('active');
-  renderTable();
+  renderActions();
 }
 function showList(){$('#viewDetail').classList.add('hidden');$('#viewList').classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});}
-// TABLA filtrable
-function renderTable(){
+// PANEL DE ACCIÓN — agrupado por qué hacer (claro, sin tabla densa)
+let collapsed={e:true,s:true}; // exceso y suficiente colapsados por defecto
+function toggleSec(id){collapsed[id]=!collapsed[id];renderActions();}
+function arow(kind,r){
+  const need=r[2], alm=r[3], arr=r[5], comprar=r[7], trasl=r[6], rep=r[4];
+  let act;
+  if(kind==='c')      act=`<div class="ar-act c"><span>Comprar</span><b>${comprar}</b></div>`;
+  else if(kind==='t') act=`<div class="ar-act t"><span>Traer de Arriola</span><b>${trasl}</b></div>`;
+  else if(kind==='e') act=`<div class="ar-act e"><span>Te sobran</span><b>${fmt(-rep)}</b></div>`;
+  else                act=`<div class="ar-act s"><span>Cubierto</span><b>✓</b></div>`;
+  const stat=(v,k,mut)=>`<div class="stat"><span class="v${mut?' muted':''}">${fmt(v)}</span><span class="k">${k}</span></div>`;
+  return `<div class="act-row">
+    <span class="ar-code">${r[0]}</span>
+    <div class="ar-main">
+      <div class="ar-name">${r[1]||'—'}</div>
+      <div class="ar-stats">
+        ${stat(need,'necesita')}
+        ${stat(alm,'tienes (ALM01)',alm===0)}
+        ${stat(arr,'en Arriola',arr===0)}
+      </div>
+    </div>
+    ${act}
+  </div>`;
+}
+function section(id,cls,icon,title,desc,rows,render,forceOpen){
+  const isColl = forceOpen?false:(collapsed[id]===true);
+  const body = rows.length
+    ? `<div class="act-body">${rows.map(render).join('')}</div>`
+    : `<div class="act-body"><div class="act-empty">Sin ítems en esta categoría.</div></div>`;
+  return `<div class="act-sec ${cls} ${isColl?'collapsed':''}">
+    <div class="act-h" onclick="toggleSec('${id}')">
+      <div class="ah-ic">${icon}</div>
+      <div class="ah-tt"><h4>${title}</h4><p>${desc}</p></div>
+      <span class="ah-count">${rows.length}</span>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+    </div>${body}
+  </div>`;
+}
+function renderActions(){
   const e=ENGINES[curIdx]; const q=($('#dSearch').value||'').trim().toUpperCase();
-  let rows=e.items.slice();
-  if(curTab==='C')rows=rows.filter(r=>r[7]>0);
-  else if(curTab==='T')rows=rows.filter(r=>r[6]>0);
-  else if(curTab==='E')rows=rows.filter(r=>r[4]<0);
-  else if(curTab==='S')rows=rows.filter(r=>r[8]==='S');
-  if(q)rows=rows.filter(r=>r[0].toUpperCase().includes(q)||(r[1]||'').toUpperCase().includes(q));
-  // orden: comprar primero, luego trasladar, luego resto
-  const rank=r=> r[7]>0?0 : r[6]>0?1 : r[4]<0?2 : 3;
-  rows.sort((a,b)=>rank(a)-rank(b));
-  if(!rows.length){$('#dRows').innerHTML='<tr><td colspan="9" class="empty">Sin ítems en esta vista.</td></tr>';return;}
-  const stName={C:'Comprar',T:'Trasladar',S:'Suficiente'};
-  $('#dRows').innerHTML=rows.map(r=>{
-    const repos=r[4], exc=repos<0;
-    const reposCell = exc ? `<span class="neg">+${fmt(-repos)}</span>` : (repos>0?`<span class="pos">${fmt(repos)}</span>`:'0');
-    return `<tr>
-      <td class="code">${r[0]}</td>
-      <td>${r[1]||''}${exc?' <span class="tag-exc">exceso</span>':''}</td>
-      <td class="num">${r[2]}</td>
-      <td class="num">${fmt(r[3])}</td>
-      <td class="num">${r[5]?fmt(r[5]):'·'}</td>
-      <td class="num">${reposCell}</td>
-      <td class="num">${r[7]>0?'<b style=\"color:#c1292e\">'+r[7]+'</b>':'·'}</td>
-      <td class="num">${r[6]>0?'<b style=\"color:#2f5fe0\">'+r[6]+'</b>':'·'}</td>
-      <td><span class="st ${r[8]}">${stName[r[8]]||'—'}</span></td>
-    </tr>`;
-  }).join('');
+  const match=r=> !q || r[0].toUpperCase().includes(q) || (r[1]||'').toUpperCase().includes(q);
+  const it=e.items.filter(match);
+  const comprar=it.filter(r=>r[7]>0).sort((a,b)=>b[7]-a[7]);
+  const trasl  =it.filter(r=>r[6]>0).sort((a,b)=>b[6]-a[6]);
+  const exceso =it.filter(r=>r[4]<0).sort((a,b)=>a[4]-b[4]);
+  const suf    =it.filter(r=>r[8]==='S'&&r[4]>=0&&r[7]===0&&r[6]===0);
+  const show = t => curTab==='all' || curTab===t;
+  let out='';
+  if(show('C')) out+=section('c','on-c',ICON.cart,'Comprar','Ítems que no hay ni en ALM01 ni en Arriola',
+        comprar,r=>arow('c',r), curTab==='C');
+  if(show('T')) out+=section('t','on-t',ICON.swap,'Traer de Arriola','Ya existen en el 2.º almacén — solo trasladar',
+        trasl,r=>arow('t',r), curTab==='T');
+  if(show('E')) out+=section('e','on-e',ICON.layers,'En exceso','Stock por encima de lo que pide el kit — reasignable',
+        exceso,r=>arow('e',r), curTab==='E');
+  if(show('S')) out+=section('s','on-s',ICON.check,'Suficiente','Cubiertos con el stock principal, sin sobrante',
+        suf,r=>arow('s',r), curTab==='S');
+  $('#actWrap').innerHTML=out||'<div class="act-sec"><div class="act-empty">No hay ítems que coincidan con la búsqueda.</div></div>';
 }
 // DONUT Chart.js
 function drawChart(){

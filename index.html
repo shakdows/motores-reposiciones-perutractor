@@ -7,65 +7,75 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
-// ====== EXPORTACIÓN A EXCEL (SheetJS) ======
-function _hoy(){const d=new Date();return d.toISOString().slice(0,10);}
-function _descargar(header, rows, sheetName, filename){
-  if(typeof XLSX==='undefined'){alert('No se pudo cargar el generador de Excel. Revisa tu conexión.');return;}
-  const ws=XLSX.utils.aoa_to_sheet([header, ...rows]);
-  ws['!cols']=header.map((hh,i)=>{
-    let w=String(hh).length;
-    rows.forEach(r=>{const v=r[i]==null?'':String(r[i]); if(v.length>w)w=v.length;});
-    return {wch:Math.min(60,Math.max(9,w+2))};
-  });
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName.slice(0,31));
-  XLSX.writeFile(wb, filename);
+// ====== EXPORTACIÓN A EXCEL (nativa, sin librerías) ======
+function _hoy(){return new Date().toISOString().slice(0,10);}
+function _esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t);}
+  t.textContent=msg;t.className='show';
+  clearTimeout(window._tt);window._tt=setTimeout(()=>t.className='',2600);
 }
-// Export del motor abierto
+function _descargar(header, rows, sheetName, filename){
+  try{
+    let html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'+
+      '<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>'+
+      '<x:Name>'+_esc(sheetName)+'</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>'+
+      '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>'+
+      '<table border="1" cellspacing="0" cellpadding="4"><thead><tr>'+
+      header.map(hh=>`<th style="background:#161d33;color:#fff;font-weight:bold;text-align:left">${_esc(hh)}</th>`).join('')+
+      '</tr></thead><tbody>'+
+      rows.map((r,i)=>`<tr style="background:${i%2?'#f4f6fc':'#ffffff'}">`+
+        r.map((c,j)=>`<td${(typeof c==='number')?' style="mso-number-format:\'0\'"':''}>${_esc(c)}</td>`).join('')+
+        '</tr>').join('')+
+      '</tbody></table></body></html>';
+    const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';
+    document.body.appendChild(a);a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},150);
+    _toast('⬇ Descargado: '+filename);
+  }catch(err){ _toast('No se pudo descargar aquí. Abre el archivo en tu navegador.'); console.error(err); }
+}
 function exportMotor(kind){
   const e=ENGINES[curIdx], it=e.items, m=e.label;
   let header, rows, sName, fname;
   if(kind==='compra'){
     header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','A COMPRAR'];
     rows=it.filter(r=>r[7]>0).sort((a,b)=>b[7]-a[7]).map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[7]]);
-    sName='Compra'; fname=`Compra_${m}_${_hoy()}.xlsx`;
-    if(!rows.length){alert('Este motor no tiene ítems por comprar.');return;}
+    sName='Compra'; fname=`Compra_${m}_${_hoy()}.xls`;
+    if(!rows.length){_toast('Este motor no tiene ítems por comprar.');return;}
   } else if(kind==='traslado'){
     header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','TRASLADAR DE ARRIOLA'];
     rows=it.filter(r=>r[6]>0).sort((a,b)=>b[6]-a[6]).map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[6]]);
-    sName='Traslados'; fname=`Traslados_${m}_${_hoy()}.xlsx`;
-    if(!rows.length){alert('Este motor no tiene traslados sugeridos.');return;}
+    sName='Traslados'; fname=`Traslados_${m}_${_hoy()}.xls`;
+    if(!rows.length){_toast('Este motor no tiene traslados sugeridos.');return;}
   } else {
     const stName={C:'Comprar',T:'Trasladar',S:'Suficiente'};
-    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','Reposición (neg=exceso)','A comprar','A trasladar','Estado'];
+    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','Reposicion (neg=exceso)','A comprar','A trasladar','Estado'];
     rows=it.map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[4],r[7],r[6],stName[r[8]]||'—']);
-    sName='Kit completo'; fname=`Kit_${m}_${_hoy()}.xlsx`;
+    sName='Kit completo'; fname=`Kit_${m}_${_hoy()}.xls`;
   }
   _descargar(header, rows, sName, fname);
 }
-// Compra consolidada de TODOS los motores (asume 1 kit de cada; excluye la vista Consolidado)
 function exportCompraTotal(){
   const map={};
   ENGINES.forEach(e=>{
-    if(e.id==='CONS')return; // evitar doble conteo con los submotores reales
+    if(e.id==='CONS')return;
     e.items.filter(r=>r[7]>0).forEach(r=>{
       if(!map[r[0]])map[r[0]]={cod:r[0],desc:r[1],total:0,det:[]};
-      map[r[0]].total+=r[7];
-      map[r[0]].det.push(e.label.replace('Motor ','')+' ×'+r[7]);
+      map[r[0]].total+=r[7]; map[r[0]].det.push(e.label.replace('Motor ','')+' x'+r[7]);
     });
   });
   const arr=Object.values(map).sort((a,b)=>b.total-a.total);
-  if(!arr.length){alert('No hay ítems por comprar.');return;}
+  if(!arr.length){_toast('No hay ítems por comprar.');return;}
   const header=['Código SAP','Descripción','TOTAL A COMPRAR','N.° de motores','Detalle por motor'];
   const rows=arr.map(x=>[x.cod,x.desc,x.total,x.det.length,x.det.join(' · ')]);
-  // fila de total
-  const totalUds=arr.reduce((a,x)=>a+x.total,0);
-  rows.push(['','TOTAL GENERAL',totalUds,'','']);
-  _descargar(header, rows, 'Compra total', `Compra_TOTAL_11_motores_${_hoy()}.xlsx`);
+  rows.push(['','TOTAL GENERAL',arr.reduce((a,x)=>a+x.total,0),'','']);
+  _descargar(header, rows, 'Compra total', `Compra_TOTAL_11_motores_${_hoy()}.xls`);
 }
 
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
  --bg:#eaeef7; --bg2:#f4f6fc; --card:#ffffff; --ink:#141a2e; --ink2:#6b7590; --ink3:#98a1bd;
@@ -377,6 +387,11 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
 .xls-btn.solid:hover{color:#fff;transform:translateY(-2px)}
 .sec-h .xls-btn{margin-left:auto}
 
+/* toast descarga */
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);z-index:2000;
+ background:#161d33;color:#fff;font-family:'Exo 2';font-size:13px;font-weight:600;padding:12px 20px;border-radius:12px;
+ box-shadow:0 20px 50px -20px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:.3s cubic-bezier(.2,.8,.2,1);max-width:88vw;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>

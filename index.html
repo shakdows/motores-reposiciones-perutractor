@@ -6,76 +6,7 @@
 <title>Kits de Motores · Inteligencia de Reposición — Peru Tractor</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js">
-// ====== EXPORTACIÓN A EXCEL (nativa, sin librerías) ======
-function _hoy(){return new Date().toISOString().slice(0,10);}
-function _esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function _toast(msg){
-  let t=document.getElementById('toast');
-  if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t);}
-  t.textContent=msg;t.className='show';
-  clearTimeout(window._tt);window._tt=setTimeout(()=>t.className='',2600);
-}
-function _descargar(header, rows, sheetName, filename){
-  try{
-    let html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'+
-      '<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>'+
-      '<x:Name>'+_esc(sheetName)+'</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>'+
-      '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>'+
-      '<table border="1" cellspacing="0" cellpadding="4"><thead><tr>'+
-      header.map(hh=>`<th style="background:#161d33;color:#fff;font-weight:bold;text-align:left">${_esc(hh)}</th>`).join('')+
-      '</tr></thead><tbody>'+
-      rows.map((r,i)=>`<tr style="background:${i%2?'#f4f6fc':'#ffffff'}">`+
-        r.map((c,j)=>`<td${(typeof c==='number')?' style="mso-number-format:\'0\'"':''}>${_esc(c)}</td>`).join('')+
-        '</tr>').join('')+
-      '</tbody></table></body></html>';
-    const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel'});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';
-    document.body.appendChild(a);a.click();
-    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},150);
-    _toast('⬇ Descargado: '+filename);
-  }catch(err){ _toast('No se pudo descargar aquí. Abre el archivo en tu navegador.'); console.error(err); }
-}
-function exportMotor(kind){
-  const e=ENGINES[curIdx], it=e.items, m=e.label;
-  let header, rows, sName, fname;
-  if(kind==='compra'){
-    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','A COMPRAR'];
-    rows=it.filter(r=>r[7]>0).sort((a,b)=>b[7]-a[7]).map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[7]]);
-    sName='Compra'; fname=`Compra_${m}_${_hoy()}.xls`;
-    if(!rows.length){_toast('Este motor no tiene ítems por comprar.');return;}
-  } else if(kind==='traslado'){
-    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','TRASLADAR DE ARRIOLA'];
-    rows=it.filter(r=>r[6]>0).sort((a,b)=>b[6]-a[6]).map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[6]]);
-    sName='Traslados'; fname=`Traslados_${m}_${_hoy()}.xls`;
-    if(!rows.length){_toast('Este motor no tiene traslados sugeridos.');return;}
-  } else {
-    const stName={C:'Comprar',T:'Trasladar',S:'Suficiente'};
-    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','Reposicion (neg=exceso)','A comprar','A trasladar','Estado'];
-    rows=it.map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[4],r[7],r[6],stName[r[8]]||'—']);
-    sName='Kit completo'; fname=`Kit_${m}_${_hoy()}.xls`;
-  }
-  _descargar(header, rows, sName, fname);
-}
-function exportCompraTotal(){
-  const map={};
-  ENGINES.forEach(e=>{
-    if(e.id==='CONS')return;
-    e.items.filter(r=>r[7]>0).forEach(r=>{
-      if(!map[r[0]])map[r[0]]={cod:r[0],desc:r[1],total:0,det:[]};
-      map[r[0]].total+=r[7]; map[r[0]].det.push(e.label.replace('Motor ','')+' x'+r[7]);
-    });
-  });
-  const arr=Object.values(map).sort((a,b)=>b.total-a.total);
-  if(!arr.length){_toast('No hay ítems por comprar.');return;}
-  const header=['Código SAP','Descripción','TOTAL A COMPRAR','N.° de motores','Detalle por motor'];
-  const rows=arr.map(x=>[x.cod,x.desc,x.total,x.det.length,x.det.join(' · ')]);
-  rows.push(['','TOTAL GENERAL',arr.reduce((a,x)=>a+x.total,0),'','']);
-  _descargar(header, rows, 'Compra total', `Compra_TOTAL_11_motores_${_hoy()}.xls`);
-}
-
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{
  --bg:#eaeef7; --bg2:#f4f6fc; --card:#ffffff; --ink:#141a2e; --ink2:#6b7590; --ink3:#98a1bd;
@@ -392,6 +323,67 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
  background:#161d33;color:#fff;font-family:'Exo 2';font-size:13px;font-weight:600;padding:12px 20px;border-radius:12px;
  box-shadow:0 20px 50px -20px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:.3s cubic-bezier(.2,.8,.2,1);max-width:88vw;text-align:center}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* ====== COSTEO / CALCULADORA ====== */
+.cost-panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-sm);margin:0 0 16px;overflow:hidden}
+.cost-head{display:flex;align-items:center;gap:14px;padding:16px 18px;background:linear-gradient(120deg,#fbfcff,#f6f9ff);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.cost-head .ch-ic{width:38px;height:38px;border-radius:11px;background:rgba(11,184,154,.13);color:#0a8f77;display:grid;place-items:center;flex:0 0 auto}
+.cost-head .ch-ic svg{width:20px;height:20px}
+.cost-head .ch-t{flex:1;min-width:180px}
+.cost-head .ch-t h4{font-family:'Orbitron';font-size:13.5px}
+.cost-head .ch-t p{font-size:11.5px;color:var(--ink3);margin-top:2px}
+/* stepper */
+.kit-step{display:flex;align-items:center;gap:0;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--sh-sm)}
+.kit-step button{width:38px;height:42px;border:none;background:#fff;color:var(--morado);font-size:19px;font-weight:700;cursor:pointer;transition:.15s;font-family:'Exo 2'}
+.kit-step button:hover{background:#f2effe}
+.kit-step input{width:60px;height:42px;border:none;border-left:1px solid var(--line);border-right:1px solid var(--line);
+ text-align:center;font-family:'Orbitron';font-weight:700;font-size:17px;color:var(--ink);outline:none;background:#fbfcfe;-moz-appearance:textfield}
+.kit-step input::-webkit-outer-spin-button,.kit-step input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.kit-lbl{font-size:11px;color:var(--ink2);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;display:block}
+.cur-tog{display:flex;background:#eef1f8;border-radius:10px;padding:3px;gap:2px}
+.cur-tog button{border:none;background:transparent;font-family:'Orbitron';font-size:11px;font-weight:700;padding:7px 12px;border-radius:8px;cursor:pointer;color:var(--ink2)}
+.cur-tog button.on{background:#fff;color:var(--morado);box-shadow:var(--sh-sm)}
+/* totales */
+.cost-tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line2)}
+.ct{background:#fff;padding:15px 16px}
+.ct .l{font-size:10.5px;color:var(--ink2);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.ct .v{font-family:'Orbitron';font-size:22px;font-weight:700;margin-top:4px;line-height:1}
+.ct.big{background:linear-gradient(120deg,#f7f5ff,#fdfbff)}
+.ct.big .v{font-size:27px;color:var(--morado)}
+.ct .s{font-size:10.5px;color:var(--ink3);margin-top:4px}
+.ct .v.warn{color:#c9821a}
+/* tabla costeo */
+.cost-rows{max-height:460px;overflow:auto;border-top:1px solid var(--line)}
+.crow{display:grid;grid-template-columns:112px 1fr 110px 66px 60px 108px 96px;gap:10px;align-items:center;
+ padding:10px 16px;border-bottom:1px solid var(--line2);font-size:12.5px}
+.crow.head{position:sticky;top:0;background:#fafbfe;font-family:'Orbitron';font-size:9.5px;letter-spacing:.5px;
+ color:var(--ink2);text-transform:uppercase;z-index:2;border-bottom:1px solid var(--line)}
+.crow:hover:not(.head){background:#f8faff}
+.crow .cd{font-family:'Orbitron';font-weight:600;font-size:11px}
+.crow .cn{color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.crow .cq{text-align:center;font-family:'Orbitron';font-weight:700;font-size:14px;color:var(--rojo)}
+.crow .cs{text-align:center;font-family:'Orbitron';font-size:12px;color:var(--ink2)}
+.crow .ct2{text-align:right;font-family:'Orbitron';font-weight:700;font-size:13px}
+.pinput{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:8px;font-family:'Orbitron';
+ font-size:12px;font-weight:600;text-align:right;outline:none;background:#fbfcfe;transition:.15s}
+.pinput:focus{border-color:var(--morado);background:#fff;box-shadow:0 0 0 3px rgba(109,78,255,.1)}
+.pinput.empty{border-color:#f5cf8a;background:#fffaf0}
+.pinput.sr{border-color:#9ee0cf;background:#f2fbf8}
+.src-tag{font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:5px;margin-left:5px;vertical-align:middle}
+.src-tag.SR{background:#e1f5ee;color:#0a8f77} .src-tag.SAP{background:#eef1f8;color:#6b7590}
+.src-tag.CTP{background:#efe9ff;color:#5a3ee0}
+.src-tag.OEM{background:#fdecc8;color:#8a5a12}
+.sup-badge{font-family:'Orbitron';font-size:10px;font-weight:700;background:#fff3dd;color:#a56a12;border:1px solid #f5cf8a;padding:3px 7px;border-radius:7px;white-space:nowrap}
+.sup-none{color:#c8cfe0;font-size:12px}
+.pinput.ctp{border-color:#c3b4ff;background:#f8f6ff}
+.cost-foot{padding:12px 16px;background:#fafbfe;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink3);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.cost-foot .tc-lbl{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:#0a8f77;font-size:11.5px}
+.cost-foot .tc-lbl svg{width:14px;height:14px}
+.cost-foot .tc-src{font-size:10.5px;color:var(--ink3)}
+.cost-foot .tc-src a{color:var(--morado);font-weight:600;text-decoration:none}
+.cost-foot .tc-src a:hover{text-decoration:underline}
+.cost-foot .tc-in{width:64px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;font-family:'Orbitron';font-size:11px;text-align:center;outline:none}
+@media(max-width:900px){.crow{grid-template-columns:96px 1fr 60px 96px 88px}.crow .cs,.crow .csup{display:none}}
+
 </style>
 </head>
 <body>
@@ -468,6 +460,38 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
     </div>
   </div>
   <div id="aiOut" class="ai-out hidden"></div>
+
+  <div class="cost-panel">
+    <div class="cost-head">
+      <div class="ch-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+      <div class="ch-t"><h4>Costeo de reposición</h4><p>Elige cuántos kits quieres reponer — recalcula qué falta comprar y cuánto cuesta.</p></div>
+      <div>
+        <span class="kit-lbl">Kits a reponer</span>
+        <div class="kit-step">
+          <button onclick="setKits(-1)">−</button>
+          <input id="kitQty" type="number" min="1" max="99" value="1" oninput="renderCost()">
+          <button onclick="setKits(1)">+</button>
+        </div>
+      </div>
+      <div>
+        <span class="kit-lbl">Moneda</span>
+        <div class="cur-tog">
+          <button id="curUSD" class="on" onclick="setCur('USD')">USD</button>
+          <button id="curPEN" onclick="setCur('PEN')">S/</button>
+        </div>
+      </div>
+    </div>
+    <div class="cost-tot" id="costTot"></div>
+    <div class="cost-rows" id="costRows"></div>
+    <div class="cost-foot">
+      <span class="tc-lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>T.C. SUNAT venta</span>
+      <span>1 USD = S/</span>
+      <input class="tc-in" id="tcIn" type="number" step="0.001" value="3.397" oninput="renderCost()">
+      <span class="tc-src">al 13/07/2026 · <a href="https://e-consulta.sunat.gob.pe/cl-at-ittipcam/tcS01Alias" target="_blank" rel="noopener">ver SUNAT</a></span>
+      <span style="flex:1"></span>
+      <button class="xls-btn" onclick="exportCosteo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Descargar costeo en Excel</button>
+    </div>
+  </div>
 
   <div class="d-lower">
     <div>
@@ -610,7 +634,7 @@ function openEngine(i){
   $('#viewList').classList.add('hidden');
   $('#viewDetail').classList.remove('hidden');
   window.scrollTo({top:0,behavior:'smooth'});
-  renderActions(); drawChart();
+  renderActions(); drawChart(); renderCost();
 }
 function setTab(id){curTab=id;
   document.querySelectorAll('#dTabs .tab').forEach(t=>t.classList.remove('active'));
@@ -717,6 +741,173 @@ function runAI(){
     out.textContent=txt;
   },650);
 }
+
+// ====== EXPORTACIÓN A EXCEL (nativa, sin librerías) ======
+function _hoy(){return new Date().toISOString().slice(0,10);}
+function _esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function _toast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t);}
+  t.textContent=msg;t.className='show';
+  clearTimeout(window._tt);window._tt=setTimeout(()=>t.className='',2600);
+}
+function _descargar(header, rows, sheetName, filename){
+  try{
+    let html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'+
+      '<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>'+
+      '<x:Name>'+_esc(sheetName)+'</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>'+
+      '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>'+
+      '<table border="1" cellspacing="0" cellpadding="4"><thead><tr>'+
+      header.map(hh=>`<th style="background:#161d33;color:#fff;font-weight:bold;text-align:left">${_esc(hh)}</th>`).join('')+
+      '</tr></thead><tbody>'+
+      rows.map((r,i)=>`<tr style="background:${i%2?'#f4f6fc':'#ffffff'}">`+
+        r.map((c,j)=>`<td${(typeof c==='number')?' style="mso-number-format:\'0\'"':''}>${_esc(c)}</td>`).join('')+
+        '</tr>').join('')+
+      '</tbody></table></body></html>';
+    const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel;charset=utf-8'});
+    const fname=filename;
+    // Método 1: Edge/IE antiguo
+    if(window.navigator && window.navigator.msSaveOrOpenBlob){ window.navigator.msSaveOrOpenBlob(blob,fname); _toast('⬇ Descargado: '+fname); return; }
+    // Método 2: enlace <a download> (estándar)
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download=fname;a.rel='noopener';a.style.display='none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},1500);
+    _toast('⬇ Descargado: '+fname);
+  }catch(err){ _toast('No se pudo descargar aquí. Abre el archivo en tu navegador.'); console.error(err); }
+}
+function exportMotor(kind){
+  const e=ENGINES[curIdx], it=e.items, m=e.label;
+  let header, rows, sName, fname;
+  if(kind==='compra'){
+    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','A COMPRAR'];
+    rows=it.filter(r=>r[7]>0).sort((a,b)=>b[7]-a[7]).map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[7]]);
+    sName='Compra'; fname=`Compra_${m}_${_hoy()}.xls`;
+    if(!rows.length){_toast('Este motor no tiene ítems por comprar.');return;}
+  } else if(kind==='traslado'){
+    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','TRASLADAR DE ARRIOLA'];
+    rows=it.filter(r=>r[6]>0).sort((a,b)=>b[6]-a[6]).map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[6]]);
+    sName='Traslados'; fname=`Traslados_${m}_${_hoy()}.xls`;
+    if(!rows.length){_toast('Este motor no tiene traslados sugeridos.');return;}
+  } else {
+    const stName={C:'Comprar',T:'Trasladar',S:'Suficiente'};
+    header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','Reposicion (neg=exceso)','A comprar','A trasladar','Estado'];
+    rows=it.map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[4],r[7],r[6],stName[r[8]]||'—']);
+    sName='Kit completo'; fname=`Kit_${m}_${_hoy()}.xls`;
+  }
+  _descargar(header, rows, sName, fname);
+}
+function exportCompraTotal(){
+  const map={};
+  ENGINES.forEach(e=>{
+    if(e.id==='CONS')return;
+    e.items.filter(r=>r[7]>0).forEach(r=>{
+      if(!map[r[0]])map[r[0]]={cod:r[0],desc:r[1],total:0,det:[]};
+      map[r[0]].total+=r[7]; map[r[0]].det.push(e.label.replace('Motor ','')+' x'+r[7]);
+    });
+  });
+  const arr=Object.values(map).sort((a,b)=>b.total-a.total);
+  if(!arr.length){_toast('No hay ítems por comprar.');return;}
+  const header=['Código SAP','Descripción','TOTAL A COMPRAR','N.° de motores','Detalle por motor'];
+  const rows=arr.map(x=>[x.cod,x.desc,x.total,x.det.length,x.det.join(' · ')]);
+  rows.push(['','TOTAL GENERAL',arr.reduce((a,x)=>a+x.total,0),'','']);
+  _descargar(header, rows, 'Compra total', `Compra_TOTAL_11_motores_${_hoy()}.xls`);
+}
+
+// ====== CATÁLOGO DE PRECIOS (Seven Roads USD + SAP S/ convertido) ======
+const PRICEBOOK = {"0365802CTP": {"usd": 4.65, "src": "SAP", "kind": "", "ref": "S/17.59", "sup": null, "st": ""}, "1003652CTP": {"usd": 17.75, "src": "SAP", "kind": "", "ref": "S/67.09", "sup": null, "st": ""}, "1007408CTP": {"usd": 352.8, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1007562CTP": {"usd": 89.12, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1007860CTP": {"usd": 14.79, "src": "SAP", "kind": "", "ref": "S/55.91", "sup": null, "st": ""}, "1017352CTP": {"usd": 80.36, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": "1028608", "st": "In Stock"}, "1044253CTP": {"usd": 15.06, "src": "SAP", "kind": "", "ref": "S/56.93", "sup": null, "st": ""}, "1044254CTP": {"usd": 13.98, "src": "SAP", "kind": "", "ref": "S/52.84", "sup": null, "st": ""}, "1045283CTP": {"usd": 204.13, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "105RSCTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "1070265CTP": {"usd": 6.22, "src": "SAP", "kind": "", "ref": "S/23.52", "sup": null, "st": ""}, "1070268CTP": {"usd": 2.71, "src": "SAP", "kind": "", "ref": "S/10.23", "sup": null, "st": ""}, "1072060CTP": {"usd": 705.6, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": "1795922", "st": "In Stock"}, "1105096CTP": {"usd": 1535.44, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1105097CTP": {"usd": 1546.35, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1111815CTP": {"usd": 16.69, "src": "SAP", "kind": "", "ref": "S/63.07", "sup": null, "st": ""}, "1152367CTP": {"usd": 10.73, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1152368CTP": {"usd": 10.39, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1167885CTP": {"usd": 457.04, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1168154CTP": {"usd": 61.54, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "Call Sales"}, "1168154LKCTP": {"usd": 141.12, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1227374CTP": {"usd": 1.47, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1227375CTP": {"usd": 38.31, "src": "SAP", "kind": "", "ref": "S/144.81", "sup": null, "st": ""}, "1317123CTP": {"usd": 6.2, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1330125CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "1333359CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "1487425CTP": {"usd": 1.62, "src": "SAP", "kind": "", "ref": "S/6.14", "sup": null, "st": ""}, "1487455CTP": {"usd": 15.6, "src": "SAP", "kind": "", "ref": "S/58.98", "sup": null, "st": ""}, "1503136CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "1512939CTP": {"usd": 11.72, "src": "SAP", "kind": "", "ref": "S/44.32", "sup": null, "st": ""}, "1521390CTP": {"usd": 36.07, "src": "SAP", "kind": "", "ref": "S/136.36", "sup": null, "st": ""}, "1608194CTP": {"usd": 9.84, "src": "SAP", "kind": "", "ref": "S/37.19", "sup": null, "st": ""}, "1608199CTP": {"usd": 83.57, "src": "SAP", "kind": "", "ref": "S/315.91", "sup": null, "st": ""}, "1609874CTP": {"usd": 4.7, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "2 Days"}, "1613398CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "1614112CTP": {"usd": 583.1, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "3-7 Weeks"}, "1614113CTP": {"usd": 239.89, "src": "SAP", "kind": "", "ref": "S/906.79", "sup": null, "st": ""}, "1644187CTP": {"usd": 54.0, "src": "SAP", "kind": "", "ref": "S/204.13", "sup": null, "st": ""}, "1654262CTP": {"usd": 39.05, "src": "SAP", "kind": "", "ref": "S/147.61", "sup": null, "st": ""}, "1654262LKCTP": {"usd": 130.33, "src": "SAP", "kind": "", "ref": "S/492.63", "sup": null, "st": ""}, "1663648CTP": {"usd": 10.82, "src": "SAP", "kind": "", "ref": "S/40.91", "sup": null, "st": ""}, "1670024CTP": {"usd": 3.88, "src": "SAP", "kind": "", "ref": "S/14.66", "sup": null, "st": ""}, "1670172CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "1727767CTP": {"usd": 162.34, "src": "SAP", "kind": "", "ref": "S/613.65", "sup": null, "st": ""}, "1727775CTP": {"usd": 217.96, "src": "SAP", "kind": "", "ref": "S/823.89", "sup": null, "st": ""}, "1727776CTP": {"usd": 194.89, "src": "SAP", "kind": "", "ref": "S/736.68", "sup": null, "st": ""}, "1737188CTP": {"usd": 1.23, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1743847CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "1807350CTP": {"usd": 146.1, "src": "SAP", "kind": "", "ref": "S/552.26", "sup": null, "st": ""}, "1850882CTP": {"usd": 0.99, "src": "SAP", "kind": "", "ref": "S/3.75", "sup": null, "st": ""}, "1862001CTP": {"usd": 97.4, "src": "SAP", "kind": "", "ref": "S/368.17", "sup": null, "st": ""}, "1875420CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "1906115CTP": {"usd": 1.5, "src": "SAP", "kind": "", "ref": "S/5.66", "sup": null, "st": ""}, "1906117CTP": {"usd": 1.71, "src": "SAP", "kind": "", "ref": "S/6.48", "sup": null, "st": ""}, "1917941CTP": {"usd": 8.75, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1917942CTP": {"usd": 8.75, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1917943CTP": {"usd": 8.75, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1917944CTP": {"usd": 7.04, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1917945CTP": {"usd": 8.75, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1917946CTP": {"usd": 6.89, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "1979322CTP": {"usd": 59.78, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": "5863377", "st": "In Stock"}, "1N3574CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "1N3576CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "1N4304CTP": {"usd": 618.31, "src": "SAP", "kind": "", "ref": "S/2337.21", "sup": null, "st": ""}, "1P1216CTP": {"usd": 144.3, "src": "SAP", "kind": "", "ref": "S/545.44", "sup": null, "st": ""}, "1S9543CTP": {"usd": 3.21, "src": "SR", "kind": "", "ref": "Seven Roads", "sup": null, "st": ""}, "1W1469CAT": {"usd": 3113.3, "src": "CTP", "kind": "OEM", "ref": "CTP 8128743", "sup": null, "st": "O.E.M."}, "1W1471CAT": {"usd": 1125.38, "src": "CTP", "kind": "OEM", "ref": "CTP 8128743", "sup": null, "st": "O.E.M."}, "1W5283CTP": {"usd": 3.82, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "07/16/26"}, "1W5300CTP": {"usd": 3.43, "src": "SAP", "kind": "", "ref": "S/12.95", "sup": null, "st": ""}, "1W5321CTP": {"usd": 2.7, "src": "SAP", "kind": "", "ref": "S/10.19", "sup": null, "st": ""}, "1W8922CTP": {"usd": 17.54, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "3-7 Weeks"}, "2035805CTP": {"usd": 4.42, "src": "SAP", "kind": "", "ref": "S/16.70", "sup": null, "st": ""}, "2036090CTP": {"usd": 3.92, "src": "SAP", "kind": "", "ref": "S/14.80", "sup": null, "st": ""}, "2037775CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2112134CTP": {"usd": 2.65, "src": "SAP", "kind": "", "ref": "S/10.02", "sup": null, "st": ""}, "2113122CTP": {"usd": 46.97, "src": "SAP", "kind": "", "ref": "S/177.54", "sup": null, "st": ""}, "2114321CTP": {"usd": 12.63, "src": "SAP", "kind": "", "ref": "S/47.73", "sup": null, "st": ""}, "2128917CTP": {"usd": 7.94, "src": "SAP", "kind": "", "ref": "S/30.00", "sup": null, "st": ""}, "2133190CTP": {"usd": 9.02, "src": "SAP", "kind": "", "ref": "S/34.09", "sup": null, "st": ""}, "2165582CTP": {"usd": 104.16, "src": "SAP", "kind": "", "ref": "S/393.74", "sup": null, "st": ""}, "2165586CTP": {"usd": 30.03, "src": "SR", "kind": "", "ref": "Seven Roads", "sup": null, "st": ""}, "2219360CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2230533CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2237263CTP": {"usd": 2236.59, "src": "SAP", "kind": "", "ref": "S/8454.32", "sup": null, "st": ""}, "2243245CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2243246CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2255495CTP": {"usd": 8.48, "src": "SAP", "kind": "", "ref": "S/32.04", "sup": null, "st": ""}, "2255499CTP": {"usd": 13.62, "src": "SAP", "kind": "", "ref": "S/51.48", "sup": null, "st": ""}, "2257781CTP": {"usd": 13.53, "src": "SAP", "kind": "", "ref": "S/51.14", "sup": null, "st": ""}, "2258329CGR": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2265561CTP": {"usd": 148.26, "src": "SAP", "kind": "", "ref": "S/560.44", "sup": null, "st": ""}, "2296259CTP": {"usd": 86.58, "src": "SAP", "kind": "", "ref": "S/327.26", "sup": null, "st": ""}, "2323233CTP": {"usd": 47.82, "src": "SR", "kind": "", "ref": "Seven Roads", "sup": null, "st": ""}, "2370229CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2377580CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2380294CTP": {"usd": 86.58, "src": "SAP", "kind": "", "ref": "S/327.26", "sup": null, "st": ""}, "2388683CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2418382CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2418383CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2418384CTP": {"usd": 2.81, "src": "SAP", "kind": "", "ref": "S/10.64", "sup": null, "st": ""}, "2418385CTP": {"usd": 2.0, "src": "SAP", "kind": "", "ref": "S/7.57", "sup": null, "st": ""}, "2418386CTP": {"usd": 1.75, "src": "SAP", "kind": "", "ref": "S/6.61", "sup": null, "st": ""}, "2418388CTP": {"usd": 3.47, "src": "SAP", "kind": "", "ref": "S/13.12", "sup": null, "st": ""}, "2420673CTP": {"usd": 818.77, "src": "SAP", "kind": "", "ref": "S/3094.96", "sup": null, "st": ""}, "2453261CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2463150CTP": {"usd": 21.65, "src": "SAP", "kind": "", "ref": "S/81.82", "sup": null, "st": ""}, "2476130CTP": {"usd": 82.2, "src": "SAP", "kind": "", "ref": "S/310.70", "sup": null, "st": ""}, "2479908CTP": {"usd": 110.39, "src": "SAP", "kind": "", "ref": "S/417.26", "sup": null, "st": ""}, "2502940CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2525165CTP": {"usd": 852.97, "src": "SAP", "kind": "", "ref": "S/3224.23", "sup": null, "st": ""}, "2526438CTP": {"usd": 1.62, "src": "SAP", "kind": "", "ref": "S/6.14", "sup": null, "st": ""}, "2528439CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2531752CTP": {"usd": 17.47, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "3-7 Weeks"}, "2543954CTP": {"usd": 1.71, "src": "SAP", "kind": "", "ref": "S/6.48", "sup": null, "st": ""}, "2595829CTP": {"usd": 1.49, "src": "SAP", "kind": "", "ref": "S/5.62", "sup": null, "st": ""}, "2604856CTP": {"usd": 1.8, "src": "SAP", "kind": "", "ref": "S/6.82", "sup": null, "st": ""}, "2611544CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2637825CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2722232CTP": {"usd": 85.68, "src": "SAP", "kind": "", "ref": "S/323.86", "sup": null, "st": ""}, "2767478CTP": {"usd": 4.51, "src": "SAP", "kind": "", "ref": "S/17.05", "sup": null, "st": ""}, "2775156CTP": {"usd": 67.64, "src": "SAP", "kind": "", "ref": "S/255.68", "sup": null, "st": ""}, "2803979CTP": {"usd": 60.82, "src": "SAP", "kind": "", "ref": "S/229.90", "sup": null, "st": ""}, "2821771CTP": {"usd": 12.99, "src": "SAP", "kind": "", "ref": "S/49.09", "sup": null, "st": ""}, "2821772CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2939367CTP": {"usd": 199.49, "src": "SAP", "kind": "", "ref": "S/754.07", "sup": null, "st": ""}, "2A4429CTP": {"usd": 0.15, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "2P0960CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2P4629CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2W0256CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2W1084CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2W1086CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2W2621CTP": {"usd": 12.4, "src": "SAP", "kind": "", "ref": "S/46.87", "sup": null, "st": ""}, "2W6178CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2W6583CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2W7458CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "2W9750CAT": {"usd": 3243.19, "src": "CTP", "kind": "OEM", "ref": "CTP 8128743", "sup": null, "st": "O.E.M."}, "3096678CTP": {"usd": 4.24, "src": "SAP", "kind": "", "ref": "S/16.02", "sup": null, "st": ""}, "3109269CTP": {"usd": 78.46, "src": "SAP", "kind": "", "ref": "S/296.58", "sup": null, "st": ""}, "3178766CTP": {"usd": 15.29, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "3190678CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "3229663CTP": {"usd": 5.59, "src": "SAP", "kind": "", "ref": "S/21.14", "sup": null, "st": ""}, "3247380CTP": {"usd": 16.4, "src": "SAP", "kind": "", "ref": "S/61.98", "sup": null, "st": ""}, "3285572CTP": {"usd": 41.69, "src": "SR", "kind": "", "ref": "Seven Roads", "sup": null, "st": ""}, "3285573CTP": {"usd": 12.86, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "329090CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "329091CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "3296655CTP": {"usd": 2.83, "src": "SAP", "kind": "", "ref": "S/10.70", "sup": null, "st": ""}, "3318905CTP": {"usd": 161.25, "src": "SAP", "kind": "", "ref": "S/609.53", "sup": null, "st": ""}, "3327298CTP": {"usd": 751.24, "src": "SAP", "kind": "", "ref": "S/2839.70", "sup": null, "st": ""}, "3348389CTP": {"usd": 1352.67, "src": "SAP", "kind": "", "ref": "S/5113.09", "sup": null, "st": ""}, "3367595CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "3399637CTP": {"usd": 6.58, "src": "SAP", "kind": "", "ref": "S/24.89", "sup": null, "st": ""}, "3472380CTP": {"usd": 11.09, "src": "SAP", "kind": "", "ref": "S/41.93", "sup": null, "st": ""}, "3472381CTP": {"usd": 7.03, "src": "SAP", "kind": "", "ref": "S/26.59", "sup": null, "st": ""}, "3472382CTP": {"usd": 15.33, "src": "SAP", "kind": "", "ref": "S/57.95", "sup": null, "st": ""}, "3502536CTP": {"usd": 171.71, "src": "SAP", "kind": "", "ref": "S/649.07", "sup": null, "st": ""}, "3520203CTP": {"usd": 183.51, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "3520211CTP": {"usd": 220.96, "src": "SAP", "kind": "", "ref": "S/835.21", "sup": null, "st": ""}, "3537423CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "3537427CTP": {"usd": 25.86, "src": "SAP", "kind": "", "ref": "S/97.74", "sup": null, "st": ""}, "3603986CTP": {"usd": 29.67, "src": "SAP", "kind": "", "ref": "S/112.16", "sup": null, "st": ""}, "3627866CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "3668853CTP": {"usd": 5.79, "src": "SAP", "kind": "", "ref": "S/21.89", "sup": null, "st": ""}, "3715941CTP": {"usd": 47.98, "src": "SAP", "kind": "", "ref": "S/181.36", "sup": null, "st": ""}, "3740750CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "3770399CTP": {"usd": 2.89, "src": "SAP", "kind": "", "ref": "S/10.91", "sup": null, "st": ""}, "3770400CTP": {"usd": 3.07, "src": "SAP", "kind": "", "ref": "S/11.59", "sup": null, "st": ""}, "3802073CTP": {"usd": 2.53, "src": "SAP", "kind": "", "ref": "S/9.58", "sup": null, "st": ""}, "3848612CTP": {"usd": 253.87, "src": "SAP", "kind": "", "ref": "S/959.63", "sup": null, "st": ""}, "3851657CTP": {"usd": 115.44, "src": "SAP", "kind": "", "ref": "S/436.35", "sup": null, "st": ""}, "3851657LKCTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "3879434CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "3889354CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "4526791CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "4695312CTP": {"usd": 36.52, "src": "SAP", "kind": "", "ref": "S/138.06", "sup": null, "st": ""}, "4881675CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "4907198CTP": {"usd": 156.92, "src": "SAP", "kind": "", "ref": "S/593.17", "sup": null, "st": ""}, "4907200CTP": {"usd": 506.8, "src": "SAP", "kind": "", "ref": "S/1915.72", "sup": null, "st": ""}, "4N0685CTP": {"usd": 4.96, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "4N1834CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "4N2514CTP": {"usd": 38.17, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "4N3281CTP": {"usd": 8.95, "src": "SAP", "kind": "", "ref": "S/33.82", "sup": null, "st": ""}, "4N3282CTP": {"usd": 9.56, "src": "SAP", "kind": "", "ref": "S/36.14", "sup": null, "st": ""}, "4N3283CTP": {"usd": 9.7, "src": "SAP", "kind": "", "ref": "S/36.68", "sup": null, "st": ""}, "4N3284CTP": {"usd": 9.38, "src": "SAP", "kind": "", "ref": "S/35.45", "sup": null, "st": ""}, "4N5893CTP": {"usd": 2.25, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "07/16/26"}, "4N6658CTP": {"usd": 7.74, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "4N6859CTP": {"usd": 237.28, "src": "SAP", "kind": "", "ref": "S/896.91", "sup": null, "st": ""}, "4N7692CTP": {"usd": 874.74, "src": "SAP", "kind": "", "ref": "S/3306.53", "sup": null, "st": ""}, "4N7820CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "4N7977CTP": {"usd": 111.65, "src": "SAP", "kind": "", "ref": "S/422.03", "sup": null, "st": ""}, "4N7978CTP": {"usd": 94.7, "src": "SAP", "kind": "", "ref": "S/357.95", "sup": null, "st": ""}, "4P2942CTP": {"usd": 192.91, "src": "SAP", "kind": "", "ref": "S/729.19", "sup": null, "st": ""}, "4P3720CAT": {"usd": 17948.54, "src": "CTP", "kind": "OEM", "ref": "CTP 8128743", "sup": "1083916", "st": "O.E.M."}, "4P8495CTP": {"usd": 7.82, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "3-7 Weeks"}, "4P9381CTP": {"usd": 13.71, "src": "SAP", "kind": "", "ref": "S/51.82", "sup": null, "st": ""}, "4P9382CTP": {"usd": 14.16, "src": "SAP", "kind": "", "ref": "S/53.52", "sup": null, "st": ""}, "4P9385CTP": {"usd": 9.27, "src": "SAP", "kind": "", "ref": "S/35.04", "sup": null, "st": ""}, "4P9386CTP": {"usd": 14.16, "src": "SAP", "kind": "", "ref": "S/53.52", "sup": null, "st": ""}, "4P9961CTP": {"usd": 13.35, "src": "SAP", "kind": "", "ref": "S/50.45", "sup": null, "st": ""}, "4P9962CTP": {"usd": 12.81, "src": "SAP", "kind": "", "ref": "S/48.41", "sup": null, "st": ""}, "4P9963CTP": {"usd": 12.44, "src": "SAP", "kind": "", "ref": "S/47.04", "sup": null, "st": ""}, "4P9964CTP": {"usd": 13.74, "src": "SAP", "kind": "", "ref": "S/51.95", "sup": null, "st": ""}, "4W2471CTP": {"usd": 3.82, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "4W2474CTP": {"usd": 3.04, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "4W3897CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "4W5698CTP": {"usd": 16.62, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "Call Sales"}, "4W5699CTP": {"usd": 13.23, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "5081898CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "5185437CTP": {"usd": 34.9, "src": "SAP", "kind": "", "ref": "S/131.93", "sup": null, "st": ""}, "5M2667CTP": {"usd": 0.54, "src": "SAP", "kind": "", "ref": "S/2.05", "sup": null, "st": ""}, "5P8768CTP": {"usd": 33.84, "src": "SR", "kind": "", "ref": "Seven Roads", "sup": null, "st": ""}, "5S6452CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "5S6795CTP": {"usd": 21.69, "src": "SAP", "kind": "", "ref": "S/81.99", "sup": null, "st": ""}, "5S7218CTP": {"usd": 3.52, "src": "SAP", "kind": "", "ref": "S/13.30", "sup": null, "st": ""}, "6I0923CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "6I1346CTP": {"usd": 99.2, "src": "SAP", "kind": "", "ref": "S/374.99", "sup": null, "st": ""}, "6I1453CTP": {"usd": 5027.4, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": "4302593", "st": "In Stock"}, "6I2981CTP": {"usd": 254.8, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "6I4421CTP": {"usd": 286.84, "src": "SAP", "kind": "", "ref": "S/1084.27", "sup": null, "st": ""}, "6N8940CTP": {"usd": 4.71, "src": "SAP", "kind": "", "ref": "S/17.79", "sup": null, "st": ""}, "6N9060CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "7C3039CTP": {"usd": 480.2, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "7E0330CAT": {"usd": 256.88, "src": "CTP", "kind": "OEM", "ref": "CTP 8128743", "sup": null, "st": "O.E.M."}, "7E0558CTP": {"usd": 10.94, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "3-7 Weeks"}, "7E0559CTP": {"usd": 12.35, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "7E5665CTP": {"usd": 1.57, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "7E5996CTP": {"usd": 100.42, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "7M4046CTP": {"usd": 5.89, "src": "SAP", "kind": "", "ref": "S/22.26", "sup": null, "st": ""}, "7N0165CTP": {"usd": 109.12, "src": "SAP", "kind": "", "ref": "S/412.49", "sup": null, "st": ""}, "7N2871CTP": {"usd": 12.63, "src": "SAP", "kind": "", "ref": "S/47.73", "sup": null, "st": ""}, "7N2872CTP": {"usd": 9.92, "src": "SAP", "kind": "", "ref": "S/37.50", "sup": null, "st": ""}, "7N2874CTP": {"usd": 10.12, "src": "SAP", "kind": "", "ref": "S/38.25", "sup": null, "st": ""}, "7N2875CTP": {"usd": 11.07, "src": "SAP", "kind": "", "ref": "S/41.86", "sup": null, "st": ""}, "7N2876CTP": {"usd": 12.63, "src": "SAP", "kind": "", "ref": "S/47.73", "sup": null, "st": ""}, "7N2942CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "7N3486CTP": {"usd": 216.44, "src": "SAP", "kind": "", "ref": "S/818.16", "sup": null, "st": ""}, "7N4651CTP": {"usd": 326.83, "src": "SAP", "kind": "", "ref": "S/1235.42", "sup": null, "st": ""}, "7N7748CTP": {"usd": 369.76, "src": "SAP", "kind": "", "ref": "S/1397.69", "sup": null, "st": ""}, "7N7998CTP": {"usd": 356.23, "src": "SAP", "kind": "", "ref": "S/1346.56", "sup": null, "st": ""}, "7N8021CTP": {"usd": 287.57, "src": "SAP", "kind": "", "ref": "S/1087.03", "sup": null, "st": ""}, "7N9145CTP": {"usd": 35.89, "src": "SAP", "kind": "", "ref": "S/135.68", "sup": null, "st": ""}, "7N9146CTP": {"usd": 45.96, "src": "SAP", "kind": "", "ref": "S/173.72", "sup": null, "st": ""}, "7N9804CTP": {"usd": 7.54, "src": "SAP", "kind": "", "ref": "S/28.50", "sup": null, "st": ""}, "7N9805CTP": {"usd": 10.04, "src": "SAP", "kind": "", "ref": "S/37.94", "sup": null, "st": ""}, "7S3206CTP": {"usd": 0.63, "src": "SAP", "kind": "", "ref": "S/2.39", "sup": null, "st": ""}, "7S7144CTP": {"usd": 3.34, "src": "SAP", "kind": "", "ref": "S/12.61", "sup": null, "st": ""}, "7W0843CAT": {"usd": 297.92, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "3-7 Weeks"}, "7W0844CTP": {"usd": 256.96, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "3-7 Weeks"}, "7W7601CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "7W9308CAT": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "7X2908CTP": {"usd": 0.93, "src": "SAP", "kind": "", "ref": "S/3.51", "sup": null, "st": ""}, "8M1584CTP": {"usd": 21.65, "src": "SAP", "kind": "", "ref": "S/81.82", "sup": null, "st": ""}, "8N0702CTP": {"usd": 4.69, "src": "SAP", "kind": "", "ref": "S/17.73", "sup": null, "st": ""}, "8N0875CTP": {"usd": 14.16, "src": "SAP", "kind": "", "ref": "S/53.52", "sup": null, "st": ""}, "8N1187CTP": {"usd": 748.54, "src": "SAP", "kind": "", "ref": "S/2829.47", "sup": null, "st": ""}, "8N1188CTP": {"usd": 847.74, "src": "SAP", "kind": "", "ref": "S/3204.46", "sup": null, "st": ""}, "8N1608CTP": {"usd": 12.67, "src": "CTP", "kind": "NET", "ref": "CTP 8128743", "sup": null, "st": "In Stock"}, "8N1721CTP": {"usd": 95.78, "src": "SAP", "kind": "", "ref": "S/362.04", "sup": null, "st": ""}, "8N1849CTP": {"usd": 32.89, "src": "SR", "kind": "", "ref": "Seven Roads", "sup": null, "st": ""}, "8N1984CTP": {"usd": 73.95, "src": "SAP", "kind": "", "ref": "S/279.54", "sup": null, "st": ""}, "8N1985CTP": {"usd": 5.41, "src": "SAP", "kind": "", "ref": "S/20.45", "sup": null, "st": ""}, "8N3182CTP": {"usd": 35.17, "src": "SAP", "kind": "", "ref": "S/132.95", "sup": null, "st": ""}, "8N4110CTP": {"usd": 3.38, "src": "SAP", "kind": "", "ref": "S/12.78", "sup": null, "st": ""}, "8N6184CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}, "8N6796CTP": {"usd": 859.83, "src": "SAP", "kind": "", "ref": "S/3250.14", "sup": null, "st": ""}, "8N7005CTP": {"usd": 55.92, "src": "SAP", "kind": "", "ref": "S/211.36", "sup": null, "st": ""}, "8N8221CTP": {"usd": 7.03, "src": "SAP", "kind": "", "ref": "S/26.59", "sup": null, "st": ""}, "8N8222CTP": {"usd": 9.47, "src": "SAP", "kind": "", "ref": "S/35.79", "sup": null, "st": ""}, "8N8223CTP": {"usd": 34.66, "src": "SR", "kind": "", "ref": "Seven Roads", "sup": null, "st": ""}, "8N8225CTP": {"usd": 8.12, "src": "SAP", "kind": "", "ref": "S/30.68", "sup": null, "st": ""}, "8N8226CTP": {"usd": 10.37, "src": "SAP", "kind": "", "ref": "S/39.20", "sup": null, "st": ""}, "8N8227CTP": {"usd": 12.17, "src": "SAP", "kind": "", "ref": "S/46.02", "sup": null, "st": ""}, "8N9733CTP": {"usd": 8.03, "src": "SAP", "kind": "", "ref": "S/30.37", "sup": null, "st": ""}, "8S2389CTP": {"usd": 7.21, "src": "SAP", "kind": "", "ref": "S/27.27", "sup": null, "st": ""}, "9H4015CTP": {"usd": 0.68, "src": "SAP", "kind": "", "ref": "S/2.56", "sup": null, "st": ""}, "9S3068CTP": {"usd": 7.21, "src": "SAP", "kind": "", "ref": "S/27.27", "sup": null, "st": ""}, "9Y1723CTP": {"usd": 177.96, "src": "SAP", "kind": "", "ref": "S/672.70", "sup": null, "st": ""}, "9Y2991CTP": {"usd": 38.43, "src": "SR", "kind": "", "ref": "Seven Roads", "sup": null, "st": ""}, "9Y2992CTP": {"usd": 35.59, "src": "SR", "kind": "", "ref": "Seven Roads", "sup": null, "st": ""}, "LK3182CTP": {"usd": 0, "src": "", "kind": "", "ref": "", "sup": null, "st": ""}};
+let CUR='USD', PRICE_OVR={}; // precios que edita el usuario
+function tc(){return parseFloat($('#tcIn').value)||3.397;}
+function money(usd){
+  const v = CUR==='USD' ? usd : usd*tc();
+  const s = CUR==='USD' ? 'US$ ' : 'S/ ';
+  return s + v.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function priceOf(cod){
+  if(PRICE_OVR[cod]!==undefined) return PRICE_OVR[cod];
+  const b=PRICEBOOK[cod]; return b? b.usd : 0;
+}
+function setKits(d){
+  const i=$('#kitQty'); let v=(parseInt(i.value)||1)+d;
+  i.value=Math.min(99,Math.max(1,v)); renderCost();
+}
+function setCur(c){
+  CUR=c; $('#curUSD').classList.toggle('on',c==='USD'); $('#curPEN').classList.toggle('on',c==='PEN');
+  renderCost();
+}
+function setPrice(cod,val){
+  const v=parseFloat(val);
+  PRICE_OVR[cod] = isNaN(v)?0:(CUR==='USD'? v : v/tc());  // si edita en S/, guardar en USD
+  renderCost();
+}
+// Recalcula la NECESIDAD REAL para N kits: necesita×N − stock ALM01 − Arriola
+function costRows(){
+  const e=ENGINES[curIdx], N=parseInt($('#kitQty').value)||1;
+  const out=[];
+  e.items.forEach(r=>{
+    const need=r[2]*N, alm=r[3], arr=r[5];
+    const falta=Math.max(0, need - alm - arr);       // hay que COMPRAR
+    const deArr=Math.max(0, Math.min(arr, need-alm)); // se cubre trasladando
+    if(falta>0) out.push({cod:r[0],desc:r[1],need,alm,arr,comprar:falta,deArr});
+  });
+  return out.sort((a,b)=>b.comprar*priceOf(b.cod) - a.comprar*priceOf(a.cod));
+}
+function renderCost(){
+  if($('#viewDetail').classList.contains('hidden')) return;
+  const rows=costRows(), N=parseInt($('#kitQty').value)||1;
+  let total=0, sinPrecio=0, uds=0;
+  rows.forEach(x=>{ const p=priceOf(x.cod); total+=p*x.comprar; uds+=x.comprar; if(!p)sinPrecio++; });
+  const e=ENGINES[curIdx];
+  // totales
+  $('#costTot').innerHTML=`
+    <div class="ct"><div class="l">Ítems a comprar</div><div class="v">${rows.length}</div><div class="s">para ${N} kit(s) de ${e.label.replace('Motor ','')}</div></div>
+    <div class="ct"><div class="l">Unidades</div><div class="v">${fmt(uds)}</div><div class="s">piezas en total</div></div>
+    <div class="ct"><div class="l">Sin precio</div><div class="v ${sinPrecio?'warn':''}">${sinPrecio}</div><div class="s">complétalos abajo</div></div>
+    <div class="ct big"><div class="l">Costo total estimado</div><div class="v">${money(total)}</div><div class="s">${sinPrecio?'faltan '+sinPrecio+' precios':'todos los precios cargados'}</div></div>`;
+  // filas
+  const head=`<div class="crow head"><span>Código SAP</span><span>Descripción</span><span class="csup">Cambia a (USE)</span><span style="text-align:center">Comprar</span><span style="text-align:center">Stock</span><span style="text-align:center">Precio unit.</span><span style="text-align:right">Subtotal</span></div>`;
+  const body=rows.map(x=>{
+    const b=PRICEBOOK[x.cod]||{src:''};
+    const p=priceOf(x.cod);
+    const shown = p ? (CUR==='USD'? p : p*tc()) : '';
+    const cls = !p?'empty' : (b.src==='CTP'?'ctp':b.src==='SR'?'sr':'');
+    const lbl = b.src==='CTP' ? (b.kind==='OEM'?'CTP · OEM':'CTP · NET') : b.src==='SR'?'SEVEN ROADS':'SAP';
+    const cls2 = b.src==='CTP' && b.kind==='OEM' ? 'OEM' : b.src;
+    const tag = b.src?`<span class="src-tag ${cls2}" title="${b.kind==='OEM'?'Pieza original CAT (CTP no la fabrica) — precio O.E.M.':'Precio NET de CTP'}">${lbl}</span>`:'';
+    const sup = b.sup ? `<span class="sup-badge" title="El código ${x.cod} fue reemplazado por ${b.sup}">→ ${b.sup}</span>` : '<span class="sup-none">—</span>';
+    return `<div class="crow">
+      <span class="cd">${x.cod}</span>
+      <span class="cn" title="${(x.desc||'').replace(/"/g,'')}">${x.desc||'—'}${tag}</span>
+      <span class="csup">${sup}</span>
+      <span class="cq">${x.comprar}</span>
+      <span class="cs">${x.alm}${x.arr?'+'+x.arr:''}</span>
+      <span><input class="pinput ${cls}" type="number" step="0.01" min="0" placeholder="0.00"
+         value="${shown===''?'':(Math.round(shown*100)/100)}" onchange="setPrice('${x.cod}',this.value)"></span>
+      <span class="ct2">${p? money(p*x.comprar) : '—'}</span>
+    </div>`;
+  }).join('');
+  $('#costRows').innerHTML = rows.length ? head+body
+    : '<div class="act-empty" style="padding:34px">Con el stock actual no necesitas comprar nada para '+N+' kit(s). 🎉</div>';
+}
+// Export del costeo
+function exportCosteo(){
+  const e=ENGINES[curIdx], N=parseInt($('#kitQty').value)||1, rows=costRows();
+  if(!rows.length){_toast('No hay nada que comprar para '+N+' kit(s).');return;}
+  const cu = CUR==='USD'?'USD':'PEN', k = CUR==='USD'?1:tc();
+  const tcNote = CUR==='USD' ? '' : ' (T.C. SUNAT venta '+tc()+')';
+  const header=['Motor','Kits a reponer','Código SAP','Código de cambio (USE)','Descripción','Necesita ('+N+' kits)','Stock ALM01','En Arriola','A COMPRAR','Precio unit. ('+cu+')'+tcNote,'Subtotal ('+cu+')','Fuente precio','Disponibilidad'];
+  const body=rows.map(x=>{
+    const p=priceOf(x.cod), b=PRICEBOOK[x.cod]||{src:''};
+    return [e.label,N,x.cod,b.sup||'',x.desc,x.need,x.alm,x.arr,x.comprar,
+            p?+(p*k).toFixed(2):'', p?+(p*x.comprar*k).toFixed(2):'',
+            PRICE_OVR[x.cod]!==undefined?'Manual':(b.src==='CTP'?('CTP 8128743 ('+(b.kind||'NET')+')'):b.src==='SR'?'Seven Roads 2026-105':b.src==='SAP'?'SAP (lista)':'sin precio'), b.st||''];
+  });
+  const tot=rows.reduce((a,x)=>a+priceOf(x.cod)*x.comprar,0)*k;
+  body.push(['','','','','','','','','TOTAL','',+tot.toFixed(2),'','']);
+  _descargar(header, body, 'Costeo', `Costeo_${e.label}_${N}kits_${_hoy()}.xls`);
+}
+
 </script>
 </body>
 </html>

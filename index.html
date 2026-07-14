@@ -1348,6 +1348,11 @@ function provHdr(prov,cu){
 function _descargar(header, rows, sheetName, filename, titulo, sub){
   try{
     const NC=header.length;
+    // Columnas CLAVE PARA IMPORTAR -> negrita + resaltado
+    const KEY = header.map(hh=>{
+      const t=String(hh||'').toUpperCase();
+      return /A COMPRAR|POR COMPRAR|PRECIO UNITARIO|PRECIO ELEGIDO/.test(t);
+    });
     const tit = titulo ? `<tr><td colspan="${NC}" style="background:#161d33;color:#ffffff;font-size:22pt;font-weight:bold;height:42pt;vertical-align:middle;padding:10px">${_esc(titulo)}</td></tr>` : '';
     const sb  = sub ? `<tr><td colspan="${NC}" style="background:#eef1f8;color:#3c4665;font-size:10pt;padding:6px">${_esc(sub)}</td></tr>` : '';
     const gap = titulo ? `<tr><td colspan="${NC}" style="height:6pt;border:none"></td></tr>` : '';
@@ -1357,10 +1362,16 @@ function _descargar(header, rows, sheetName, filename, titulo, sub){
       '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>'+
       '<table border="1" cellspacing="0" cellpadding="4">'+ tit + sb + gap +
       '<thead><tr>'+
-      header.map(hh=>`<th style="background:#161d33;color:#fff;font-weight:bold;text-align:left;vertical-align:middle">${_esc(hh)}</th>`).join('')+
+      header.map((hh,j)=>`<th style="background:${KEY[j]?'#5a3fe0':'#161d33'};color:#fff;font-weight:bold;text-align:left;vertical-align:middle">${_esc(hh)}</th>`).join('')+
       '</tr></thead><tbody>'+
       rows.map((r,i)=>`<tr style="background:${i%2?'#f4f6fc':'#ffffff'}">`+
-        r.map((c,j)=>`<td${(typeof c==='number')?' style="mso-number-format:\'0.00\'"':''}>${_esc(c)}</td>`).join('')+
+        r.map((c,j)=>{
+          const num = (typeof c==='number');
+          const st = [];
+          if(num) st.push("mso-number-format:'0.00'");
+          if(KEY[j]){ st.push('font-weight:bold'); st.push('background:#fff3dd'); st.push('color:#161d33'); }
+          return `<td${st.length?` style="${st.join(';')}"`:''}>${_esc(c)}</td>`;
+        }).join('')+
         '</tr>').join('')+
       '</tbody></table></body></html>';
     const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel;charset=utf-8'});
@@ -1633,7 +1644,9 @@ function exportCosteo(){
   const body=rows.map(x=>{
     const b=PRICEBOOK[x.cod]||{}, p=priceOf(x.cod), o=offerOf(x.cod), r=itemOf(x.cod)||[];
     return [x.cod, (b.chain? b.chain+' → '+b.sup : (b.sup||'')), x.desc, r[14]||'',
-      x.need, x.alm, x.arr, (x.tra||0), (x.smin!=null?x.smin:'FALTA INFO'),
+      x.need, x.alm, x.arr, (x.tra||0),
+      (x.aqp||0), (x.hch||0),
+      (x.smin!=null?x.smin:'FALTA INFO'),
       (x.com||'—'), (x.buy||'—'), x.comprar,
       ...PRV.map(pr=>{const v=priceBy(x.cod,pr); return v===''?'':+(v*k).toFixed(2);}),
       p?+(p*k).toFixed(2):'', p?+(p*x.comprar*k).toFixed(2):'',
@@ -1641,7 +1654,7 @@ function exportCosteo(){
   });
   const tot=rows.reduce((a,x)=>a+priceOf(x.cod)*x.comprar,0)*k;
   const pad=new Array(PRV.length).fill('');
-  body.push(['','','','','','','','','','','','','TOTAL','',...pad,'',+tot.toFixed(2),'']);
+  body.push([...new Array(12).fill(''),'TOTAL','',...pad,'',+tot.toFixed(2),'']);
   const tcTxt = CUR==='USD' ? '' : ` · T.C. SUNAT venta ${tc()}`;
   const titulo=`${e.label.toUpperCase()}  —  COSTEO DE REPOSICIÓN`;
   const sub=`Peru Tractor S.R.L. · ${N} kit${N>1?'s':''} a reponer · ${rows.length} ítems · ${fmt(rows.reduce((a,x)=>a+x.comprar,0))} unidades · Total ${money(tot/k)}${tcTxt} · Generado ${_hoy()}`;
@@ -1987,12 +2000,16 @@ function _logoSrc(){
   const im=document.querySelector('#grimaZone img');
   return im? im.getAttribute('src') : '';
 }
+function _pdfKey(header){
+  return header.map(hh=>/A COMPRAR|POR COMPRAR|P\. UNIT|PRECIO UNITARIO|PRECIO ELEGIDO/i.test(String(hh||'')));
+}
 function _pdf(header, rows, filename, titulo, sub, resumen){
   try{
     const logo=_logoSrc();
     const numCols = header.map(hh=>/USD|PEN|PRECIO|SUBTOTAL|Necesita|Stock|Arriola|tránsito|COMPRAR|TRASLADAR|SOBRAN|mínimo/i.test(hh));
     const esTotal = r => String(r[10]||'').toUpperCase()==='TOTAL' || r.some(c=>String(c).toUpperCase()==='TOTAL');
-    const th = header.map(hh=>`<th>${_esc(hh)}</th>`).join('');
+    const KEY = header.map(hh=>/A COMPRAR|POR COMPRAR|P\. UNIT|PRECIO UNITARIO|PRECIO ELEGIDO/i.test(String(hh||'')));
+    const th = header.map((hh,j)=>`<th class="${KEY[j]?'key':''}">${_esc(hh)}</th>`).join('');
     const tb = rows.map(r=>{
       const tot = esTotal(r);
       return `<tr class="${tot?'tot':''}">`+r.map((c,j)=>{
@@ -2000,7 +2017,7 @@ function _pdf(header, rows, filename, titulo, sub, resumen){
         const cls = num? 'n' : (numCols[j]? 'n':'');
         let v = num ? c.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2}) : _esc(c);
         if(String(c).indexOf('SÍ')===0 || String(c).indexOf('FALTA INFO')===0) v=`<b class="al">${v}</b>`;
-        return `<td class="${cls}">${v}</td>`;
+        return `<td class="${cls}${KEY[j]?' key':''}">${v}</td>`;
       }).join('')+'</tr>';
     }).join('');
     const kpis = (resumen||[]).map(([l,v])=>`<div class="kp"><span class="l">${_esc(l)}</span><span class="v">${_esc(v)}</span></div>`).join('');
@@ -2026,7 +2043,10 @@ function _pdf(header, rows, filename, titulo, sub, resumen){
      padding:5px 4px;text-align:left;border:1px solid #2c3654;font-weight:700}
   td{padding:4px;border:1px solid #e2e7f0;font-size:7.6pt;vertical-align:middle}
   td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  th.key{background:#5a3fe0;border-color:#7a63f0}
+  td.key{font-weight:800;background:#fff3dd;color:#161d33}
   tbody tr:nth-child(even){background:#f6f8fc}
+  tbody tr:nth-child(even) td.key{background:#fdedd0}
   tr.tot td{background:#eef1f8;font-weight:800;border-top:2px solid #161d33}
   b.al{color:#c1292e}
   tr{page-break-inside:avoid}

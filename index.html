@@ -628,6 +628,12 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 @media(max-width:1000px){.prow{grid-template-columns:34px 90px 1fr 76px 54px 70px 84px 84px}
  .prow .pfam,.prow .pn.stk,.prow .pn.arr{display:none}}
 
+.xls-btn.pdf{color:#c1292e;border-color:#f3c9cb}
+.xls-btn.pdf:hover{background:#fff2f2;border-color:#e5484d}
+.sbtn.pdfb{color:#c1292e;border-color:#f3c9cb}
+.sbtn.pdfb:hover{background:#fff2f2;border-color:#e5484d}
+.sbtn.pdfb svg{width:13px;height:13px}
+@media print{.tb,.d-back,.xls-bar,.sec-tools,.cost-head .kit-step,.cost-foot,.pl-ov,.gs-overlay{display:none!important}}
 </style>
 </head>
 <body>
@@ -745,6 +751,7 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
       <span class="tc-src">al 13/07/2026 · <a href="https://e-consulta.sunat.gob.pe/cl-at-ittipcam/tcS01Alias" target="_blank" rel="noopener">ver SUNAT</a></span>
       <span style="flex:1"></span>
       <button class="xls-btn" style="border-color:#c9bcff;color:var(--morado)" onclick="openPlan()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>Planificar compra</button>
+      <button class="xls-btn pdf" onclick="pdfCosteo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 18h4"/></svg>PDF</button>
       <button class="xls-btn" onclick="exportCosteo()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Descargar costeo en Excel</button>
     </div>
   </div>
@@ -825,6 +832,7 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
     <div class="pl-foot">
       <div class="pl-tot" id="plTot"></div>
       <div class="pl-act">
+        <button class="xls-btn pdf" onclick="pdfPlan()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 15h6M9 18h4"/></svg>Descargar PDF</button>
         <button class="xls-btn" onclick="exportPlan()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Descargar plan en Excel</button>
       </div>
     </div>
@@ -1090,6 +1098,9 @@ function section(id,cls,icon,title,desc,rows,render,forceOpen){
       <span class="sep"></span>
       <button class="sbtn xls" onclick="exportSec('${id}',event)" title="Descargar esta lista en Excel">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Excel
+      </button>
+      <button class="sbtn pdfb" onclick="pdfSec('${id}',event)" title="Descargar esta lista en PDF">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>PDF
       </button>
     </div>`;
   const body = rows.length
@@ -1825,6 +1836,160 @@ function exportPlan(){
   const titulo=`${e.label.toUpperCase()}  —  PLAN DE COMPRA`;
   const sub=`Peru Tractor S.R.L. · ${N} kit${N>1?'s':''} · ${sel.length} ítems · ${fmt(uds)} unidades · ${bajo} bajo stock mínimo · Total ${money(tot/k)}${tcTxt} · Generado ${_hoy()}`;
   _descargar(header, body, 'Plan de compra', `Plan_compra_${e.label.replace('Motor ','')}_${N}kit${N>1?'s':''}_${_hoy()}.xls`, titulo, sub);
+}
+
+
+// ====== DESCARGA EN PDF (impresión nativa, sin librerías) ======
+function _logoSrc(){
+  const im=document.querySelector('#grimaZone img');
+  return im? im.getAttribute('src') : '';
+}
+function _pdf(header, rows, filename, titulo, sub, resumen){
+  try{
+    const logo=_logoSrc();
+    const numCols = header.map(hh=>/USD|PEN|PRECIO|SUBTOTAL|Necesita|Stock|Arriola|tránsito|COMPRAR|TRASLADAR|SOBRAN|mínimo/i.test(hh));
+    const esTotal = r => String(r[10]||'').toUpperCase()==='TOTAL' || r.some(c=>String(c).toUpperCase()==='TOTAL');
+    const th = header.map(hh=>`<th>${_esc(hh)}</th>`).join('');
+    const tb = rows.map(r=>{
+      const tot = esTotal(r);
+      return `<tr class="${tot?'tot':''}">`+r.map((c,j)=>{
+        const num = typeof c==='number';
+        const cls = num? 'n' : (numCols[j]? 'n':'');
+        let v = num ? c.toLocaleString('es-PE',{minimumFractionDigits:2,maximumFractionDigits:2}) : _esc(c);
+        if(String(c).indexOf('SÍ')===0 || String(c).indexOf('FALTA INFO')===0) v=`<b class="al">${v}</b>`;
+        return `<td class="${cls}">${v}</td>`;
+      }).join('')+'</tr>';
+    }).join('');
+    const kpis = (resumen||[]).map(([l,v])=>`<div class="kp"><span class="l">${_esc(l)}</span><span class="v">${_esc(v)}</span></div>`).join('');
+    const doc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${_esc(filename)}</title>
+<style>
+  @page{size:A4 landscape;margin:11mm 9mm}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",Arial,Helvetica,sans-serif;color:#161d33;font-size:8.2pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .hd{display:flex;align-items:center;gap:12px;background:#161d33;color:#fff;padding:12px 14px;border-radius:8px}
+  .hd img{width:38px;height:38px;background:#fff;border-radius:9px;padding:4px;object-fit:contain}
+  .hd .t{flex:1}
+  .hd h1{font-size:16pt;font-weight:800;letter-spacing:.4px;line-height:1.15}
+  .hd .s{font-size:7.6pt;color:#c3cbe4;margin-top:3px}
+  .hd .co{text-align:right;font-size:7.4pt;color:#c3cbe4;line-height:1.5}
+  .hd .co b{color:#fff;display:block;font-size:9pt}
+  .kps{display:flex;gap:7px;margin:9px 0}
+  .kp{flex:1;border:1px solid #dfe4ef;border-radius:7px;padding:7px 9px;background:#f7f9fd}
+  .kp .l{display:block;font-size:6.6pt;text-transform:uppercase;color:#5b6580;letter-spacing:.4px;font-weight:600}
+  .kp .v{display:block;font-size:12pt;font-weight:800;color:#161d33;margin-top:2px}
+  table{width:100%;border-collapse:collapse;margin-top:4px}
+  thead{display:table-header-group}
+  th{background:#161d33;color:#fff;font-size:6.9pt;text-transform:uppercase;letter-spacing:.2px;
+     padding:5px 4px;text-align:left;border:1px solid #2c3654;font-weight:700}
+  td{padding:4px;border:1px solid #e2e7f0;font-size:7.6pt;vertical-align:middle}
+  td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  tbody tr:nth-child(even){background:#f6f8fc}
+  tr.tot td{background:#eef1f8;font-weight:800;border-top:2px solid #161d33}
+  b.al{color:#c1292e}
+  tr{page-break-inside:avoid}
+  .ft{margin-top:10px;padding-top:7px;border-top:1px solid #dfe4ef;display:flex;justify-content:space-between;
+      font-size:6.9pt;color:#6b7590}
+  .ft b{color:#161d33;font-size:7.6pt}
+</style></head><body>
+  <div class="hd">
+    ${logo? `<img src="${logo}" alt="">`:''}
+    <div class="t"><h1>${_esc(titulo)}</h1><div class="s">${_esc(sub)}</div></div>
+    <div class="co"><b>PERU TRACTOR S.R.L.</b>RUC 20290308802<br>Repuestos CAT / CTP</div>
+  </div>
+  ${kpis? `<div class="kps">${kpis}</div>`:''}
+  <table><thead><tr>${th}</tr></thead><tbody>${tb}</tbody></table>
+  <div class="ft">
+    <span><b>Alexis Brian Ramírez Ramírez</b> · CEO · VERONIX</span>
+    <span>Generado el ${_hoy()} · Documento interno de planificación</span>
+  </div>
+</body></html>`;
+    const ifr=document.createElement('iframe');
+    ifr.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+    document.body.appendChild(ifr);
+    const d=ifr.contentWindow.document;
+    d.open(); d.write(doc); d.close();
+    ifr.contentWindow.focus();
+    setTimeout(()=>{
+      try{ ifr.contentWindow.print(); }catch(e){ console.error(e); }
+      setTimeout(()=>document.body.removeChild(ifr), 1500);
+    }, 350);
+    _toast('🖨 Abriendo PDF — elige "Guardar como PDF"');
+  }catch(err){ console.error(err); _toast('No se pudo generar el PDF'); }
+}
+// --- PDF del costeo ---
+function pdfCosteo(){
+  const e=ENGINES[curIdx], N=KITS(), rows=costRows();
+  if(!rows.length){_toast('No hay nada que comprar para '+N+' kit(s).');return;}
+  const cu=CUR==='USD'?'USD':'PEN', k=CUR==='USD'?1:tc();
+  const header=['Código SAP','Cambia a (USE)','Descripción','Categoría','Necesita','ALM01','Arriola','Tránsito','Stock mín.','A COMPRAR','P. unit. ('+cu+')','Subtotal ('+cu+')','Proveedor'];
+  const body=rows.map(x=>{
+    const b=PRICEBOOK[x.cod]||{}, p=priceOf(x.cod), o=offerOf(x.cod), r=itemOf(x.cod)||[];
+    return [x.cod,(b.chain? b.chain+' → '+b.sup:(b.sup||'—')),x.desc,r[14]||'',x.need,x.alm,x.arr,(x.tra||0),
+      (x.smin!=null?x.smin:'FALTA INFO'),x.comprar,
+      p?+(p*k).toFixed(2):'—', p?+(p*x.comprar*k).toFixed(2):'—',
+      o? o.prov+(o.kind?' · '+o.kind:'') : '—'];
+  });
+  const tot=rows.reduce((a,x)=>a+priceOf(x.cod)*x.comprar,0)*k;
+  const uds=rows.reduce((a,x)=>a+x.comprar,0);
+  body.push(['','','','','','','','','','TOTAL','',+tot.toFixed(2),'']);
+  _pdf(header, body, `Costeo_${e.label}_${N}kits`,
+    `${e.label.toUpperCase()} — COSTEO DE REPOSICIÓN`,
+    `${N} kit${N>1?'s':''} a reponer${CUR==='PEN'?' · T.C. SUNAT venta '+tc():''}`,
+    [['Ítems a comprar',rows.length],['Unidades',fmt(uds)],['Costo total',money(tot/k)],['Kits',N]]);
+}
+// --- PDF de una sección ---
+function pdfSec(id, ev){
+  if(ev) ev.stopPropagation();
+  const e=ENGINES[curIdx], N=KITS();
+  const q=($('#dSearch').value||'').trim().toUpperCase();
+  const it=e.items.filter(r=> !q || r[0].toUpperCase().includes(q) || (r[1]||'').toUpperCase().includes(q));
+  let rows,titulo,accion;
+  if(id==='c'){ rows=it.filter(r=>calc(r,N).comprar>0); titulo='COMPRAR'; accion='A COMPRAR'; }
+  else if(id==='t'){ rows=it.filter(r=>calc(r,N).trasl>0); titulo='TRAER DE ARRIOLA'; accion='TRASLADAR'; }
+  else if(id==='e'){ rows=it.filter(r=>calc(r,N).exceso>0); titulo='EN EXCESO'; accion='SOBRAN'; }
+  else { rows=it.filter(r=>{const c=calc(r,N);return c.comprar===0&&c.trasl===0&&c.exceso===0;}); titulo='SUFICIENTE'; accion='STOCK'; }
+  if(!rows.length){_toast('No hay ítems en esa lista.');return;}
+  rows=sortSec(id,rows);
+  const header=['Código SAP','Cambia a (USE)','Descripción','Categoría','Necesita','ALM01','Arriola','Tránsito','Stock mín.',accion,'P. unit. (USD)','Subtotal (USD)','Proveedor'];
+  const body=rows.map(r=>{
+    const c=calc(r,N), b=PRICEBOOK[r[0]]||{}, p=priceOf(r[0]), o=offerOf(r[0]);
+    const val=id==='c'?c.comprar:id==='t'?c.trasl:id==='e'?c.exceso:c.alm;
+    return [r[0],(b.chain? b.chain+' → '+b.sup:(b.sup||'—')),r[1],r[14]||'',c.need,r[3],r[5],(r[13]||0),
+      (r[10]!=null?r[10]:'FALTA INFO'),val,
+      p?+p.toFixed(2):'—', p?+(p*val).toFixed(2):'—', o? o.prov+(o.kind?' · '+o.kind:''):'—'];
+  });
+  const tot=rows.reduce((a,r)=>{const c=calc(r,N);
+    const v=id==='c'?c.comprar:id==='t'?c.trasl:id==='e'?c.exceso:c.alm; return a+priceOf(r[0])*v;},0);
+  const uds=rows.reduce((a,r)=>{const c=calc(r,N);
+    return a+(id==='c'?c.comprar:id==='t'?c.trasl:id==='e'?c.exceso:c.alm);},0);
+  body.push(['','','','','','','','','','TOTAL','',+tot.toFixed(2),'']);
+  _pdf(header, body, `${titulo}_${e.label}`,
+    `${e.label.toUpperCase()} — ${titulo}`,
+    `${N} kit${N>1?'s':''} · ${rows.length} ítems`,
+    [['Ítems',rows.length],['Unidades',fmt(uds)],['Valorizado',money(tot)],['Kits',N]]);
+}
+// --- PDF del plan ---
+function pdfPlan(){
+  const e=ENGINES[curIdx], N=KITS();
+  const sel=Object.keys(PLAN).filter(c=>PLAN[c].on && PLAN[c].qty>0);
+  if(!sel.length){_toast('No hay ítems seleccionados.');return;}
+  const cu=CUR==='USD'?'USD':'PEN', k=CUR==='USD'?1:tc();
+  const STL={buy:'A comprar',mov:'Traslado',suf:'Cubierto',exc:'Sobra'};
+  const header=['Código SAP','Cambia a (USE)','Descripción','Categoría','Estado','Necesita','ALM01','Arriola','Tránsito','Stock mín.','Bajo mín.','CANTIDAD','P. unit. ('+cu+')','Subtotal ('+cu+')','Proveedor'];
+  const body=sel.map(c=>{
+    const r=itemOf(c), b=PRICEBOOK[c]||{}, q=PLAN[c].qty, p=priceOf(c), cc=calc(r,N), o=offerOf(c);
+    return [c,(b.chain? b.chain+' → '+b.sup:(b.sup||'—')),r[1],r[14]||'',STL[statusOf(r,N)]||'',
+      cc.need,r[3],r[5],(r[13]||0),(r[10]!=null?r[10]:'FALTA INFO'),(belowMin(r)?'SÍ':'no'),q,
+      p?+(p*k).toFixed(2):'—', p?+(p*q*k).toFixed(2):'—', o? o.prov+(o.kind?' · '+o.kind:''):'—'];
+  });
+  const tot=sel.reduce((a,c)=>a+PLAN[c].qty*priceOf(c),0)*k;
+  const uds=sel.reduce((a,c)=>a+PLAN[c].qty,0);
+  const bajo=sel.filter(c=>belowMin(itemOf(c))).length;
+  body.push(['','','','','','','','','','','','TOTAL','',+tot.toFixed(2),'']);
+  _pdf(header, body, `Plan_compra_${e.label}`,
+    `${e.label.toUpperCase()} — PLAN DE COMPRA`,
+    `${N} kit${N>1?'s':''}${CUR==='PEN'?' · T.C. SUNAT venta '+tc():''}`,
+    [['Ítems',sel.length],['Unidades',fmt(uds)],['Bajo mínimo',bajo],['Total del plan',money(tot/k)]]);
 }
 
 </script>

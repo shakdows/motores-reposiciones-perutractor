@@ -592,6 +592,42 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 .ar-money b{font-family:'Orbitron';font-size:13px;color:var(--ink);display:block}
 .ar-money .np{color:#c9821a;background:#fff3dd;border:1px solid #f5cf8a;padding:2px 7px;border-radius:6px;font-weight:600}
 
+/* ====== FILTROS DE ESTADO (tipo SaaS) ====== */
+.pl-tabs{display:flex;gap:7px;padding:12px 20px 0;flex-wrap:wrap;background:#fafbfe}
+.ptab{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;padding:9px 13px;
+ border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;transition:.15s;
+ font-family:'Exo 2';white-space:nowrap}
+.ptab:hover{border-color:var(--morado);color:var(--morado)}
+.ptab .n{font-family:'Orbitron';font-size:10.5px;font-weight:700;background:#eef1f8;color:var(--ink2);
+ padding:2px 7px;border-radius:20px;min-width:22px;text-align:center}
+.ptab.on{color:#fff;border-color:transparent}
+.ptab.on .n{background:rgba(255,255,255,.28);color:#fff}
+.ptab.on.all{background:var(--ink)}
+.ptab.on.buy{background:#e5484d} .ptab.on.mov{background:#2f6bff}
+.ptab.on.tra{background:#1d5fd6} .ptab.on.suf{background:#0bb89a}
+.ptab.on.min{background:#d93a3f}
+.ptab.min{border-color:#f5b8ba;color:#c1292e;background:#fff5f5}
+.ptab.min:hover{background:#ffecec}
+/* alerta de stock mínimo */
+.pl-alert{display:flex;align-items:center;gap:11px;margin:12px 20px 0;padding:12px 15px;border-radius:12px;
+ background:#fff1f1;border:1px solid #f5b8ba;color:#a3242a;font-size:12.5px}
+.pl-alert .ai{width:30px;height:30px;border-radius:9px;background:#f9d5d6;display:grid;place-items:center;flex:0 0 auto;font-size:15px}
+.pl-alert b{font-family:'Orbitron'}
+.pl-alert .go{margin-left:auto;background:#d93a3f;color:#fff;border:none;padding:7px 12px;border-radius:8px;
+ font-size:11.5px;font-weight:700;cursor:pointer;font-family:'Exo 2';white-space:nowrap}
+.pl-alert .go:hover{background:#c1292e}
+/* estado por fila */
+.pst{font-size:9.5px;font-weight:700;padding:3px 8px;border-radius:6px;white-space:nowrap;text-align:center}
+.pst.buy{background:#fdecec;color:#c1292e} .pst.mov{background:#e9f0ff;color:#2f5fe0}
+.pst.suf{background:#e4f7f1;color:#0a8f77} .pst.exc{background:#fff3dd;color:#a56a12}
+.prow.below{box-shadow:inset 3px 0 0 #e5484d}
+.pmin{font-size:9.5px;margin-top:2px;display:block}
+.pmin.bad{color:#c1292e;font-weight:700}
+.pmin.ok{color:var(--ink3)}
+.prow{grid-template-columns:38px 100px 1fr 104px 82px 56px 58px 72px 86px 92px 92px}
+@media(max-width:1000px){.prow{grid-template-columns:34px 90px 1fr 76px 54px 70px 84px 84px}
+ .prow .pfam,.prow .pn.stk,.prow .pn.arr{display:none}}
+
 </style>
 </head>
 <body>
@@ -767,9 +803,10 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
       <div><h3 id="plTitle">Planificador de compra</h3><p id="plSub">Ajusta qué comprar, quita lo que ya viene en camino y agrega lo que necesites.</p></div>
       <button class="pl-x" onclick="closePlan()">✕</button>
     </div>
+    <div id="plAlert"></div>
+    <div class="pl-tabs" id="plTabs"></div>
     <div class="pl-filt">
       <select id="plFam" onchange="renderPlan()"><option value="">Todas las categorías</option></select>
-      <span class="chipf tra" id="plChipT" onclick="togFilt('tra')">🚚 Solo en tránsito</span>
       <span class="chipf" id="plChipS" onclick="togFilt('sel')">✓ Solo seleccionados</span>
       <span class="chipf" id="plChipN" onclick="togFilt('nop')">Sin precio</span>
       <input type="text" id="plQ" placeholder="Buscar código o descripción…" oninput="renderPlan()">
@@ -1536,9 +1573,24 @@ let PLAN={};                       // cod -> {on, qty}
 let PFILT={tra:false, sel:false, nop:false};
 function itemOf(cod){ return ENGINES[curIdx].items.find(r=>r[0]===cod); }
 
+let PTAB='buy';   // pestaña activa
+// Estado de un ítem para N kits
+function statusOf(r,N){
+  const c=calc(r,N);
+  const usaArr=Math.min(c.arr, Math.max(0,c.need-c.alm));
+  if(c.comprar>0) return 'buy';       // hay que comprar
+  if(usaArr>0)    return 'mov';       // se cubre trasladando
+  if(c.exceso>0)  return 'exc';       // sobra
+  return 'suf';                        // justo cubierto
+}
+function belowMin(r){ return r[10]!=null && r[3] < r[10]; }
 function buildPlan(){
   PLAN={};
-  costRows().forEach(x=>{ PLAN[x.cod]={on:true, qty:x.comprar}; });
+  const e=ENGINES[curIdx], N=KITS();
+  e.items.forEach(r=>{
+    const c=calc(r,N);
+    PLAN[r[0]]={ on: c.comprar>0, qty: c.comprar };   // por defecto: solo lo que falta comprar
+  });
 }
 function openPlan(){
   buildPlan();
@@ -1548,17 +1600,18 @@ function openPlan(){
   // categorías presentes
   const fams=[...new Set(e.items.map(r=>r[14]))].sort();
   $('#plFam').innerHTML='<option value="">Todas las categorías</option>'+fams.map(f=>`<option value="${f}">${f}</option>`).join('');
-  $('#plQ').value=''; PFILT={tra:false,sel:false,nop:false};
-  ['plChipT','plChipS','plChipN'].forEach(id=>$('#'+id).classList.remove('on'));
+  $('#plQ').value=''; PFILT={sel:false,nop:false}; PTAB='buy';
+  ['plChipS','plChipN'].forEach(id=>$('#'+id).classList.remove('on'));
   $('#plOv').classList.add('on');
   renderPlan();
 }
 function closePlan(){ $('#plOv').classList.remove('on'); }
 function togFilt(k){
   PFILT[k]=!PFILT[k];
-  $('#plChip'+(k==='tra'?'T':k==='sel'?'S':'N')).classList.toggle('on',PFILT[k]);
+  $('#plChip'+(k==='sel'?'S':'N')).classList.toggle('on',PFILT[k]);
   renderPlan();
 }
+function setPTab(t){ PTAB=t; renderPlan(); }
 function togglePlan(cod,on){ if(PLAN[cod]) PLAN[cod].on=on; renderPlan(); }
 function setPlanQty(cod,v){
   const q=Math.max(0,parseInt(v)||0);
@@ -1584,61 +1637,114 @@ function addPlanItem(cod){
   if(!cod) return;
   const r=itemOf(cod); if(!r) return;
   const N=KITS(), c=calc(r,N);
-  PLAN[cod]={on:true, qty: c.comprar>0 ? c.comprar : Math.max(1, c.need-c.alm)};
+  // sugerencia: si está bajo el mínimo, reponer hasta el mínimo; si no, 1
+  let q = c.comprar>0 ? c.comprar : (belowMin(r) ? (r[10]-c.alm) : 1);
+  PLAN[cod]={on:true, qty: Math.max(1,q)};
   $('#plAdd').value='';
   renderPlan();
   _toast('Agregado: '+cod);
 }
 function planRows(){
-  const e=ENGINES[curIdx];
+  const e=ENGINES[curIdx], N=KITS();
   const fam=$('#plFam').value, q=($('#plQ').value||'').trim().toUpperCase();
   return Object.keys(PLAN).map(c=>{
     const r=itemOf(c); if(!r) return null;
-    return {r, cod:c, on:PLAN[c].on, qty:PLAN[c].qty, tra:r[13]||0, fam:r[14], p:priceOf(c)};
-  }).filter(x=>x
-    && (!fam || x.fam===fam)
-    && (!q || x.cod.toUpperCase().includes(q) || (x.r[1]||'').toUpperCase().includes(q))
-    && (!PFILT.tra || x.tra>0)
-    && (!PFILT.sel || x.on)
-    && (!PFILT.nop || !x.p)
-  ).sort((a,b)=> (b.on?1:0)-(a.on?1:0) || b.qty*b.p - a.qty*a.p);
+    const cc=calc(r,N);
+    return {r, cod:c, on:PLAN[c].on, qty:PLAN[c].qty, tra:r[13]||0, fam:r[14], p:priceOf(c),
+            st:statusOf(r,N), low:belowMin(r), c:cc,
+            usaArr:Math.min(cc.arr, Math.max(0,cc.need-cc.alm))};
+  }).filter(x=>{
+    if(!x) return false;
+    if(PTAB==='buy'  && x.st!=='buy') return false;
+    if(PTAB==='mov'  && x.usaArr<=0) return false;
+    if(PTAB==='tra'  && x.tra<=0) return false;
+    if(PTAB==='suf'  && !(x.st==='suf'||x.st==='exc')) return false;
+    if(PTAB==='min'  && !x.low) return false;
+    if(fam && x.fam!==fam) return false;
+    if(q && !(x.cod.toUpperCase().includes(q) || (x.r[1]||'').toUpperCase().includes(q))) return false;
+    if(PFILT.sel && !x.on) return false;
+    if(PFILT.nop && x.p) return false;
+    return true;
+  }).sort((a,b)=> (b.on?1:0)-(a.on?1:0) || b.qty*b.p - a.qty*a.p);
+}
+// conteos para las pestañas
+function planCounts(){
+  const N=KITS(), e=ENGINES[curIdx];
+  let all=0,buy=0,mov=0,tra=0,suf=0,min=0;
+  e.items.forEach(r=>{
+    const c=calc(r,N), st=statusOf(r,N);
+    const usaArr=Math.min(c.arr, Math.max(0,c.need-c.alm));
+    all++;
+    if(st==='buy') buy++;
+    if(usaArr>0) mov++;
+    if((r[13]||0)>0) tra++;
+    if(st==='suf'||st==='exc') suf++;
+    if(belowMin(r)) min++;
+  });
+  return {all,buy,mov,tra,suf,min};
 }
 function renderPlan(){
   const N=KITS(), e=ENGINES[curIdx];
+  const K=planCounts();
+  // ----- pestañas de estado -----
+  const TB=[
+    ['all','Todos',           K.all, 'all'],
+    ['buy','A comprar',       K.buy, 'buy'],
+    ['mov','Traslado Arriola',K.mov, 'mov'],
+    ['tra','En tránsito',     K.tra, 'tra'],
+    ['suf','Con stock',       K.suf, 'suf'],
+    ['min','⚠ Bajo mínimo',   K.min, 'min'],
+  ];
+  $('#plTabs').innerHTML=TB.map(([id,lab,n,cls])=>
+    `<span class="ptab ${cls} ${PTAB===id?'on':''}" onclick="setPTab('${id}')">${lab}<span class="n">${n}</span></span>`).join('');
+  // ----- alerta de stock mínimo -----
+  $('#plAlert').innerHTML = K.min>0 && PTAB!=='min'
+    ? `<div class="pl-alert"><div class="ai">⚠</div>
+        <div>Tienes <b>${K.min}</b> ítem(s) por <b>debajo del stock mínimo</b> definido. Conviene reponerlos aunque el kit ya esté cubierto.</div>
+        <button class="go" onclick="setPTab('min')">Ver cuáles</button></div>`
+    : '';
   const rows=planRows();
+  const STL={buy:['buy','Comprar'],mov:['mov','Traslado'],suf:['suf','Cubierto'],exc:['exc','Sobra']};
   const head=`<div class="prow h"><span></span><span>Código</span><span>Descripción</span><span>Categoría</span>
-    <span style="text-align:center">Nec.</span><span style="text-align:center">Stock</span>
+    <span style="text-align:center">Estado</span><span style="text-align:center">Nec.</span>
+    <span style="text-align:center">ALM01</span><span style="text-align:center">Arriola</span>
     <span style="text-align:center">Tránsito</span><span style="text-align:center">Comprar</span>
-    <span style="text-align:center">Precio</span><span style="text-align:right">Subtotal</span></div>`;
+    <span style="text-align:right">Subtotal</span></div>`;
   const body=rows.map(x=>{
-    const c=calc(x.r,N);
-    const sub=x.on ? x.qty*x.p : 0;
+    const c=x.c, sub=x.on? x.qty*x.p : 0;
+    const [scls,slab]=STL[x.st]||['suf','—'];
+    const minTxt = x.r[10]==null
+      ? '<span class="pmin ok">sin mín.</span>'
+      : (x.low ? `<span class="pmin bad">🔴 mín ${x.r[10]}</span>` : `<span class="pmin ok">mín ${x.r[10]}</span>`);
     const hint = x.tra>0 ? `<span class="tra-hint">ya vienen ${x.tra}</span>` : '';
-    return `<div class="prow ${x.on?'':'off'} ${x.tra>0?'hastra':''}">
+    return `<div class="prow ${x.on?'':'off'} ${x.tra>0?'hastra':''} ${x.low?'below':''}">
       <span><input class="pchk" type="checkbox" ${x.on?'checked':''} onchange="togglePlan('${x.cod}',this.checked)"></span>
       <span class="pc">${x.cod}</span>
-      <span class="pd" title="${(x.r[1]||'').replace(/"/g,'')}">${x.r[1]||'—'}</span>
+      <span class="pd" title="${(x.r[1]||'').replace(/"/g,'')}">${x.r[1]||'—'}
+        ${x.p? '<br>'+provTag(x.cod)+' <span style="font-size:10px;color:var(--ink3)">'+money(x.p)+' c/u</span>' : '<br><span class="nd">sin precio</span>'}</span>
       <span class="pfam" title="${x.fam}">${x.fam}</span>
+      <span style="text-align:center"><span class="pst ${scls}">${slab}</span></span>
       <span class="pn">${c.need}</span>
-      <span class="pn stk">${c.alm}</span>
+      <span class="pn stk">${c.alm}${minTxt}</span>
+      <span class="pn arr">${c.arr? c.arr : '<i style="color:#c8cfe0;font-style:normal">—</i>'}${x.usaArr? `<span class="pmin" style="color:#2f6bff;font-weight:700">↦ traes ${x.usaArr}</span>`:''}</span>
       <span class="ptra">${x.tra? `<b>${fmt(x.tra)}</b>${hint}` : '<i>—</i>'}</span>
       <span><input class="qin" type="number" min="0" value="${x.qty}" onchange="setPlanQty('${x.cod}',this.value)"></span>
-      <span class="pn pprice">${x.p? money(x.p)+'<br>'+provTag(x.cod) : '<span class="nd">sin precio</span>'}</span>
       <span class="psub">${x.on && x.p? money(sub) : '—'}</span>
     </div>`;
   }).join('');
-  $('#plBody').innerHTML = rows.length ? head+body : '<div class="act-empty" style="padding:40px">Ningún ítem coincide con los filtros.</div>';
-  // selector de "agregar"
-  const yaEstan=new Set(Object.keys(PLAN));
-  const faltan=e.items.filter(r=>!yaEstan.has(r[0]));
-  $('#plAdd').innerHTML='<option value="">Elegir pieza…</option>'+faltan
+  const vacio = {buy:'No falta comprar nada para estos kits. 🎉', mov:'No hay nada que trasladar de Arriola.',
+    tra:'Ningún ítem tiene unidades en tránsito.', suf:'Ningún ítem está cubierto con el stock actual.',
+    min:'Ningún ítem está por debajo del stock mínimo. 👍', all:'Sin ítems.'}[PTAB];
+  $('#plBody').innerHTML = rows.length ? head+body : `<div class="act-empty" style="padding:44px">${vacio}</div>`;
+  // selector de "agregar" (solo los no seleccionados)
+  const noSel=e.items.filter(r=>!PLAN[r[0]] || !PLAN[r[0]].on);
+  $('#plAdd').innerHTML='<option value="">Elegir pieza…</option>'+noSel
     .sort((a,b)=>(a[1]||'').localeCompare(b[1]||''))
-    .map(r=>`<option value="${r[0]}">${r[0]} · ${(r[1]||'').slice(0,40)} — ${r[14]}</option>`).join('');
+    .map(r=>`<option value="${r[0]}">${r[0]} · ${(r[1]||'').slice(0,38)} — ${r[14]}</option>`).join('');
   // totales
-  const sel=Object.keys(PLAN).filter(c=>PLAN[c].on);
+  const sel=Object.keys(PLAN).filter(c=>PLAN[c].on && PLAN[c].qty>0);
   const uds=sel.reduce((a,c)=>a+PLAN[c].qty,0);
   const tot=sel.reduce((a,c)=>a+PLAN[c].qty*priceOf(c),0);
-  // ahorro potencial por tránsito (lo que aún NO has descontado)
   let ahorro=0, conTra=0;
   sel.forEach(c=>{ const r=itemOf(c); const tra=r?(r[13]||0):0;
     if(tra>0){ conTra++; ahorro += Math.min(PLAN[c].qty, tra) * priceOf(c); } });
@@ -1646,6 +1752,7 @@ function renderPlan(){
     <div class="t"><div class="l">Ítems</div><div class="v">${sel.length}</div></div>
     <div class="t"><div class="l">Unidades</div><div class="v">${fmt(uds)}</div></div>
     ${conTra? `<div class="t save"><div class="l">Ya en tránsito</div><div class="v">${money(ahorro)}</div></div>`:''}
+    ${K.min? `<div class="t"><div class="l">Bajo mínimo</div><div class="v" style="color:#c1292e">${K.min}</div></div>`:''}
     <div class="t big"><div class="l">Total del plan</div><div class="v">${money(tot)}</div></div>`;
 }
 function exportPlan(){

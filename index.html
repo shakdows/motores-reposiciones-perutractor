@@ -698,6 +698,74 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 .out-note div{flex:1;font-size:11.5px;line-height:1.55;color:#8f3237}
 .out-note b{color:#a3242a;display:block;margin-bottom:2px}
 .out-note .on-x{display:block;color:#a05055}
+/* Tarjeta Consolidado (rojo) */
+.ecard.cons{border-color:#f3c9cb;background:#fffafa}
+.ecard.cons:hover{border-color:#e5484d}
+.cons-tag{position:absolute;top:0;left:0;right:0;background:#e5484d;color:#fff;font-size:9px;font-weight:800;
+ letter-spacing:.5px;padding:4px 10px;text-align:center;font-family:'Orbitron';border-radius:14px 14px 0 0;z-index:2}
+.ecard.cons .ec-top{margin-top:16px}
+/* CTA de demanda combinada */
+.comb-cta{display:flex;align-items:center;gap:14px;margin:0 0 18px;padding:14px 18px;border-radius:14px;
+ background:linear-gradient(135deg,#f4f1ff,#eef4ff);border:1px solid #ddd6ff}
+.cc-ic{width:40px;height:40px;border-radius:11px;background:#fff;display:grid;place-items:center;font-size:19px;
+ border:1px solid #ddd6ff;flex:0 0 auto}
+.cc-tx{flex:1;line-height:1.5}
+.cc-tx b{display:block;font-family:'Orbitron';font-size:13px;color:var(--ink)}
+.cc-tx span{font-size:12px;color:var(--ink2)}
+.cc-btn{background:var(--morado);color:#fff;border:none;padding:10px 17px;border-radius:10px;font-weight:700;
+ font-size:12.5px;cursor:pointer;font-family:'Exo 2';white-space:nowrap}
+.cc-btn:hover{background:#5a3fe0}
+.cb-ov{position:fixed;inset:0;z-index:970;background:rgba(18,24,44,.55);backdrop-filter:blur(3px);
+ display:none;align-items:center;justify-content:center;padding:3vh 12px}
+.cb-ov.on{display:flex}
+.cb-box{width:min(1400px,98vw);max-height:94vh;background:#fff;border-radius:18px;display:flex;flex-direction:column;
+ overflow:hidden;border:1px solid var(--line);box-shadow:0 50px 100px -30px rgba(0,0,0,.5);animation:gsIn .2s cubic-bezier(.2,.8,.2,1)}
+.cb-head{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);background:#fafbfe}
+.cb-head h4{font-family:'Orbitron';font-size:14px}
+.cb-head p{font-size:11.5px;color:var(--ink3);margin-top:3px}
+.cb-pick{display:flex;gap:8px;flex-wrap:wrap;padding:13px 18px;border-bottom:1px solid var(--line2);background:#fbfcfe}
+.mchip{display:flex;align-items:center;gap:7px;padding:7px 11px;border-radius:10px;border:1px solid var(--line);
+ background:#fff;font-size:12px;cursor:pointer;user-select:none;transition:.14s}
+.mchip:hover{border-color:var(--morado)}
+.mchip.on{border-color:var(--morado);background:#f4f1ff;color:var(--morado);font-weight:700}
+.mchip.cons{border-color:#f3c9cb;background:#fff5f5;color:#c1292e}
+.mchip.cons.on{background:#fdecec;border-color:#e5484d}
+.mchip input{accent-color:#6d4eff}
+.mchip .kq{width:38px;padding:2px 4px;border:1px solid var(--line);border-radius:6px;text-align:center;
+ font-family:'Orbitron';font-size:11px;background:#fbfcfe}
+.cb-kpis{display:flex;gap:10px;padding:13px 18px;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.cbk{flex:1;min-width:130px;padding:10px 13px;border-radius:11px;border:1px solid var(--line);background:#fbfcfe}
+.cbk .l{font-size:9px;font-family:'Orbitron';text-transform:uppercase;color:var(--ink3);letter-spacing:.4px}
+.cbk .v{font-family:'Orbitron';font-size:17px;font-weight:700;color:var(--ink);margin-top:3px}
+.cbk.buy .v{color:#e5484d} .cbk.rep .v{color:#6d4eff} .cbk.mon .v{color:#0bb89a}
+.cb-bar{display:flex;gap:9px;align-items:center;padding:11px 18px;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.cb-find{flex:0 0 260px;padding:8px 11px;border:1px solid var(--line);border-radius:9px;font-size:12.5px;
+ outline:none;font-family:'Exo 2'}
+.cb-find:focus{border-color:var(--morado)}
+.cb-chk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);cursor:pointer}
+.cb-chk input{accent-color:#6d4eff}
+.cb-wrap{overflow:auto;flex:1;padding:0 18px 18px}
+.cb-t{width:100%;border-collapse:collapse;font-size:12px}
+.cb-t th{position:sticky;top:0;background:#161d33;color:#fff;font-family:'Orbitron';font-size:8.5px;
+ text-transform:uppercase;letter-spacing:.3px;padding:9px 7px;text-align:left;z-index:2;white-space:nowrap}
+.cb-t th.mot{background:#3c4665}
+.cb-t th.buy{background:#5a3fe0}
+.cb-t td{padding:7px;border-bottom:1px solid var(--line2);white-space:nowrap}
+.cb-t td.cod{font-family:'Orbitron';font-weight:600;font-size:11px}
+.cb-t td.dsc{white-space:normal;min-width:190px;color:var(--ink2)}
+.cb-t td.n{text-align:center;font-family:'Orbitron';font-size:11.5px}
+.cb-t td.n.z{color:#c8cfe0}
+.cb-t td.mot{text-align:center;font-family:'Orbitron';font-size:11.5px;background:#f7f9fd}
+.cb-t td.tot{text-align:center;font-family:'Orbitron';font-weight:800;background:#eef1f8}
+.cb-t td.buy{text-align:center;font-family:'Orbitron';font-weight:800;color:#e5484d;background:#fff3f3}
+.cb-t td.buy.z{color:#9fb0c8;background:#f6f8fc;font-weight:400}
+.cb-t td.out{text-align:center;font-family:'Orbitron';color:#c1292e;background:#fff4f4;font-weight:700}
+.cb-t tr:hover td{background:#f4f6fc}
+.cb-t tr.rep td.cod{color:#6d4eff}
+.rep-b{display:inline-block;margin-left:5px;background:#f0ecff;color:#6d4eff;font-size:8.5px;font-weight:800;
+ padding:1px 5px;border-radius:5px;font-family:'Orbitron'}
+.cb-t tfoot td{position:sticky;bottom:0;background:#161d33;color:#fff;font-family:'Orbitron';font-weight:700;
+ padding:9px 7px;font-size:11.5px}
 </style>
 </head>
 <body>
@@ -754,6 +822,14 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 <!-- VISTA LISTA -->
 <section id="viewList">
   <div class="sec-h"><h2>Motores</h2><span class="hint">toca un motor para ver el detalle</span><span class="line"></span><button class="xls-btn solid" onclick="exportCompraTotal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Compra total · Excel</button></div>
+  <div class="comb-cta">
+    <div class="cc-ic">🧮</div>
+    <div class="cc-tx">
+      <b>Demanda combinada</b>
+      <span>Hay piezas que se repiten entre motores. El stock es <b>uno solo</b> — súmalas para no comprar de menos.</span>
+    </div>
+    <button class="cc-btn" onclick="openComb()">Ver cuadro combinado</button>
+  </div>
   <div class="grid" id="engineGrid"></div>
 </section>
 
@@ -854,6 +930,27 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
   </div>
   <div class="brand">Producto <b>VERONIX</b> · <span class="teal">Grima · El dragón caído</span><br>Kits de motores COSTEX/CTP — SAP ALM01 + Arriola</div>
 </footer>
+</div>
+
+<div class="cb-ov" id="cbOv" onclick="if(event.target===this)closeComb()">
+  <div class="cb-box">
+    <div class="cb-head">
+      <div style="flex:1"><h4>Demanda combinada — stock compartido</h4>
+        <p>El stock de ALM01 y Arriola es <b>uno solo</b> para todos los motores. Aquí se suma lo que pide cada uno.</p></div>
+      <button class="pl-x" onclick="closeComb()">✕</button>
+    </div>
+    <div class="cb-pick" id="cbPick"></div>
+    <div class="cb-kpis" id="cbKpis"></div>
+    <div class="cb-bar">
+      <input class="cb-find" id="cbFind" placeholder="Buscar código o descripción…" oninput="renderComb()">
+      <label class="cb-chk"><input type="checkbox" id="cbRep" onchange="renderComb()"> Solo piezas repetidas</label>
+      <label class="cb-chk"><input type="checkbox" id="cbBuy" onchange="renderComb()"> Solo lo que falta comprar</label>
+      <span style="flex:1"></span>
+      <button class="ot-btn gh" onclick="exportComb()">⬇ Excel</button>
+      <button class="ot-btn gh" onclick="pdfComb()">⬇ PDF</button>
+    </div>
+    <div class="cb-wrap"><table class="cb-t" id="cbTable"></table></div>
+  </div>
 </div>
 
 <div class="ot-ov" id="otOv" onclick="if(event.target===this)closeOtros()">
@@ -995,14 +1092,16 @@ function gradFor(g){
 function renderGrid(){
   $('#engineGrid').innerHTML=ENGINES.map((e,i)=>{
     const k=e.kpi, tot=k.items||1, g=gradFor(e.grupo);
+    const esCons = e.id==='CONS';
     const armable=k.kits_principal>0;
     const status = armable
       ? `<div class="ec-status green"><div class="s-ic">${ICON.check}</div><div>Kit armable · <b>${k.kits_principal}</b> completo(s) con stock ALM01</div></div>`
       : `<div class="ec-status red"><div class="s-ic">${ICON.cart}</div><div>Faltan <b>${k.comprar_items}</b> ítems para poder armar el kit</div></div>`;
     const mini=(cls,n,l)=>`<div class="m ${cls}"><div class="n ${n===0?'zero':''}">${n}</div><div class="l">${l}</div></div>`;
-    return `<div class="ecard" style="--grad:${g}" onclick="openEngine(${i})">
+    return `<div class="ecard${esCons?' cons':''}" style="--grad:${esCons?'linear-gradient(135deg,#e5484d,#a3242a)':g}" onclick="openEngine(${i})">
+      ${esCons?`<div class="cons-tag">⚠ NO SUMAR · se solapa con los 4 submotores</div>`:''}
       <div class="ec-top">
-        <div class="ec-avatar" style="--grad:${g}">${e.icon}</div>
+        <div class="ec-avatar" style="--grad:${esCons?'linear-gradient(135deg,#e5484d,#a3242a)':g}">${e.icon}</div>
         <div class="ec-hd">
           <div class="grp">${e.grupo}</div>
           <h3>${e.label.replace('Motor ','')}</h3>
@@ -2234,6 +2333,154 @@ function aplicarPegado(){
   if(excede.length) msg+=`<br><span style="color:#c9821a">⚠ ${excede.length} exceden el stock total (¿ya se vendieron?): ${excede.slice(0,4).join(' · ')}${excede.length>4?'…':''}</span>`;
   $('#otMsg').innerHTML=msg;
   renderOtros(); otTab(1);
+}
+
+
+// ══════════ DEMANDA COMBINADA (stock compartido entre motores) ══════════
+let CB_SEL = {};   // engineId -> kits (0 = no incluido)
+function openComb(){
+  if(!Object.keys(CB_SEL).length){
+    // por defecto: TODOS menos el Consolidado (se solapa con los 4 submotores)
+    ENGINES.forEach(e=>{ CB_SEL[e.id] = (e.id==='CONS') ? 0 : 1; });
+  }
+  $('#cbOv').classList.add('on');
+  renderPick(); renderComb();
+}
+function closeComb(){ $('#cbOv').classList.remove('on'); }
+function cbToggle(id){ CB_SEL[id] = CB_SEL[id] ? 0 : 1; renderPick(); renderComb(); }
+function cbKits(id,v){ CB_SEL[id] = Math.max(0, parseInt(v)||0); renderComb(); }
+function renderPick(){
+  $('#cbPick').innerHTML = ENGINES.map(e=>{
+    const on = CB_SEL[e.id]>0, cons = e.id==='CONS';
+    return `<span class="mchip ${on?'on':''} ${cons?'cons':''}">
+      <input type="checkbox" ${on?'checked':''} onchange="cbToggle('${e.id}')">
+      <span onclick="cbToggle('${e.id}')">${e.label.replace('Motor ','')}${cons?' ⚠':''}</span>
+      ${on? `<input class="kq" type="number" min="1" value="${CB_SEL[e.id]}" onclick="event.stopPropagation()" onchange="cbKits('${e.id}',this.value)" title="kits de este motor">`:''}
+    </span>`;
+  }).join('');
+}
+// Suma la demanda de todos los motores elegidos, contra UN stock compartido
+function combRows(){
+  const map = {};   // cod -> {cod,desc,fam,por:{engId:qty},total, r}
+  ENGINES.forEach(e=>{
+    const n = CB_SEL[e.id]||0; if(!n) return;
+    e.items.forEach(r=>{
+      let m = map[r[0]];
+      if(!m) m = map[r[0]] = {cod:r[0], desc:r[1], fam:r[14]||'Otros', por:{}, total:0, r};
+      const q = r[2]*n;
+      m.por[e.id] = (m.por[e.id]||0) + q;
+      m.total += q;
+      // el stock lo tomamos del registro con más info (mismo código = mismo stock real)
+      if((r[15]||0) > (m.r[15]||0)) m.r = r;
+    });
+  });
+  return Object.values(map).map(m=>{
+    const r=m.r;
+    const alm=r[3]||0, arr=arriolaOf(r), aqp=aqpOf(r), hch=hchOf(r), tra=r[13]||0;
+    const falta   = Math.max(0, m.total - alm);
+    const deArr   = Math.min(arr, falta);
+    const comprar = Math.max(0, falta - arr);
+    const nMot    = Object.keys(m.por).length;
+    return {...m, alm, arr, aqp, hch, tra, deArr, comprar, nMot,
+            precio: priceOf(m.cod)||0};
+  }).sort((a,b)=> b.comprar*b.precio - a.comprar*a.precio || b.nMot-a.nMot);
+}
+function renderComb(){
+  const sel = ENGINES.filter(e=>CB_SEL[e.id]>0);
+  let rows = combRows();
+  const all = rows;
+  const q = ($('#cbFind').value||'').toLowerCase().trim();
+  if($('#cbRep').checked) rows = rows.filter(x=>x.nMot>1);
+  if($('#cbBuy').checked) rows = rows.filter(x=>x.comprar>0);
+  if(q) rows = rows.filter(x=> x.cod.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q));
+  // KPIs
+  const rep   = all.filter(x=>x.nMot>1).length;
+  const buyI  = all.filter(x=>x.comprar>0).length;
+  const buyU  = all.reduce((a,x)=>a+x.comprar,0);
+  const cost  = all.reduce((a,x)=>a+x.comprar*x.precio,0);
+  const trasl = all.reduce((a,x)=>a+x.deArr,0);
+  $('#cbKpis').innerHTML = [
+    ['','Motores incluidos', sel.length+' de '+ENGINES.length],
+    ['rep','Piezas repetidas', fmt(rep)],
+    ['buy','Ítems a comprar', fmt(buyI)],
+    ['buy','Unidades a comprar', fmt(buyU)],
+    ['','Traer de Arriola', fmt(trasl)],
+    ['mon','Costo total', money(cost)],
+  ].map(([c,l,v])=>`<div class="cbk ${c}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
+  // Tabla
+  const th = `<thead><tr>
+    <th>Código</th><th>Descripción</th><th>Categoría</th>
+    ${sel.map(e=>`<th class="mot" title="${e.label}">${e.label.replace('Motor ','')}</th>`).join('')}
+    <th class="buy">TOTAL NECESITA</th>
+    <th>ALM01</th><th>Arriola</th><th>Arequipa</th><th>Huachipa</th><th>Tránsito</th>
+    <th>Traer Arriola</th><th class="buy">A COMPRAR</th><th class="buy">P. UNIT.</th><th>Subtotal</th>
+  </tr></thead>`;
+  const tb = rows.map(x=>`<tr class="${x.nMot>1?'rep':''}">
+    <td class="cod">${x.cod}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
+    <td class="dsc">${x.desc||'—'}</td>
+    <td class="dsc" style="color:var(--ink3);min-width:auto">${x.fam}</td>
+    ${sel.map(e=>`<td class="mot ${x.por[e.id]?'':'z'}">${x.por[e.id]||'·'}</td>`).join('')}
+    <td class="tot">${fmt(x.total)}</td>
+    <td class="n ${x.alm?'':'z'}">${x.alm||'·'}</td>
+    <td class="${x.arr?'out':'n z'}">${x.arr||'·'}</td>
+    <td class="${x.aqp?'out':'n z'}">${x.aqp||'·'}</td>
+    <td class="${x.hch?'out':'n z'}">${x.hch||'·'}</td>
+    <td class="n ${x.tra?'':'z'}">${x.tra||'·'}</td>
+    <td class="n ${x.deArr?'':'z'}" style="${x.deArr?'color:#2f6bff;font-weight:700':''}">${x.deArr||'·'}</td>
+    <td class="buy ${x.comprar?'':'z'}">${x.comprar||'·'}</td>
+    <td class="buy ${x.precio?'':'z'}">${x.precio?money(x.precio):'—'}</td>
+    <td class="n">${x.comprar&&x.precio?money(x.comprar*x.precio):'·'}</td>
+  </tr>`).join('');
+  const totC = rows.reduce((a,x)=>a+x.comprar*x.precio,0);
+  const tf = `<tfoot><tr>
+    <td colspan="${3+sel.length}">${rows.length} ítem(s)${rows.length!==all.length?` de ${all.length}`:''}</td>
+    <td style="text-align:center">${fmt(rows.reduce((a,x)=>a+x.total,0))}</td>
+    <td colspan="6"></td>
+    <td style="text-align:center">${fmt(rows.reduce((a,x)=>a+x.comprar,0))}</td>
+    <td></td><td style="text-align:center">${money(totC)}</td>
+  </tr></tfoot>`;
+  $('#cbTable').innerHTML = th + '<tbody>' + (rows.length? tb :
+    `<tr><td colspan="${13+sel.length}" style="padding:40px;text-align:center;color:var(--ink3)">Sin resultados.</td></tr>`) + '</tbody>' + tf;
+}
+function combHeaderRows(){
+  const sel = ENGINES.filter(e=>CB_SEL[e.id]>0);
+  let rows = combRows();
+  if($('#cbRep').checked) rows = rows.filter(x=>x.nMot>1);
+  if($('#cbBuy').checked) rows = rows.filter(x=>x.comprar>0);
+  const cu = CUR==='USD'?'USD':'PEN', k = CUR==='USD'?1:tc();
+  const header = ['Código SAP','Descripción','Categoría','En cuántos motores',
+    ...sel.map(e=>`${e.label} (×${CB_SEL[e.id]} kit)`),
+    'TOTAL NECESITA','Stock ALM01','En Arriola (trasladable)','Arequipa (no trasl.)','Huachipa (no trasl.)',
+    'En tránsito','Traer de Arriola','A COMPRAR',`PRECIO UNITARIO (${cu})`,`SUBTOTAL (${cu})`];
+  const body = rows.map(x=>[x.cod, x.desc||'', x.fam, x.nMot,
+    ...sel.map(e=>x.por[e.id]||0),
+    x.total, x.alm, x.arr, x.aqp, x.hch, x.tra, x.deArr, x.comprar,
+    x.precio? +(x.precio*k).toFixed(2):'', x.precio? +(x.precio*x.comprar*k).toFixed(2):'']);
+  const tot = rows.reduce((a,x)=>a+x.comprar*x.precio,0)*k;
+  body.push([...new Array(3+sel.length).fill(''),'TOTAL','','','','','','',
+    rows.reduce((a,x)=>a+x.comprar,0),'',+tot.toFixed(2)]);
+  return {header, body, rows, sel, tot, cu};
+}
+function exportComb(){
+  const {header, body, rows, sel, tot, cu} = combHeaderRows();
+  if(!rows.length){_toast('No hay filas que exportar.');return;}
+  const nombres = sel.map(e=>e.label.replace('Motor ','')+' ×'+CB_SEL[e.id]).join(' + ');
+  _descargar(header, body, 'Demanda combinada',
+    `Demanda_combinada_${sel.length}motores_${new Date().toISOString().slice(0,10)}.xls`,
+    'DEMANDA COMBINADA — STOCK COMPARTIDO',
+    `Peru Tractor S.R.L. · ${nombres} · ${rows.length} ítems · Total ${cu==='USD'?'US$':'S/'} ${fmt(+tot.toFixed(2))} · Generado ${new Date().toISOString().slice(0,10)}`);
+}
+function pdfComb(){
+  const {header, body, rows, sel, tot, cu} = combHeaderRows();
+  if(!rows.length){_toast('No hay filas que exportar.');return;}
+  const rep = rows.filter(x=>x.nMot>1).length;
+  _pdf('DEMANDA COMBINADA — STOCK COMPARTIDO',
+    sel.map(e=>e.label.replace('Motor ','')+' ×'+CB_SEL[e.id]).join(' + '),
+    [['Motores', sel.length],['Piezas repetidas', rep],
+     ['Ítems a comprar', rows.filter(x=>x.comprar>0).length],
+     ['Unidades', fmt(rows.reduce((a,x)=>a+x.comprar,0))],
+     ['Costo total', money(tot)]],
+    header, body, 'Demanda_combinada.pdf');
 }
 
 </script>

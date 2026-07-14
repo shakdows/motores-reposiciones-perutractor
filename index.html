@@ -766,6 +766,18 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
  padding:1px 5px;border-radius:5px;font-family:'Orbitron'}
 .cb-t tfoot td{position:sticky;bottom:0;background:#161d33;color:#fff;font-family:'Orbitron';font-weight:700;
  padding:9px 7px;font-size:11.5px}
+.cb-view{display:flex;gap:4px;background:#f1f4fb;padding:3px;border-radius:10px;border:1px solid var(--line)}
+.cv-t{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink2);white-space:nowrap}
+.cv-t.on{background:#fff;color:var(--morado);box-shadow:0 1px 3px rgba(20,30,60,.08)}
+.cb-t.res td{padding:9px 10px;font-size:13px}
+.cb-t.res td.cod{font-size:12.5px}
+.cb-t.res th{padding:10px;font-size:9px}
+.cb-t.res td.qty{text-align:center;font-family:'Orbitron';font-weight:800;font-size:15px;color:#e5484d;background:#fff3f3}
+.cb-t.res td.pu{text-align:right;font-family:'Orbitron';font-weight:700;font-size:13px;background:#fff8ec}
+.cb-t.res td.sub{text-align:right;font-family:'Orbitron';font-weight:800;font-size:13.5px;color:var(--ink)}
+.cb-t.res td.mots{font-size:11px;color:var(--ink3)}
+.mot-p{display:inline-block;background:#eef1f8;border:1px solid var(--line);color:var(--ink2);font-size:9.5px;
+ font-weight:700;padding:2px 6px;border-radius:5px;margin:1px 3px 1px 0;font-family:'Orbitron'}
 </style>
 </head>
 <body>
@@ -942,9 +954,13 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
     <div class="cb-pick" id="cbPick"></div>
     <div class="cb-kpis" id="cbKpis"></div>
     <div class="cb-bar">
+      <div class="cb-view">
+        <span class="cv-t on" id="cvT1" onclick="cbView('resumen')">🛒 Resumen de compra</span>
+        <span class="cv-t" id="cvT2" onclick="cbView('detalle')">📋 Detalle completo</span>
+      </div>
       <input class="cb-find" id="cbFind" placeholder="Buscar código o descripción…" oninput="renderComb()">
-      <label class="cb-chk"><input type="checkbox" id="cbRep" onchange="renderComb()"> Solo piezas repetidas</label>
-      <label class="cb-chk"><input type="checkbox" id="cbBuy" onchange="renderComb()"> Solo lo que falta comprar</label>
+      <label class="cb-chk"><input type="checkbox" id="cbRep" checked onchange="renderComb()"> Solo piezas repetidas</label>
+      <label class="cb-chk"><input type="checkbox" id="cbBuy" checked onchange="renderComb()"> Solo lo que falta comprar</label>
       <span style="flex:1"></span>
       <button class="ot-btn gh" onclick="exportComb()">⬇ Excel</button>
       <button class="ot-btn gh" onclick="pdfComb()">⬇ PDF</button>
@@ -2338,6 +2354,13 @@ function aplicarPegado(){
 
 // ══════════ DEMANDA COMBINADA (stock compartido entre motores) ══════════
 let CB_SEL = {};   // engineId -> kits (0 = no incluido)
+let CB_VIEW = 'resumen';
+function cbView(v){
+  CB_VIEW=v;
+  $('#cvT1').classList.toggle('on', v==='resumen');
+  $('#cvT2').classList.toggle('on', v==='detalle');
+  renderComb();
+}
 function openComb(){
   if(!Object.keys(CB_SEL).length){
     // por defecto: TODOS menos el Consolidado (se solapa con los 4 submotores)
@@ -2407,7 +2430,37 @@ function renderComb(){
     ['','Traer de Arriola', fmt(trasl)],
     ['mon','Costo total', money(cost)],
   ].map(([c,l,v])=>`<div class="cbk ${c}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
-  // Tabla
+  // ══ TABLA ══
+  if(CB_VIEW==='resumen'){
+    const th = `<thead><tr>
+      <th>Código SAP</th><th>Descripción</th><th>En qué motores</th>
+      <th class="buy">TOTAL A COMPRAR</th><th class="buy">PRECIO UNITARIO</th><th class="buy">TOTAL</th>
+    </tr></thead>`;
+    const tb = rows.map(x=>`<tr class="${x.nMot>1?'rep':''}">
+      <td class="cod">${x.cod}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
+      <td class="dsc">${x.desc||'—'}</td>
+      <td class="mots">${Object.keys(x.por).map(id=>{
+          const e=ENGINES.find(y=>y.id===id);
+          return `<span class="mot-p">${e.label.replace('Motor ','')} · ${x.por[id]}</span>`;
+        }).join('')}</td>
+      <td class="qty">${fmt(x.comprar)}</td>
+      <td class="pu">${x.precio? money(x.precio) : '<span style="color:#c8cfe0">sin precio</span>'}</td>
+      <td class="sub">${x.precio? money(x.comprar*x.precio) : '—'}</td>
+    </tr>`).join('');
+    const totU = rows.reduce((a,x)=>a+x.comprar,0);
+    const totC = rows.reduce((a,x)=>a+x.comprar*x.precio,0);
+    const tf = `<tfoot><tr>
+      <td colspan="3">${rows.length} código(s)${rows.length!==all.length?` de ${all.length}`:''}</td>
+      <td style="text-align:center">${fmt(totU)}</td><td></td>
+      <td style="text-align:right">${money(totC)}</td>
+    </tr></tfoot>`;
+    $('#cbTable').className='cb-t res';
+    $('#cbTable').innerHTML = th + '<tbody>' + (rows.length? tb :
+      '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--ink3)">Sin resultados.</td></tr>') + '</tbody>' + tf;
+    return;
+  }
+  // ── vista DETALLE ──
+  $('#cbTable').className='cb-t';
   const th = `<thead><tr>
     <th>Código</th><th>Descripción</th><th>Categoría</th>
     ${sel.map(e=>`<th class="mot" title="${e.label}">${e.label.replace('Motor ','')}</th>`).join('')}
@@ -2447,7 +2500,24 @@ function combHeaderRows(){
   let rows = combRows();
   if($('#cbRep').checked) rows = rows.filter(x=>x.nMot>1);
   if($('#cbBuy').checked) rows = rows.filter(x=>x.comprar>0);
+  const q = ($('#cbFind').value||'').toLowerCase().trim();
+  if(q) rows = rows.filter(x=> x.cod.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q));
   const cu = CUR==='USD'?'USD':'PEN', k = CUR==='USD'?1:tc();
+  const tot = rows.reduce((a,x)=>a+x.comprar*x.precio,0)*k;
+  const uds = rows.reduce((a,x)=>a+x.comprar,0);
+
+  if(CB_VIEW==='resumen'){
+    const header=['Código SAP','Descripción','En cuántos motores','En qué motores',
+      'TOTAL A COMPRAR',`PRECIO UNITARIO (${cu})`,`TOTAL (${cu})`];
+    const body=rows.map(x=>[x.cod, x.desc||'', x.nMot,
+      Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);
+        return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · '),
+      x.comprar,
+      x.precio? +(x.precio*k).toFixed(2) : '',
+      x.precio? +(x.precio*x.comprar*k).toFixed(2) : '']);
+    body.push(['','','','TOTAL', uds, '', +tot.toFixed(2)]);
+    return {header, body, rows, sel, tot, uds, cu};
+  }
   const header = ['Código SAP','Descripción','Categoría','En cuántos motores',
     ...sel.map(e=>`${e.label} (×${CB_SEL[e.id]} kit)`),
     'TOTAL NECESITA','Stock ALM01','En Arriola (trasladable)','Arequipa (no trasl.)','Huachipa (no trasl.)',
@@ -2456,31 +2526,34 @@ function combHeaderRows(){
     ...sel.map(e=>x.por[e.id]||0),
     x.total, x.alm, x.arr, x.aqp, x.hch, x.tra, x.deArr, x.comprar,
     x.precio? +(x.precio*k).toFixed(2):'', x.precio? +(x.precio*x.comprar*k).toFixed(2):'']);
-  const tot = rows.reduce((a,x)=>a+x.comprar*x.precio,0)*k;
-  body.push([...new Array(3+sel.length).fill(''),'TOTAL','','','','','','',
-    rows.reduce((a,x)=>a+x.comprar,0),'',+tot.toFixed(2)]);
-  return {header, body, rows, sel, tot, cu};
+  body.push([...new Array(3+sel.length).fill(''),'TOTAL','','','','','','', uds,'',+tot.toFixed(2)]);
+  return {header, body, rows, sel, tot, uds, cu};
 }
 function exportComb(){
   const {header, body, rows, sel, tot, cu} = combHeaderRows();
   if(!rows.length){_toast('No hay filas que exportar.');return;}
   const nombres = sel.map(e=>e.label.replace('Motor ','')+' ×'+CB_SEL[e.id]).join(' + ');
-  _descargar(header, body, 'Demanda combinada',
-    `Demanda_combinada_${sel.length}motores_${new Date().toISOString().slice(0,10)}.xls`,
-    'DEMANDA COMBINADA — STOCK COMPARTIDO',
+  const esRes = CB_VIEW==='resumen';
+  _descargar(header, body, esRes?'Resumen de compra':'Demanda combinada',
+    `${esRes?'Resumen_compra':'Demanda_combinada'}_${sel.length}motores_${new Date().toISOString().slice(0,10)}.xls`,
+    esRes? 'RESUMEN DE COMPRA — CÓDIGOS REPETIDOS ENTRE MOTORES' : 'DEMANDA COMBINADA — STOCK COMPARTIDO',
     `Peru Tractor S.R.L. · ${nombres} · ${rows.length} ítems · Total ${cu==='USD'?'US$':'S/'} ${fmt(+tot.toFixed(2))} · Generado ${new Date().toISOString().slice(0,10)}`);
 }
 function pdfComb(){
-  const {header, body, rows, sel, tot, cu} = combHeaderRows();
+  const {header, body, rows, sel, tot, uds, cu} = combHeaderRows();
   if(!rows.length){_toast('No hay filas que exportar.');return;}
   const rep = rows.filter(x=>x.nMot>1).length;
-  _pdf('DEMANDA COMBINADA — STOCK COMPARTIDO',
-    sel.map(e=>e.label.replace('Motor ','')+' ×'+CB_SEL[e.id]).join(' + '),
-    [['Motores', sel.length],['Piezas repetidas', rep],
-     ['Ítems a comprar', rows.filter(x=>x.comprar>0).length],
-     ['Unidades', fmt(rows.reduce((a,x)=>a+x.comprar,0))],
-     ['Costo total', money(tot)]],
-    header, body, 'Demanda_combinada.pdf');
+  const nombres = sel.map(e=>e.label.replace('Motor ','')+' ×'+CB_SEL[e.id]).join(' + ');
+  const esRes = CB_VIEW==='resumen';
+  // firma correcta: _pdf(header, rows, filename, titulo, sub, resumen)
+  _pdf(header, body, (esRes?'Resumen_compra_':'Demanda_combinada_')+sel.length+'motores',
+    esRes? 'RESUMEN DE COMPRA — CÓDIGOS REPETIDOS ENTRE MOTORES' : 'DEMANDA COMBINADA — STOCK COMPARTIDO',
+    `Peru Tractor S.R.L. · ${nombres}`,
+    [['Motores', String(sel.length)],
+     ['Piezas repetidas', String(rep)],
+     ['Ítems a comprar', String(rows.filter(x=>x.comprar>0).length)],
+     ['Unidades a comprar', fmt(uds!=null?uds:rows.reduce((a,x)=>a+x.comprar,0))],
+     ['Costo total', money(tot)]]);
 }
 
 </script>

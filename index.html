@@ -687,6 +687,17 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 .ot-alert .go{background:#d93a3f;color:#fff;border:none;padding:7px 13px;border-radius:8px;font-size:11.5px;
  font-weight:700;cursor:pointer;font-family:"Exo 2";white-space:nowrap}
 .ot-alert .go:hover{background:#c1292e}
+/* Stock fuera de ALM01: rojo + verificación */
+.stat.fuera{background:#fff2f2;border-color:#f3c9cb}
+.stat.fuera .v{color:#c1292e;font-weight:800}
+.stat.fuera .k{color:#c1656a}
+.out-note{display:flex;gap:9px;align-items:flex-start;margin-top:9px;padding:9px 11px;border-radius:10px;
+ background:#fff4f4;border:1px solid #f5cfd1}
+.out-note .on-i{width:20px;height:20px;border-radius:6px;background:#f7d8d9;color:#a3242a;
+ display:grid;place-items:center;font-size:11px;flex:0 0 auto;margin-top:1px}
+.out-note div{flex:1;font-size:11.5px;line-height:1.55;color:#8f3237}
+.out-note b{color:#a3242a;display:block;margin-bottom:2px}
+.out-note .on-x{display:block;color:#a05055}
 </style>
 </head>
 <body>
@@ -1174,6 +1185,21 @@ function arow(kind,r){
   const uds = kind==='c'? compra : kind==='t'? usaArr : kind==='e'? sobra : need;
   const money2 = p ? `<b>${money(p*uds)}</b>${money(p)} c/u ${provTag(r[0])}` : `<span class="np">sin precio</span>`;
   const stat=(v,k,mut)=>`<div class="stat"><span class="v${mut?' muted':''}">${fmt(v)}</span><span class="k">${k}</span></div>`;
+  // Stock FUERA de ALM01 -> rojo, hay que verificarlo antes de decidir
+  const statOut=(v,k,tip)=>`<div class="stat fuera" title="${tip}"><span class="v">${fmt(v)}</span><span class="k">${k}</span></div>`;
+  const aqp=c.aqp, hch=c.hch;
+  const chipsFuera =
+      (arr? statOut(arr,'en Arriola','Otro almacén: confirmar que exista en físico antes de contar con él'):'') +
+      (aqp? statOut(aqp,'en Arequipa','Arequipa: no se puede trasladar por la distancia'):'') +
+      (hch? statOut(hch,'en Huachipa','Huachipa: no se puede trasladar por la distancia'):'');
+  const notaFuera = (arr||aqp||hch)
+    ? `<div class="out-note">
+         <span class="on-i">⚠</span>
+         <div><b>Stock fuera de ALM01 — verificar antes de decidir.</b>
+           ${aqp||hch? `<span class="on-x">${aqp?`Arequipa (${aqp})`:''}${aqp&&hch?' y ':''}${hch?`Huachipa (${hch})`:''} no se puede${(aqp&&hch)?'n':''} mover por la distancia — no cuenta${(aqp&&hch)?'n':''} para el kit.</span>`:''}
+           ${arr? `<span class="on-x">Arriola (${arr}): confirmar que exista en físico. Consultar antes de dar por hecho el traslado.</span>`:''}
+         </div>
+       </div>` : '';
   const statMin = smin!=null
     ? `<div class="stat ${alm<smin?'below':''}"><span class="v">${fmt(smin)}</span><span class="k">stock mín.</span></div>`
     : `<div class="stat nd-stat" title="Falta información"><span class="v">?</span><span class="k">falta info</span></div>`;
@@ -1184,7 +1210,7 @@ function arow(kind,r){
       <div class="ar-stats">
         ${stat(need, N>1 ? 'necesita ('+N+' kits)' : 'necesita')}
         ${stat(alm,'tienes (ALM01)',alm===0)}
-        ${stat(arr,'en Arriola',arr===0)}
+        ${chipsFuera}
         ${statMin}
         ${tra? `<div class="stat transito" title="Unidades ya pedidas, en camino"><span class="v">${fmt(tra)}</span><span class="k">en tránsito</span></div>`:''}
         <div class="stat flagstat"><span class="v">${flagBadge(r[11],'Comerciable')}</span><span class="k">comerciable</span></div>
@@ -1193,6 +1219,7 @@ function arow(kind,r){
       <div class="cov">
         ${covBar}
         <div class="cov-txt">${seg.join('')}${aviso}</div>
+        ${notaFuera}
       </div>
     </div>
     <div class="ar-right">

@@ -776,6 +776,12 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 .cb-t.res td.pu{text-align:right;font-family:'Orbitron';font-weight:700;font-size:13px;background:#fff8ec}
 .cb-t.res td.sub{text-align:right;font-family:'Orbitron';font-weight:800;font-size:13.5px;color:var(--ink)}
 .cb-t.res td.mots{font-size:11px;color:var(--ink3)}
+.cb-t.res th.al2{background:#2f6bff}
+.cb-t.res td.alc{text-align:center;font-family:'Orbitron';font-weight:700;font-size:11.5px}
+.cb-t.res td.alc.ok{color:#0bb89a;background:#eafaf5}
+.cb-t.res td.alc.no{color:#e5484d;background:#fff3f3}
+.cb-t.res td.buy2{text-align:center;font-family:'Orbitron';font-weight:800;font-size:15px;color:#e5484d;background:#fff3f3}
+.cb-t.res td.buy2.z{color:#c8cfe0;background:#f7f9fd;font-weight:400}
 .mot-p{display:inline-block;background:#eef1f8;border:1px solid var(--line);color:var(--ink2);font-size:9.5px;
  font-weight:700;padding:2px 6px;border-radius:5px;margin:1px 3px 1px 0;font-family:'Orbitron'}
 </style>
@@ -948,7 +954,7 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
   <div class="cb-box">
     <div class="cb-head">
       <div style="flex:1"><h4>Demanda combinada — stock compartido</h4>
-        <p>El stock de ALM01 y Arriola es <b>uno solo</b> para todos los motores. Aquí se suma lo que pide cada uno.</p></div>
+        <p>Una misma pieza la usan varios motores, pero tu stock es <b>uno solo</b>. Si armas un motor, esa pieza ya no está para el otro — por eso <b>NECESITA TOTAL</b> suma lo de todos, y <b>COMPRAR</b> es lo que falta para que alcance para <b>todos</b>.</p></div>
       <button class="pl-x" onclick="closeComb()">✕</button>
     </div>
     <div class="cb-pick" id="cbPick"></div>
@@ -2433,30 +2439,42 @@ function renderComb(){
   // ══ TABLA ══
   if(CB_VIEW==='resumen'){
     const th = `<thead><tr>
-      <th>Código SAP</th><th>Descripción</th><th>En qué motores</th>
-      <th class="buy">TOTAL A COMPRAR</th><th class="buy">PRECIO UNITARIO</th><th class="buy">TOTAL</th>
+      <th>Código SAP</th><th>Descripción</th><th>Reparto por motor</th>
+      <th class="buy">NECESITA TOTAL</th><th>TIENES</th><th class="al2">ALCANZA / FALTA</th>
+      <th class="buy">COMPRAR</th><th class="buy">P. UNIT.</th><th class="buy">TOTAL</th>
     </tr></thead>`;
-    const tb = rows.map(x=>`<tr class="${x.nMot>1?'rep':''}">
-      <td class="cod">${x.cod}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
-      <td class="dsc">${x.desc||'—'}</td>
-      <td class="mots">${Object.keys(x.por).map(id=>{
-          const e=ENGINES.find(y=>y.id===id);
-          return `<span class="mot-p">${e.label.replace('Motor ','')} · ${x.por[id]}</span>`;
-        }).join('')}</td>
-      <td class="qty">${fmt(x.comprar)}</td>
-      <td class="pu">${x.precio? money(x.precio) : '<span style="color:#c8cfe0">sin precio</span>'}</td>
-      <td class="sub">${x.precio? money(x.comprar*x.precio) : '—'}</td>
-    </tr>`).join('');
+    const tb = rows.map(x=>{
+      const disp = x.alm + x.arr;            // lo realmente usable (ALM01 + Arriola)
+      const cubre = Math.min(disp, x.total); // cuánto de la demanda queda cubierto
+      const falta = Math.max(0, x.total - disp);
+      const alcanza = falta===0;
+      return `<tr class="${x.nMot>1?'rep':''}">
+        <td class="cod">${x.cod}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
+        <td class="dsc">${x.desc||'—'}</td>
+        <td class="mots">${Object.keys(x.por).map(id=>{
+            const e=ENGINES.find(y=>y.id===id);
+            return `<span class="mot-p">${e.label.replace('Motor ','')} · ${x.por[id]}</span>`;
+          }).join('')}</td>
+        <td class="qty">${fmt(x.total)}</td>
+        <td class="n ${disp?'':'z'}">${disp||'·'}</td>
+        <td class="alc ${alcanza?'ok':'no'}">${alcanza? '✓ alcanza' : '−'+fmt(falta)}</td>
+        <td class="buy2 ${x.comprar?'':'z'}">${x.comprar? fmt(x.comprar):'·'}</td>
+        <td class="pu">${x.precio? money(x.precio) : '<span style="color:#c8cfe0">sin precio</span>'}</td>
+        <td class="sub">${x.precio? money(x.comprar*x.precio) : '—'}</td>
+      </tr>`;
+    }).join('');
     const totU = rows.reduce((a,x)=>a+x.comprar,0);
+    const totN = rows.reduce((a,x)=>a+x.total,0);
     const totC = rows.reduce((a,x)=>a+x.comprar*x.precio,0);
     const tf = `<tfoot><tr>
       <td colspan="3">${rows.length} código(s)${rows.length!==all.length?` de ${all.length}`:''}</td>
+      <td style="text-align:center">${fmt(totN)}</td><td colspan="2"></td>
       <td style="text-align:center">${fmt(totU)}</td><td></td>
       <td style="text-align:right">${money(totC)}</td>
     </tr></tfoot>`;
     $('#cbTable').className='cb-t res';
     $('#cbTable').innerHTML = th + '<tbody>' + (rows.length? tb :
-      '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--ink3)">Sin resultados.</td></tr>') + '</tbody>' + tf;
+      '<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--ink3)">Sin resultados.</td></tr>') + '</tbody>' + tf;
     return;
   }
   // ── vista DETALLE ──
@@ -2507,15 +2525,20 @@ function combHeaderRows(){
   const uds = rows.reduce((a,x)=>a+x.comprar,0);
 
   if(CB_VIEW==='resumen'){
-    const header=['Código SAP','Descripción','En cuántos motores','En qué motores',
-      'TOTAL A COMPRAR',`PRECIO UNITARIO (${cu})`,`TOTAL (${cu})`];
-    const body=rows.map(x=>[x.cod, x.desc||'', x.nMot,
-      Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);
-        return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · '),
-      x.comprar,
-      x.precio? +(x.precio*k).toFixed(2) : '',
-      x.precio? +(x.precio*x.comprar*k).toFixed(2) : '']);
-    body.push(['','','','TOTAL', uds, '', +tot.toFixed(2)]);
+    const header=['Código SAP','Descripción','En cuántos motores','Reparto por motor',
+      'NECESITA TOTAL','TIENES (ALM01+Arriola)','FALTA','A COMPRAR',
+      `PRECIO UNITARIO (${cu})`,`TOTAL (${cu})`];
+    const body=rows.map(x=>{
+      const disp=x.alm+x.arr, falta=Math.max(0,x.total-disp);
+      return [x.cod, x.desc||'', x.nMot,
+        Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);
+          return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · '),
+        x.total, disp, falta, x.comprar,
+        x.precio? +(x.precio*k).toFixed(2) : '',
+        x.precio? +(x.precio*x.comprar*k).toFixed(2) : ''];
+    });
+    const totN=rows.reduce((a,x)=>a+x.total,0);
+    body.push(['','','','TOTAL', totN, '', '', uds, '', +tot.toFixed(2)]);
     return {header, body, rows, sel, tot, uds, cu};
   }
   const header = ['Código SAP','Descripción','Categoría','En cuántos motores',

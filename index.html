@@ -550,7 +550,7 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
   <div class="cost-panel">
     <div class="cost-head">
       <div class="ch-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-      <div class="ch-t"><h4>Costeo de reposición</h4><p>Elige cuántos kits quieres reponer — recalcula qué falta comprar y cuánto cuesta.</p></div>
+      <div class="ch-t"><h4>Costeo de reposición</h4><p>Elige cuántos kits quieres reponer — <b>recalcula todo el motor</b>: listas, cantidades y costo.</p></div>
       <div>
         <span class="kit-lbl">Objetivo</span>
         <div class="cur-tog">
@@ -562,7 +562,7 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
         <span class="kit-lbl">Kits a reponer</span>
         <div class="kit-step">
           <button onclick="setKits(-1)">−</button>
-          <input id="kitQty" type="number" min="1" max="99" value="1" oninput="renderCost()">
+          <input id="kitQty" type="number" min="1" max="99" value="1" oninput="refreshEngine()">
           <button onclick="setKits(1)">+</button>
         </div>
       </div>
@@ -719,28 +719,41 @@ function openEngine(i){
   $('#dTitle').textContent=e.label;
   const warn = e.id==='CONS' ? ' · <span class="warn-need">⚠ cantidades por confirmar (Cantidad pendiente)</span>' : '';
   $('#dMeta').innerHTML=`${e.grupo} · ${e.coti!=='—'?'Cotización <b>'+e.coti+'</b> · ':''}${k.items} ítems en el kit${warn}`;
-  // dKpis
-  $('#dKpis').innerHTML=[
-    ['k','Kits armables','val',k.kits_principal,'con stock principal'],
-    ['c','Ítems a comprar','',k.comprar_items,fmt(k.comprar_uds)+' unidades'],
-    ['t','Trasladar de Arriola','',k.trasl_items,fmt(k.trasl_uds)+' unidades'],
-    ['e','Ítems en exceso','',k.exceso_items,fmt(k.exceso_uds)+' uds sobrantes'],
-    ['s','Suficientes','',k.suf_items,'ya cubiertos en ALM01'],
-  ].map(([c,l,_,v,s])=>`<div class="dk ${c}"><div class="lab">${l}</div><div class="val">${fmt(v)}</div><div class="sub">${s}</div></div>`).join('');
-  // tabs
-  $('#dTabs').innerHTML=TABS.map(([id,lab])=>{
-    let c=0; const it=e.items;
-    if(id==='all')c=it.length; else if(id==='C')c=it.filter(r=>r[7]>0).length;
-    else if(id==='T')c=it.filter(r=>r[6]>0).length; else if(id==='E')c=it.filter(r=>r[4]<0).length;
-    else if(id==='S')c=it.filter(r=>r[8]==='S').length;
-    return `<div class="tab ${id===curTab?'active':''}" onclick="setTab('${id}')">${lab} <span class="c">(${c})</span></div>`;
-  }).join('');
   $('#dSearch').value='';
   $('#aiOut').classList.add('hidden'); $('#aiOut').textContent='';
   $('#viewList').classList.add('hidden');
   $('#viewDetail').classList.remove('hidden');
   window.scrollTo({top:0,behavior:'smooth'});
-  renderActions(); drawChart(); renderCost();
+  refreshEngine();
+}
+// Recalcula KPIs, pestañas, listas, gráfico y costeo para los N kits vigentes
+function refreshEngine(){
+  const e=ENGINES[curIdx], N=KITS();
+  const C=e.items.map(r=>calc(r,N));
+  const comprar=C.filter(c=>c.comprar>0), trasl=C.filter(c=>c.trasl>0);
+  const exceso =C.filter(c=>c.exceso>0);
+  const suf    =C.filter(c=>c.comprar===0&&c.trasl===0&&c.exceso===0);
+  const kitsArmables = Math.min(...e.items.map(r=> r[2]>0 ? Math.floor(r[3]/r[2]) : 999));
+  const sfx = N>1 ? ` · para <b>${N}</b> kits` : '';
+  $('#dKpis').innerHTML=[
+    ['k','Kits armables',kitsArmables,'con stock principal'],
+    ['c','Ítems a comprar',comprar.length,fmt(comprar.reduce((a,c)=>a+c.comprar,0))+' unidades'],
+    ['t','Trasladar de Arriola',trasl.length,fmt(trasl.reduce((a,c)=>a+c.trasl,0))+' unidades'],
+    ['e','Ítems en exceso',exceso.length,fmt(exceso.reduce((a,c)=>a+c.exceso,0))+' uds sobrantes'],
+    ['s','Suficientes',suf.length,'justo cubiertos'],
+  ].map(([c,l,v,s])=>`<div class="dk ${c}"><div class="lab">${l}</div><div class="val">${fmt(v)}</div><div class="sub">${s}</div></div>`).join('');
+  $('#dTabs').innerHTML=TABS.map(([id,lab])=>{
+    let n=0;
+    if(id==='all')n=e.items.length;
+    else if(id==='C')n=comprar.length; else if(id==='T')n=trasl.length;
+    else if(id==='E')n=exceso.length; else if(id==='S')n=suf.length;
+    return `<div class="tab ${id===curTab?'active':''}" onclick="setTab('${id}')">${lab} <span class="c">(${n})</span></div>`;
+  }).join('');
+  const warn = e.id==='CONS' ? ' · <span class="warn-need">⚠ cantidades por confirmar</span>' : '';
+  $('#dMeta').innerHTML=`${e.grupo} · ${e.kpi.items} ítems en el kit${sfx}${warn}`;
+  renderActions();
+  drawChart(comprar.length,trasl.length,exceso.length,suf.length);
+  renderCost();
 }
 function setTab(id){curTab=id;
   document.querySelectorAll('#dTabs .tab').forEach(t=>t.classList.remove('active'));
@@ -761,10 +774,10 @@ function ssort(id,k,ev){
 }
 // valor de orden según sección
 function svalue(id,r){
-  const s=SSORT[id];
+  const s=SSORT[id], c=calc(r,KITS());
   if(s.k==='cod') return r[0];
   if(s.k==='desc') return (r[1]||'').toUpperCase();
-  return id==='c' ? r[7] : id==='t' ? r[6] : id==='e' ? (r[3]-r[2]) : r[3];  // qty
+  return id==='c' ? c.comprar : id==='t' ? c.trasl : id==='e' ? c.exceso : c.alm;  // qty
 }
 function sortSec(id, rows){
   const d = SSORT[id].d==='asc'?1:-1;
@@ -775,12 +788,24 @@ function sortSec(id, rows){
   });
 }
 function toggleSec(id){collapsed[id]=!collapsed[id];renderActions();}
+// N.º de kits vigente (gobierna TODA la vista del motor)
+function KITS(){ const v=parseInt(($('#kitQty')||{}).value)||1; return Math.max(1,v); }
+// Recalcula un ítem para N kits
+function calc(r,N){
+  const need=r[2]*N, alm=r[3], arr=r[5];
+  const falta   = Math.max(0, need-alm);
+  const trasl   = Math.min(arr, falta);
+  const comprar = Math.max(0, falta-arr);
+  const exceso  = Math.max(0, alm-need);
+  return {need,alm,arr,falta,trasl,comprar,exceso};
+}
 function arow(kind,r){
-  const need=r[2], alm=r[3], arr=r[5], comprar=r[7], trasl=r[6], rep=r[4];
+  const N=KITS(), c=calc(r,N);
+  const need=c.need, alm=c.alm, arr=c.arr;
   let act;
-  if(kind==='c')      act=`<div class="ar-act c"><span>Comprar</span><b>${comprar}</b></div>`;
-  else if(kind==='t') act=`<div class="ar-act t"><span>Traer de Arriola</span><b>${trasl}</b></div>`;
-  else if(kind==='e') act=`<div class="ar-act e"><span>Te sobran</span><b>${fmt(-rep)}</b></div>`;
+  if(kind==='c')      act=`<div class="ar-act c"><span>Comprar</span><b>${c.comprar}</b></div>`;
+  else if(kind==='t') act=`<div class="ar-act t"><span>Traer de Arriola</span><b>${c.trasl}</b></div>`;
+  else if(kind==='e') act=`<div class="ar-act e"><span>Te sobran</span><b>${fmt(c.exceso)}</b></div>`;
   else                act=`<div class="ar-act s"><span>Cubierto</span><b>✓</b></div>`;
   const stat=(v,k,mut)=>`<div class="stat"><span class="v${mut?' muted':''}">${fmt(v)}</span><span class="k">${k}</span></div>`;
   const smin=r[10];
@@ -792,7 +817,7 @@ function arow(kind,r){
     <div class="ar-main">
       <div class="ar-name">${r[1]||'—'}</div>
       <div class="ar-stats">
-        ${stat(need,'necesita')}
+        ${stat(need, N>1 ? 'necesita ('+N+' kits)' : 'necesita')}
         ${stat(alm,'tienes (ALM01)',alm===0)}
         ${stat(arr,'en Arriola',arr===0)}
         ${statMin}
@@ -834,11 +859,11 @@ function section(id,cls,icon,title,desc,rows,render,forceOpen){
 function renderActions(){
   const e=ENGINES[curIdx]; const q=($('#dSearch').value||'').trim().toUpperCase();
   const match=r=> !q || r[0].toUpperCase().includes(q) || (r[1]||'').toUpperCase().includes(q);
-  const it=e.items.filter(match);
-  const comprar=it.filter(r=>r[7]>0);
-  const trasl  =it.filter(r=>r[6]>0);
-  const exceso =it.filter(r=>r[3]>r[2]);
-  const suf    =it.filter(r=>r[8]==='S'&&r[4]>=0&&r[7]===0&&r[6]===0);
+  const it=e.items.filter(match); const N=KITS();
+  const comprar=it.filter(r=>calc(r,N).comprar>0);
+  const trasl  =it.filter(r=>calc(r,N).trasl>0);
+  const exceso =it.filter(r=>calc(r,N).exceso>0);
+  const suf    =it.filter(r=>{const c=calc(r,N);return c.comprar===0&&c.trasl===0&&c.exceso===0;});
   const show = t => curTab==='all' || curTab===t;
   let out='';
   if(show('C')) out+=section('c','on-c',ICON.cart,'Comprar','Ítems que no hay ni en ALM01 ni en Arriola',
@@ -852,14 +877,13 @@ function renderActions(){
   $('#actWrap').innerHTML=out||'<div class="act-sec"><div class="act-empty">No hay ítems que coincidan con la búsqueda.</div></div>';
 }
 // DONUT Chart.js
-function drawChart(){
+function drawChart(nc,nt,ne,ns){
   const e=ENGINES[curIdx],k=e.kpi;
-  const comprar=k.comprar_items, trasl=k.trasl_items, exceso=k.exceso_items;
-  const sufNeto=Math.max(0,k.suf_items - exceso); // suficientes sin exceso
-  const data=[comprar,trasl,exceso,sufNeto];
+  const data=[nc||0,nt||0,ne||0,ns||0];
   const labs=['Comprar','Trasladar de Arriola','En exceso','Suficiente (justo)'];
   const cols=['#e5484d','#2f6bff','#f5a623','#0bb89a'];
-  $('#chartHint').textContent=`${k.items} ítems del kit de ${e.label}, clasificados por acción.`;
+  const N=KITS();
+  $('#chartHint').textContent=`${k.items} ítems del kit de ${e.label}, clasificados por acción${N>1?' para '+N+' kits':''}.`;
   if(chart)chart.destroy();
   chart=new Chart($('#donut'),{type:'doughnut',
     data:{labels:labs,datasets:[{data,backgroundColor:cols,borderWidth:2,borderColor:'#fff'}]},
@@ -1002,7 +1026,7 @@ function priceOf(cod){
 }
 function setKits(d){
   const i=$('#kitQty'); let v=(parseInt(i.value)||1)+d;
-  i.value=Math.min(99,Math.max(1,v)); renderCost();
+  i.value=Math.min(99,Math.max(1,v)); refreshEngine();
 }
 function setCur(c){
   CUR=c; $('#curUSD').classList.toggle('on',c==='USD'); $('#curPEN').classList.toggle('on',c==='PEN');
@@ -1208,30 +1232,32 @@ function exportSec(id, ev){
   const e=ENGINES[curIdx], q=($('#dSearch').value||'').trim().toUpperCase();
   const match=r=> !q || r[0].toUpperCase().includes(q) || (r[1]||'').toUpperCase().includes(q);
   const it=e.items.filter(match);
+  const N=KITS();
   let rows, titulo, accion;
-  if(id==='c'){ rows=it.filter(r=>r[7]>0); titulo='Comprar';           accion='A COMPRAR'; }
-  else if(id==='t'){ rows=it.filter(r=>r[6]>0); titulo='Traer de Arriola'; accion='TRASLADAR DE ARRIOLA'; }
-  else if(id==='e'){ rows=it.filter(r=>r[3]>r[2]); titulo='En exceso';   accion='UNIDADES QUE SOBRAN'; }
-  else { rows=it.filter(r=>r[8]==='S'&&r[7]===0&&r[6]===0); titulo='Suficiente'; accion='STOCK ALM01'; }
+  if(id==='c'){ rows=it.filter(r=>calc(r,N).comprar>0); titulo='Comprar';           accion='A COMPRAR'; }
+  else if(id==='t'){ rows=it.filter(r=>calc(r,N).trasl>0); titulo='Traer de Arriola'; accion='TRASLADAR DE ARRIOLA'; }
+  else if(id==='e'){ rows=it.filter(r=>calc(r,N).exceso>0); titulo='En exceso';   accion='UNIDADES QUE SOBRAN'; }
+  else { rows=it.filter(r=>{const c=calc(r,N);return c.comprar===0&&c.trasl===0&&c.exceso===0;}); titulo='Suficiente'; accion='STOCK ALM01'; }
   if(!rows.length){ _toast('No hay ítems en "'+titulo+'".'); return; }
   rows = sortSec(id, rows);   // mismo orden que en pantalla
   const b = r => PRICEBOOK[r[0]] || {};
-  const header=['Motor','Código SAP','Código de cambio (USE)','Descripción','Necesita (1 kit)','Stock ALM01','En Arriola','Stock mínimo','En tránsito (pedido)','Comerciable','¿Comprar?',accion,'Precio unit. (USD)','Subtotal (USD)','Fuente precio'];
+  const header=['Motor','Kits a reponer','Código SAP','Código de cambio (USE)','Descripción','Necesita ('+N+' kit'+(N>1?'s':'')+')','Stock ALM01','En Arriola','Stock mínimo','En tránsito (pedido)','Comerciable','¿Comprar?',accion,'Precio unit. (USD)','Subtotal (USD)','Fuente precio'];
   const body=rows.map(r=>{
-    const val = id==='c'? r[7] : id==='t'? r[6] : id==='e'? (r[3]-r[2]) : r[3];
+    const c=calc(r,N);
+    const val = id==='c'? c.comprar : id==='t'? c.trasl : id==='e'? c.exceso : c.alm;
     const p = priceOf(r[0]), bb=b(r);
-    const cobra = (id==='c') ? p*r[7] : '';
-    return [e.label, r[0], (bb.chain? bb.chain+' → '+bb.sup : (bb.sup||'')), r[1], r[2], r[3], r[5],
+    const cobra = (id==='c') ? p*c.comprar : '';
+    return [e.label, N, r[0], (bb.chain? bb.chain+' → '+bb.sup : (bb.sup||'')), r[1], c.need, r[3], r[5],
             (r[10]!=null? r[10] : 'FALTA INFO'), (r[13]||0), (r[11]||'—'), (r[12]||'—'), val,
             p? +p.toFixed(2):'', cobra? +cobra.toFixed(2):'',
             bb.src==='CTP'? ('Cotización CTP ('+(bb.kind||'NET')+') · '+(bb.ref||'')) : bb.src==='SR'?'Cotización Seven Roads':bb.src==='SAP'?'SAP (lista)':'sin precio'];
   });
   if(id==='c'){
-    const tot=rows.reduce((a,r)=>a+priceOf(r[0])*r[7],0);
-    body.push(['','','','','','','','','','','','TOTAL','',+tot.toFixed(2),'']);
+    const tot=rows.reduce((a,r)=>a+priceOf(r[0])*calc(r,N).comprar,0);
+    body.push(['','','','','','','','','','','','','TOTAL','',+tot.toFixed(2),'']);
   }
   const sn = titulo.replace(/[^\w áéíóúÁÉÍÓÚñÑ]/g,'');
-  _descargar(header, body, sn, `${sn.replace(/\s+/g,'_')}_${e.label.replace('Motor ','')}_${_hoy()}.xls`);
+  _descargar(header, body, sn, `${sn.replace(/\s+/g,'_')}_${e.label.replace('Motor ','')}_${N}kit${N>1?'s':''}_${_hoy()}.xls`);
 }
 
 </script>

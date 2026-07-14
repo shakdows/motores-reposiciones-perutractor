@@ -1175,17 +1175,39 @@ function _toast(msg){
   t.textContent=msg;t.className='show';
   clearTimeout(window._tt);window._tt=setTimeout(()=>t.className='',2600);
 }
-function _descargar(header, rows, sheetName, filename){
+// proveedores con datos (para una columna de precio por proveedor)
+function provList(){
+  const s=new Set();
+  Object.values(PRICEBOOK).forEach(b=>(b.offers||[]).forEach(o=>s.add(o.prov)));
+  const orden=['COSTEX','Seven Roads','SAP'];
+  return [...s].sort((a,b)=>{const ia=orden.indexOf(a),ib=orden.indexOf(b);
+    return (ia<0?99:ia)-(ib<0?99:ib);});
+}
+function priceBy(cod,prov){
+  const b=PRICEBOOK[cod]; if(!b||!b.offers) return '';
+  const o=b.offers.find(o=>o.prov===prov);
+  return o? o.usd : '';
+}
+function provHdr(prov,cu){
+  return prov==='SAP' ? `PRECIO UNITARIO · SAP (referencia, ${cu})`
+                      : `PRECIO UNITARIO · PROVEEDOR ${prov.toUpperCase()} (${cu})`;
+}
+function _descargar(header, rows, sheetName, filename, titulo, sub){
   try{
+    const NC=header.length;
+    const tit = titulo ? `<tr><td colspan="${NC}" style="background:#161d33;color:#ffffff;font-size:22pt;font-weight:bold;height:42pt;vertical-align:middle;padding:10px">${_esc(titulo)}</td></tr>` : '';
+    const sb  = sub ? `<tr><td colspan="${NC}" style="background:#eef1f8;color:#3c4665;font-size:10pt;padding:6px">${_esc(sub)}</td></tr>` : '';
+    const gap = titulo ? `<tr><td colspan="${NC}" style="height:6pt;border:none"></td></tr>` : '';
     let html='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">'+
       '<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>'+
       '<x:Name>'+_esc(sheetName)+'</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>'+
       '</x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>'+
-      '<table border="1" cellspacing="0" cellpadding="4"><thead><tr>'+
-      header.map(hh=>`<th style="background:#161d33;color:#fff;font-weight:bold;text-align:left">${_esc(hh)}</th>`).join('')+
+      '<table border="1" cellspacing="0" cellpadding="4">'+ tit + sb + gap +
+      '<thead><tr>'+
+      header.map(hh=>`<th style="background:#161d33;color:#fff;font-weight:bold;text-align:left;vertical-align:middle">${_esc(hh)}</th>`).join('')+
       '</tr></thead><tbody>'+
       rows.map((r,i)=>`<tr style="background:${i%2?'#f4f6fc':'#ffffff'}">`+
-        r.map((c,j)=>`<td${(typeof c==='number')?' style="mso-number-format:\'0\'"':''}>${_esc(c)}</td>`).join('')+
+        r.map((c,j)=>`<td${(typeof c==='number')?' style="mso-number-format:\'0.00\'"':''}>${_esc(c)}</td>`).join('')+
         '</tr>').join('')+
       '</tbody></table></body></html>';
     const blob=new Blob(['\ufeff'+html],{type:'application/vnd.ms-excel;charset=utf-8'});
@@ -1448,18 +1470,28 @@ function exportCosteo(){
   const e=ENGINES[curIdx], N=parseInt($('#kitQty').value)||1, rows=costRows();
   if(!rows.length){_toast('No hay nada que comprar para '+N+' kit(s).');return;}
   const cu = CUR==='USD'?'USD':'PEN', k = CUR==='USD'?1:tc();
-  const tcNote = CUR==='USD' ? '' : ' (T.C. SUNAT venta '+tc()+')';
-  const header=['Motor','Kits a reponer','Código SAP','Código de cambio (USE)','Descripción','Necesita ('+N+' kits)','Stock ALM01','En Arriola','A COMPRAR','Stock mínimo','En tránsito (pedido)','Comerciable','¿Comprar?','Precio unit. ('+cu+')'+tcNote,'Subtotal ('+cu+')','Fuente precio','Disponibilidad'];
+  const PRV=provList();
+  const header=['Código SAP','Código de cambio (USE)','Descripción','Categoría',
+    'Necesita ('+N+' kit'+(N>1?'s':'')+')','Stock ALM01','En Arriola','En tránsito (pedido)','Stock mínimo',
+    'Comerciable','¿Comprar?','A COMPRAR',
+    ...PRV.map(p=>provHdr(p,cu)),
+    'PRECIO ELEGIDO ('+cu+')','SUBTOTAL ('+cu+')','Disponibilidad'];
   const body=rows.map(x=>{
-    const p=priceOf(x.cod), b=PRICEBOOK[x.cod]||{src:''};
-    return [e.label,N,x.cod,(b.chain? b.chain+' → '+b.sup : (b.sup||'')),x.desc,x.need,x.alm,x.arr,x.comprar,(x.smin!=null?x.smin:'FALTA INFO'),(x.tra||0),(x.com||'—'),(x.buy||'—'),
-            p?+(p*k).toFixed(2):'', p?+(p*x.comprar*k).toFixed(2):'',
-            PRICE_OVR[x.cod]!==undefined?'Manual':(()=>{const o=offerOf(x.cod);return o? o.prov+(o.kind?' ('+o.kind+')':'')+(o.ref?' · '+o.ref:'') : 'sin precio';})(),
-            (()=>{const o=offerOf(x.cod);return o? (o.st||'') : '';})()];
+    const b=PRICEBOOK[x.cod]||{}, p=priceOf(x.cod), o=offerOf(x.cod), r=itemOf(x.cod)||[];
+    return [x.cod, (b.chain? b.chain+' → '+b.sup : (b.sup||'')), x.desc, r[14]||'',
+      x.need, x.alm, x.arr, (x.tra||0), (x.smin!=null?x.smin:'FALTA INFO'),
+      (x.com||'—'), (x.buy||'—'), x.comprar,
+      ...PRV.map(pr=>{const v=priceBy(x.cod,pr); return v===''?'':+(v*k).toFixed(2);}),
+      p?+(p*k).toFixed(2):'', p?+(p*x.comprar*k).toFixed(2):'',
+      o?(o.st||''):''];
   });
   const tot=rows.reduce((a,x)=>a+priceOf(x.cod)*x.comprar,0)*k;
-  body.push(['','','','','','','','','','','','','TOTAL','',+tot.toFixed(2),'','']);
-  _descargar(header, body, 'Costeo', `Costeo_${e.label}_${N}kits_${_hoy()}.xls`);
+  const pad=new Array(PRV.length).fill('');
+  body.push(['','','','','','','','','','','TOTAL','',...pad,'',+tot.toFixed(2),'']);
+  const tcTxt = CUR==='USD' ? '' : ` · T.C. SUNAT venta ${tc()}`;
+  const titulo=`${e.label.toUpperCase()}  —  COSTEO DE REPOSICIÓN`;
+  const sub=`Peru Tractor S.R.L. · ${N} kit${N>1?'s':''} a reponer · ${rows.length} ítems · ${fmt(rows.reduce((a,x)=>a+x.comprar,0))} unidades · Total ${money(tot/k)}${tcTxt} · Generado ${_hoy()}`;
+  _descargar(header, body, 'Costeo', `Costeo_${e.label.replace('Motor ','')}_${N}kit${N>1?'s':''}_${_hoy()}.xls`, titulo, sub);
 }
 
 
@@ -1546,25 +1578,33 @@ function exportSec(id, ev){
   else if(id==='e'){ rows=it.filter(r=>calc(r,N).exceso>0); titulo='En exceso';   accion='UNIDADES QUE SOBRAN'; }
   else { rows=it.filter(r=>{const c=calc(r,N);return c.comprar===0&&c.trasl===0&&c.exceso===0;}); titulo='Suficiente'; accion='STOCK ALM01'; }
   if(!rows.length){ _toast('No hay ítems en "'+titulo+'".'); return; }
-  rows = sortSec(id, rows);   // mismo orden que en pantalla
-  const b = r => PRICEBOOK[r[0]] || {};
-  const header=['Motor','Kits a reponer','Código SAP','Código de cambio (USE)','Descripción','Necesita ('+N+' kit'+(N>1?'s':'')+')','Stock ALM01','En Arriola','Stock mínimo','En tránsito (pedido)','Comerciable','¿Comprar?',accion,'Precio unit. (USD)','Subtotal (USD)','Fuente precio'];
+  rows = sortSec(id, rows);
+  const PRV=provList();
+  const header=['Código SAP','Código de cambio (USE)','Descripción','Categoría',
+    'Necesita ('+N+' kit'+(N>1?'s':'')+')','Stock ALM01','En Arriola','En tránsito (pedido)','Stock mínimo',
+    'Comerciable','¿Comprar?',accion,
+    ...PRV.map(p=>provHdr(p,'USD')),
+    'PRECIO ELEGIDO (USD)','SUBTOTAL (USD)'];
   const body=rows.map(r=>{
-    const c=calc(r,N);
+    const c=calc(r,N), bb=PRICEBOOK[r[0]]||{}, p=priceOf(r[0]);
     const val = id==='c'? c.comprar : id==='t'? c.trasl : id==='e'? c.exceso : c.alm;
-    const p = priceOf(r[0]), bb=b(r);
-    const cobra = (id==='c') ? p*c.comprar : '';
-    return [e.label, N, r[0], (bb.chain? bb.chain+' → '+bb.sup : (bb.sup||'')), r[1], c.need, r[3], r[5],
-            (r[10]!=null? r[10] : 'FALTA INFO'), (r[13]||0), (r[11]||'—'), (r[12]||'—'), val,
-            p? +p.toFixed(2):'', cobra? +cobra.toFixed(2):'',
-            (()=>{const o=offerOf(r[0]);return PRICE_OVR[r[0]]!==undefined?'Manual':(o? o.prov+(o.kind?' ('+o.kind+')':'')+(o.ref?' · '+o.ref:'') : 'sin precio');})()];
+    return [r[0], (bb.chain? bb.chain+' → '+bb.sup : (bb.sup||'')), r[1], r[14]||'',
+      c.need, r[3], r[5], (r[13]||0), (r[10]!=null? r[10] : 'FALTA INFO'),
+      (r[11]||'—'), (r[12]||'—'), val,
+      ...PRV.map(pr=>{const v=priceBy(r[0],pr); return v===''?'':v;}),
+      p? +p.toFixed(2):'', p? +(p*val).toFixed(2):''];
   });
-  if(id==='c'){
-    const tot=rows.reduce((a,r)=>a+priceOf(r[0])*calc(r,N).comprar,0);
-    body.push(['','','','','','','','','','','','','TOTAL','',+tot.toFixed(2),'']);
-  }
+  const tot=rows.reduce((a,r)=>{const c=calc(r,N);
+    const v = id==='c'? c.comprar : id==='t'? c.trasl : id==='e'? c.exceso : c.alm;
+    return a+priceOf(r[0])*v;},0);
+  const pad=new Array(PRV.length).fill('');
+  body.push(['','','','','','','','','','','TOTAL','',...pad,'',+tot.toFixed(2)]);
+  const uds=rows.reduce((a,r)=>{const c=calc(r,N);
+    return a+(id==='c'? c.comprar : id==='t'? c.trasl : id==='e'? c.exceso : c.alm);},0);
+  const big=`${e.label.toUpperCase()}  —  ${titulo.toUpperCase()}`;
+  const sub=`Peru Tractor S.R.L. · ${N} kit${N>1?'s':''} · ${rows.length} ítems · ${fmt(uds)} unidades · Valorizado ${money(tot)} · Generado ${_hoy()}`;
   const sn = titulo.replace(/[^\w áéíóúÁÉÍÓÚñÑ]/g,'');
-  _descargar(header, body, sn, `${sn.replace(/\s+/g,'_')}_${e.label.replace('Motor ','')}_${N}kit${N>1?'s':''}_${_hoy()}.xls`);
+  _descargar(header, body, sn, `${sn.replace(/\s+/g,'_')}_${e.label.replace('Motor ','')}_${N}kit${N>1?'s':''}_${_hoy()}.xls`, big, sub);
 }
 
 
@@ -1760,19 +1800,31 @@ function exportPlan(){
   const sel=Object.keys(PLAN).filter(c=>PLAN[c].on && PLAN[c].qty>0);
   if(!sel.length){ _toast('No hay ítems seleccionados en el plan.'); return; }
   const cu=CUR==='USD'?'USD':'PEN', k=CUR==='USD'?1:tc();
-  const header=['Motor','Kits','Código SAP','Código de cambio (USE)','Descripción','Categoría',
-    'Necesita ('+N+' kit'+(N>1?'s':'')+')','Stock ALM01','En Arriola','En tránsito (pedido)','Stock mínimo',
-    'Comerciable','¿Comprar?','CANTIDAD A COMPRAR','Precio unit. ('+cu+')','Subtotal ('+cu+')','Fuente precio'];
+  const PRV=provList();
+  const STL={buy:'A comprar',mov:'Traslado Arriola',suf:'Cubierto',exc:'Sobra'};
+  const header=['Código SAP','Código de cambio (USE)','Descripción','Categoría','Estado',
+    'Necesita ('+N+' kit'+(N>1?'s':'')+')','Stock ALM01','En Arriola','En tránsito (pedido)',
+    'Stock mínimo','¿Bajo mínimo?','Comerciable','¿Comprar?','CANTIDAD A COMPRAR',
+    ...PRV.map(p=>provHdr(p,cu)),
+    'PRECIO ELEGIDO ('+cu+')','SUBTOTAL ('+cu+')'];
   const body=sel.map(c=>{
     const r=itemOf(c), b=PRICEBOOK[c]||{}, q=PLAN[c].qty, p=priceOf(c), cc=calc(r,N);
-    return [e.label,N,c,(b.chain? b.chain+' → '+b.sup : (b.sup||'')),r[1],r[14],
-      cc.need,r[3],r[5],(r[13]||0),(r[10]!=null?r[10]:'FALTA INFO'),(r[11]||'—'),(r[12]||'—'),q,
-      p?+(p*k).toFixed(2):'', p?+(p*q*k).toFixed(2):'',
-      (()=>{const o=offerOf(c);return PRICE_OVR[c]!==undefined?'Manual':(o? o.prov+(o.kind?' ('+o.kind+')':'')+(o.ref?' · '+o.ref:'') : 'sin precio');})()];
+    return [c, (b.chain? b.chain+' → '+b.sup : (b.sup||'')), r[1], r[14]||'', STL[statusOf(r,N)]||'',
+      cc.need, r[3], r[5], (r[13]||0),
+      (r[10]!=null?r[10]:'FALTA INFO'), (belowMin(r)?'SÍ ⚠':'no'),
+      (r[11]||'—'), (r[12]||'—'), q,
+      ...PRV.map(pr=>{const v=priceBy(c,pr); return v===''?'':+(v*k).toFixed(2);}),
+      p?+(p*k).toFixed(2):'', p?+(p*q*k).toFixed(2):''];
   });
   const tot=sel.reduce((a,c)=>a+PLAN[c].qty*priceOf(c),0)*k;
-  body.push(['','','','','','','','','','','','','TOTAL','',+tot.toFixed(2),'']);
-  _descargar(header, body, 'Plan de compra', `Plan_compra_${e.label.replace('Motor ','')}_${N}kit${N>1?'s':''}_${_hoy()}.xls`);
+  const uds=sel.reduce((a,c)=>a+PLAN[c].qty,0);
+  const bajo=sel.filter(c=>belowMin(itemOf(c))).length;
+  const pad=new Array(PRV.length).fill('');
+  body.push(['','','','','','','','','','','','','TOTAL','',...pad,'',+tot.toFixed(2)]);
+  const tcTxt = CUR==='USD' ? '' : ` · T.C. SUNAT venta ${tc()}`;
+  const titulo=`${e.label.toUpperCase()}  —  PLAN DE COMPRA`;
+  const sub=`Peru Tractor S.R.L. · ${N} kit${N>1?'s':''} · ${sel.length} ítems · ${fmt(uds)} unidades · ${bajo} bajo stock mínimo · Total ${money(tot/k)}${tcTxt} · Generado ${_hoy()}`;
+  _descargar(header, body, 'Plan de compra', `Plan_compra_${e.label.replace('Motor ','')}_${N}kit${N>1?'s':''}_${_hoy()}.xls`, titulo, sub);
 }
 
 </script>

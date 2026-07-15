@@ -388,6 +388,11 @@ td.num{text-align:center;font-variant-numeric:tabular-nums}
 .mk.cm-NO{background:#fde8e8;color:#c0392b}
 .mk.cm-DUDA{background:#fff3d6;color:#9a6b00}
 .mk.cm-1VENTA{background:#e8ecff;color:#4a3fd0}
+.zchip{display:inline-block;font-size:8.5px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:6px;font-family:'Orbitron';vertical-align:middle}
+.zchip.zf{background:#d9f2e6;color:#0a7a52}
+.zchip.mia{background:#e8f0ff;color:#2f6bff}
+.zchip.sap{background:#eee;color:#888}
+.zchip.man{background:#fdecc8;color:#8a5a12}
 .sup-badge.chain{background:#efe9ff;color:#5a3ee0;border-color:#c9bcff}
 .sup-badge i{font-style:normal;font-size:9px}
 .sup-badge{font-family:'Orbitron';font-size:10px;font-weight:700;background:#fff3dd;color:#a56a12;border:1px solid #f5cf8a;padding:3px 7px;border-radius:7px;white-space:nowrap}
@@ -1671,7 +1676,10 @@ function provTag(cod){
   const b=PRICEBOOK[cod]||{offers:[]}, o=offerOf(cod);
   if(!o) return '';
   const nprov=(b.offers||[]).filter(x=>x.tipo==='prov').length;
-  const lbl=o.prov + (o.kind? ' · '+o.kind : (o.tipo==='ref'?' · ref':''));
+  let provName=o.prov;
+  if(o.prov==='COSTEX ZF') provName='COSTEX · Zona Franca (solo marítimo)';
+  else if(o.prov==='COSTEX') provName='COSTEX · Zona Miami (aéreo o marítimo)';
+  const lbl=provName + (o.kind? ' · '+o.kind : (o.tipo==='ref'?' · ref':''));
   const esMejor = b.best>=0 && b.offers[b.best]===o;
   const star = (nprov>1 && esMejor) ? '<i class="star" title="Mejor precio">★</i>' : '';
   const cmp = nprov>1 ? `<span class="cmpb" onclick="event.stopPropagation();cmpProv('${cod}')" title="Comparar ${nprov} proveedores">⇄ ${nprov}</span>` : '';
@@ -2515,6 +2523,25 @@ function comerOf(r){
   if(s==='1 VENTA'||s==='1VENTA') return '1 VENTA';
   return s;   // cualquier otro valor, tal cual
 }
+// zona del precio elegido: Zona Franca (marítimo) o Zona Miami (aéreo)
+function zonaOf(cod){
+  if(PRICE_OVR && PRICE_OVR[cod]!==undefined) return 'MAN';
+  const o=offerOf(cod); if(!o) return '';
+  if(o.prov==='COSTEX ZF') return 'ZF';
+  if(o.prov==='COSTEX')    return 'MIA';
+  if(o.prov==='SAP')       return 'SAP';
+  return 'SR';
+}
+function zonaTxt(z){
+  return z==='ZF'?'Zona Franca (solo marítimo)':z==='MIA'?'Zona Miami (aéreo o marítimo)':z==='SAP'?'SAP ref':z==='MAN'?'Manual':'';
+}
+function zonaChip(z){
+  if(z==='ZF')  return '<span class="zchip zf" title="Zona Franca · SOLO se puede traer por vía marítima">🚢 Z.Franca · solo marítimo</span>';
+  if(z==='MIA') return '<span class="zchip mia" title="Zona Miami · se puede traer por aéreo o marítimo">✈🚢 Z.Miami · aéreo o marítimo</span>';
+  if(z==='SAP') return '<span class="zchip sap" title="Precio referencial SAP">SAP</span>';
+  if(z==='MAN') return '<span class="zchip man" title="Precio manual">Manual</span>';
+  return '';
+}
 function combRows(){
   const map = {};   // cod -> {cod,desc,fam,por:{engId:qty},total, r}
   ENGINES.forEach(e=>{
@@ -2538,7 +2565,7 @@ function combRows(){
     const nMot    = Object.keys(m.por).length;
     return {...m, alm, arr, aqp, hch, tra, deArr, comprar, nMot,
             precio: priceOf(m.cod)||0,
-            marca: marcaOf(m.cod), oem: oemOf(m.cod), comer: comerOf(r)};
+            marca: marcaOf(m.cod), oem: oemOf(m.cod), comer: comerOf(r), zona: zonaOf(m.cod)};
   }).sort((a,b)=> b.comprar*b.precio - a.comprar*a.precio || b.nMot-a.nMot);
 }
 function renderComb(){
@@ -2594,7 +2621,7 @@ function renderComb(){
           <td class="dsc">${x.desc||'—'}</td>
           <td class="mots">${reparto}</td>
           <td class="buy2">${fmt(q)}</td>
-          <td class="pu">${x.precio? money(x.precio) : '<span style="color:#c8cfe0">sin precio</span>'}</td>
+          <td class="pu">${x.precio? money(x.precio)+zonaChip(x.zona) : '<span style="color:#c8cfe0">sin precio</span>'}</td>
           <td class="sub">${x.precio? money(q*x.precio) : '—'}</td>
         </tr>`;
       }
@@ -2606,7 +2633,7 @@ function renderComb(){
         <td class="n ${disp?'':'z'}">${disp||'·'}</td>
         <td class="alc ${alcanza?'ok':'no'}">${alcanza? '✓ alcanza' : '−'+fmt(falta)}</td>
         <td class="buy2 ${x.comprar?'':'z'}">${x.comprar? fmt(x.comprar):'·'}</td>
-        <td class="pu">${x.precio? money(x.precio) : '<span style="color:#c8cfe0">sin precio</span>'}</td>
+        <td class="pu">${x.precio? money(x.precio)+zonaChip(x.zona) : '<span style="color:#c8cfe0">sin precio</span>'}</td>
         <td class="sub">${x.precio? money(x.comprar*x.precio) : '—'}</td>
       </tr>`;
     }).join('');
@@ -2681,21 +2708,22 @@ function combHeaderRows(){
     const KIT = $('#cbKit') && $('#cbKit').checked;
     if(KIT){
       const header=['Código SAP','Marca','Tipo','Comerciable','Descripción','En cuántos motores','Reparto por motor',
-        'CANTIDAD NECESARIA',`PRECIO UNITARIO (${cu})`,`TOTAL (${cu})`];
+        'CANTIDAD NECESARIA',`PRECIO UNITARIO (${cu})`,'Zona precio',`TOTAL (${cu})`];
       const body=rows.map(x=>[x.cod, x.marca, x.oem||'', x.comer||'', x.desc||'', x.nMot,
         Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);
           return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · '),
         x.total,
         x.precio? +(x.precio*k).toFixed(2) : '',
+        zonaTxt(x.zona),
         x.precio? +(x.precio*x.total*k).toFixed(2) : '']);
       const totN=rows.reduce((a,x)=>a+x.total,0);
       const totKit=rows.reduce((a,x)=>a+x.total*x.precio,0)*k;
-      body.push(['','','','','','','TOTAL KIT', totN, '', +totKit.toFixed(2)]);
+      body.push(['','','','','','','TOTAL KIT', totN, '', '', +totKit.toFixed(2)]);
       return {header, body, rows, sel, tot:totKit, uds:totN, cu, kit:true};
     }
     const header=['Código SAP','Marca','Tipo','Comerciable','Descripción','En cuántos motores','Reparto por motor',
       'NECESITA TOTAL','TIENES (ALM01+Arriola)','FALTA','A COMPRAR',
-      `PRECIO UNITARIO (${cu})`,`TOTAL (${cu})`];
+      `PRECIO UNITARIO (${cu})`,'Zona precio',`TOTAL (${cu})`];
     const body=rows.map(x=>{
       const disp=x.alm+x.arr, falta=Math.max(0,x.total-disp);
       return [x.cod, x.marca, x.oem||'', x.comer||'', x.desc||'', x.nMot,
@@ -2703,10 +2731,11 @@ function combHeaderRows(){
           return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · '),
         x.total, disp, falta, x.comprar,
         x.precio? +(x.precio*k).toFixed(2) : '',
+        zonaTxt(x.zona),
         x.precio? +(x.precio*x.comprar*k).toFixed(2) : ''];
     });
     const totN=rows.reduce((a,x)=>a+x.total,0);
-    body.push(['','','','','','','TOTAL', totN, '', '', uds, '', +tot.toFixed(2)]);
+    body.push(['','','','','','','TOTAL', totN, '', '', uds, '', '', +tot.toFixed(2)]);
     return {header, body, rows, sel, tot, uds, cu};
   }
   const header = ['Código SAP','Descripción','Categoría','En cuántos motores',

@@ -784,9 +784,46 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 .cb-t.res td.buy2.z{color:#c8cfe0;background:#f7f9fd;font-weight:400}
 .mot-p{display:inline-block;background:#eef1f8;border:1px solid var(--line);color:var(--ink2);font-size:9.5px;
  font-weight:700;padding:2px 6px;border-radius:5px;margin:1px 3px 1px 0;font-family:'Orbitron'}
+/* Pantalla de bloqueo */
+#lockScreen{position:fixed;inset:0;z-index:9999;background:linear-gradient(150deg,#eef1f8 0%,#e6e9f5 100%);
+ display:flex;align-items:center;justify-content:center;padding:20px}
+#lockScreen.hidden{display:none}
+.lock-card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:40px 36px;width:min(400px,92vw);
+ text-align:center;box-shadow:0 40px 90px -30px rgba(20,30,60,.35);animation:gsIn .35s cubic-bezier(.2,.8,.2,1)}
+.lock-logo{width:74px;height:74px;margin:0 auto 20px;border-radius:18px;background:#fff;border:1px solid var(--line);
+ display:grid;place-items:center;box-shadow:0 6px 18px rgba(20,30,60,.08)}
+.lock-logo img{width:52px;height:52px;object-fit:contain}
+.lock-card h1{font-family:'Orbitron';font-size:20px;color:var(--ink);margin-bottom:6px;letter-spacing:.5px}
+.lock-card p{font-size:12.5px;color:var(--ink3);margin-bottom:24px}
+.lock-field{display:flex;gap:8px}
+.lock-field input{flex:1;padding:12px 14px;border:1px solid var(--line);border-radius:11px;font-size:14px;
+ outline:none;font-family:'Exo 2';transition:.15s}
+.lock-field input:focus{border-color:var(--morado);box-shadow:0 0 0 3px rgba(109,78,255,.12)}
+.lock-field button{background:var(--morado);color:#fff;border:none;padding:12px 20px;border-radius:11px;
+ font-weight:700;font-size:14px;cursor:pointer;font-family:'Exo 2';transition:.15s}
+.lock-field button:hover{background:#5a3fe0}
+.lock-err{color:#e5484d;font-size:12.5px;margin-top:14px;font-weight:600;height:16px;opacity:0;transition:.2s}
+.lock-err.show{opacity:1}
+.lock-card.shake{animation:lockShake .4s}
+@keyframes lockShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-9px)}40%,80%{transform:translateX(9px)}}
+.lock-ft{margin-top:26px;font-size:10.5px;color:var(--ink3);font-family:'Orbitron';letter-spacing:.5px;text-transform:uppercase}
 </style>
 </head>
 <body>
+<div id="lockScreen">
+  <div class="lock-card">
+    <div class="lock-logo" id="lockLogo"></div>
+    <h1>Kits de Motores</h1>
+    <p>Inteligencia de Reposición · Peru Tractor S.R.L.</p>
+    <div class="lock-field">
+      <input type="password" id="lockPass" placeholder="Contraseña de acceso" autocomplete="off"
+             onkeydown="if(event.key==='Enter')tryUnlock()">
+      <button onclick="tryUnlock()">Entrar</button>
+    </div>
+    <div class="lock-err" id="lockErr">Contraseña incorrecta</div>
+    <div class="lock-ft">Acceso restringido · VERONIX</div>
+  </div>
+</div>
 <div class="topbar"><div class="topbar-in">
   <div class="tb-brand"><span class="dot"></span>VERONIX · Grima</div>
   <div class="tb-spacer"></div>
@@ -2117,6 +2154,27 @@ function exportPlan(){
 
 
 // ====== DESCARGA EN PDF (impresión nativa, sin librerías) ======
+const LOCK_PASS='perutractor2026';
+function tryUnlock(){
+  const inp=$('#lockPass'), err=$('#lockErr'), card=document.querySelector('.lock-card');
+  if(inp.value===LOCK_PASS){
+    try{ sessionStorage.setItem('pt_auth','1'); }catch(e){}
+    const ls=$('#lockScreen');
+    ls.style.transition='opacity .3s'; ls.style.opacity='0';
+    setTimeout(()=>ls.classList.add('hidden'),300);
+  }else{
+    err.classList.add('show'); card.classList.add('shake');
+    inp.value=''; inp.focus();
+    setTimeout(()=>card.classList.remove('shake'),420);
+  }
+}
+function _initLock(){
+  // pinta el logo Grima en el candado
+  const src=_logoSrc(); if(src){ $('#lockLogo').innerHTML='<img src="'+src+'" alt="Grima">'; }
+  let ok=false; try{ ok=sessionStorage.getItem('pt_auth')==='1'; }catch(e){}
+  if(ok){ $('#lockScreen').classList.add('hidden'); }
+  else{ setTimeout(()=>{ const i=$('#lockPass'); if(i) i.focus(); }, 100); }
+}
 function _logoSrc(){
   const im=document.querySelector('#grimaZone img');
   return im? im.getAttribute('src') : '';
@@ -2579,6 +2637,8 @@ function pdfComb(){
      ['Costo total', money(tot)]]);
 }
 
+
+try{_initLock();}catch(e){console.error(e);}
 </script>
 </body>
 </html>

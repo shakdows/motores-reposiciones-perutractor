@@ -744,6 +744,10 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 .cb-find:focus{border-color:var(--morado)}
 .cb-chk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink2);cursor:pointer}
 .cb-chk input{accent-color:#6d4eff}
+.cb-chk.kit{color:#7a4d00;font-weight:600}
+.cb-chk.kit input{accent-color:#f5a623}
+.cb-chk input:disabled+*{opacity:.4}
+.cb-chk:has(input:disabled){opacity:.45}
 .cb-wrap{overflow:auto;flex:1;padding:0 18px 18px}
 .cb-t{width:100%;border-collapse:collapse;font-size:12px}
 .cb-t th{position:sticky;top:0;background:#161d33;color:#fff;font-family:'Orbitron';font-size:8.5px;
@@ -1004,6 +1008,7 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
       <input class="cb-find" id="cbFind" placeholder="Buscar código o descripción…" oninput="renderComb()">
       <label class="cb-chk"><input type="checkbox" id="cbRep" checked onchange="renderComb()"> Solo piezas repetidas</label>
       <label class="cb-chk"><input type="checkbox" id="cbBuy" checked onchange="renderComb()"> Solo lo que falta comprar</label>
+      <label class="cb-chk kit"><input type="checkbox" id="cbKit" onchange="onKitToggle()"> 🧾 Cotizar kit completo (ignorar stock)</label>
       <span style="flex:1"></span>
       <button class="ot-btn gh" onclick="exportComb()">⬇ Excel</button>
       <button class="ot-btn gh" onclick="pdfComb()">⬇ PDF</button>
@@ -2419,6 +2424,16 @@ function aplicarPegado(){
 // ══════════ DEMANDA COMBINADA (stock compartido entre motores) ══════════
 let CB_SEL = {};   // engineId -> kits (0 = no incluido)
 let CB_VIEW = 'resumen';
+function onKitToggle(){
+  const kit=document.getElementById('cbKit').checked;
+  const buy=document.getElementById('cbBuy');
+  const rep=document.getElementById('cbRep');
+  // en modo kit completo: traes TODO el kit, así que no aplica "solo lo que falta comprar"
+  // y con un solo motor tampoco tiene sentido "solo repetidas"
+  buy.disabled=kit; rep.disabled=kit;
+  if(kit){ buy.checked=false; rep.checked=false; }
+  renderComb();
+}
 function cbView(v){
   CB_VIEW=v;
   $('#cvT1').classList.toggle('on', v==='resumen');
@@ -2496,24 +2511,40 @@ function renderComb(){
   ].map(([c,l,v])=>`<div class="cbk ${c}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
   // ══ TABLA ══
   if(CB_VIEW==='resumen'){
-    const th = `<thead><tr>
+    const KIT = $('#cbKit') && $('#cbKit').checked;   // cotizar kit completo (ignora stock)
+    const qtyOf = x => KIT ? x.total : x.comprar;     // kit completo = cantidad necesaria
+    const th = KIT ? `<thead><tr>
+      <th>Código SAP</th><th>Descripción</th><th>Reparto por motor</th>
+      <th class="buy">CANTIDAD NECESARIA</th><th class="buy">P. UNIT.</th><th class="buy">TOTAL</th>
+    </tr></thead>` : `<thead><tr>
       <th>Código SAP</th><th>Descripción</th><th>Reparto por motor</th>
       <th class="buy">NECESITA TOTAL</th><th>TIENES</th><th class="al2">ALCANZA / FALTA</th>
       <th class="buy">COMPRAR</th><th class="buy">P. UNIT.</th><th class="buy">TOTAL</th>
     </tr></thead>`;
     const tb = rows.map(x=>{
-      const disp = x.alm + x.arr;            // lo realmente usable (ALM01 + Arriola)
-      const cubre = Math.min(disp, x.total); // cuánto de la demanda queda cubierto
+      const disp = x.alm + x.arr;
       const falta = Math.max(0, x.total - disp);
       const alcanza = falta===0;
+      const reparto = Object.keys(x.por).map(id=>{
+          const e=ENGINES.find(y=>y.id===id);
+          return `<span class="mot-p">${e.label.replace('Motor ','')} · ${x.por[id]}</span>`;
+        }).join('');
+      if(KIT){
+        const q=x.total;
+        return `<tr class="${x.nMot>1?'rep':''}">
+          <td class="cod">${x.cod}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
+          <td class="dsc">${x.desc||'—'}</td>
+          <td class="mots">${reparto}</td>
+          <td class="buy2">${fmt(q)}</td>
+          <td class="pu">${x.precio? money(x.precio) : '<span style="color:#c8cfe0">sin precio</span>'}</td>
+          <td class="sub">${x.precio? money(q*x.precio) : '—'}</td>
+        </tr>`;
+      }
       return `<tr class="${x.nMot>1?'rep':''}">
         <td class="cod">${x.cod}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
         <td class="dsc">${x.desc||'—'}</td>
-        <td class="mots">${Object.keys(x.por).map(id=>{
-            const e=ENGINES.find(y=>y.id===id);
-            return `<span class="mot-p">${e.label.replace('Motor ','')} · ${x.por[id]}</span>`;
-          }).join('')}</td>
-        <td class="qty">${fmt(x.total)}</td>
+        <td class="mots">${reparto}</td>
+        <td class="qty">${fmt(x.comprar)}</td>
         <td class="n ${disp?'':'z'}">${disp||'·'}</td>
         <td class="alc ${alcanza?'ok':'no'}">${alcanza? '✓ alcanza' : '−'+fmt(falta)}</td>
         <td class="buy2 ${x.comprar?'':'z'}">${x.comprar? fmt(x.comprar):'·'}</td>
@@ -2521,18 +2552,20 @@ function renderComb(){
         <td class="sub">${x.precio? money(x.comprar*x.precio) : '—'}</td>
       </tr>`;
     }).join('');
-    const totU = rows.reduce((a,x)=>a+x.comprar,0);
-    const totN = rows.reduce((a,x)=>a+x.total,0);
-    const totC = rows.reduce((a,x)=>a+x.comprar*x.precio,0);
-    const tf = `<tfoot><tr>
+    const totU = rows.reduce((a,x)=>a+qtyOf(x),0);
+    const totC = rows.reduce((a,x)=>a+qtyOf(x)*x.precio,0);
+    const tf = KIT ? `<tfoot><tr>
+      <td colspan="3">${rows.length} código(s) · KIT COMPLETO${rows.length!==all.length?` de ${all.length}`:''}</td>
+      <td style="text-align:center">${fmt(totU)}</td><td></td>
+      <td style="text-align:right">${money(totC)}</td>
+    </tr></tfoot>` : `<tfoot><tr>
       <td colspan="3">${rows.length} código(s)${rows.length!==all.length?` de ${all.length}`:''}</td>
-      <td style="text-align:center">${fmt(totN)}</td><td colspan="2"></td>
       <td style="text-align:center">${fmt(totU)}</td><td></td>
       <td style="text-align:right">${money(totC)}</td>
     </tr></tfoot>`;
     $('#cbTable').className='cb-t res';
     $('#cbTable').innerHTML = th + '<tbody>' + (rows.length? tb :
-      '<tr><td colspan="9" style="padding:40px;text-align:center;color:var(--ink3)">Sin resultados.</td></tr>') + '</tbody>' + tf;
+      '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--ink3)">Sin resultados.</td></tr>') + '</tbody>' + tf;
     return;
   }
   // ── vista DETALLE ──
@@ -2583,6 +2616,21 @@ function combHeaderRows(){
   const uds = rows.reduce((a,x)=>a+x.comprar,0);
 
   if(CB_VIEW==='resumen'){
+    const KIT = $('#cbKit') && $('#cbKit').checked;
+    if(KIT){
+      const header=['Código SAP','Descripción','En cuántos motores','Reparto por motor',
+        'CANTIDAD NECESARIA',`PRECIO UNITARIO (${cu})`,`TOTAL (${cu})`];
+      const body=rows.map(x=>[x.cod, x.desc||'', x.nMot,
+        Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);
+          return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · '),
+        x.total,
+        x.precio? +(x.precio*k).toFixed(2) : '',
+        x.precio? +(x.precio*x.total*k).toFixed(2) : '']);
+      const totN=rows.reduce((a,x)=>a+x.total,0);
+      const totKit=rows.reduce((a,x)=>a+x.total*x.precio,0)*k;
+      body.push(['','','','TOTAL KIT', totN, '', +totKit.toFixed(2)]);
+      return {header, body, rows, sel, tot:totKit, uds:totN, cu, kit:true};
+    }
     const header=['Código SAP','Descripción','En cuántos motores','Reparto por motor',
       'NECESITA TOTAL','TIENES (ALM01+Arriola)','FALTA','A COMPRAR',
       `PRECIO UNITARIO (${cu})`,`TOTAL (${cu})`];
@@ -2617,7 +2665,7 @@ function exportComb(){
   const esRes = CB_VIEW==='resumen';
   _descargar(header, body, esRes?'Resumen de compra':'Demanda combinada',
     `${esRes?'Resumen_compra':'Demanda_combinada'}_${sel.length}motores_${new Date().toISOString().slice(0,10)}.xls`,
-    esRes? 'RESUMEN DE COMPRA — CÓDIGOS REPETIDOS ENTRE MOTORES' : 'DEMANDA COMBINADA — STOCK COMPARTIDO',
+    esRes? (($('#cbKit')&&$('#cbKit').checked)? 'COTIZACIÓN DE KIT COMPLETO — CANTIDAD NECESARIA' : 'RESUMEN DE COMPRA — CÓDIGOS REPETIDOS ENTRE MOTORES') : 'DEMANDA COMBINADA — STOCK COMPARTIDO',
     `Peru Tractor S.R.L. · ${nombres} · ${rows.length} ítems · Total ${cu==='USD'?'US$':'S/'} ${fmt(+tot.toFixed(2))} · Generado ${new Date().toISOString().slice(0,10)}`);
 }
 function pdfComb(){
@@ -2628,7 +2676,7 @@ function pdfComb(){
   const esRes = CB_VIEW==='resumen';
   // firma correcta: _pdf(header, rows, filename, titulo, sub, resumen)
   _pdf(header, body, (esRes?'Resumen_compra_':'Demanda_combinada_')+sel.length+'motores',
-    esRes? 'RESUMEN DE COMPRA — CÓDIGOS REPETIDOS ENTRE MOTORES' : 'DEMANDA COMBINADA — STOCK COMPARTIDO',
+    esRes? (($('#cbKit')&&$('#cbKit').checked)? 'COTIZACIÓN DE KIT COMPLETO — CANTIDAD NECESARIA' : 'RESUMEN DE COMPRA — CÓDIGOS REPETIDOS ENTRE MOTORES') : 'DEMANDA COMBINADA — STOCK COMPARTIDO',
     `Peru Tractor S.R.L. · ${nombres}`,
     [['Motores', String(sel.length)],
      ['Piezas repetidas', String(rep)],

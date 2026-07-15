@@ -746,6 +746,12 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 .cb-chk input{accent-color:#6d4eff}
 .cb-chk.kit{color:#7a4d00;font-weight:600}
 .cb-chk.kit input{accent-color:#f5a623}
+.cb-sel{padding:7px 10px;border:1px solid var(--line);border-radius:9px;font-size:12px;font-family:'Exo 2';
+ background:#fbfcfe;color:var(--ink2);cursor:pointer;outline:none}
+.cb-sel:focus{border-color:var(--morado)}
+.mk{display:inline-block;font-size:8.5px;font-weight:800;padding:1px 5px;border-radius:4px;font-family:'Orbitron';margin-left:5px}
+.mk.CTP{background:#e8f0ff;color:#2f6bff} .mk.CAT{background:#fff0e6;color:#d1691a} .mk.OTRO{background:#eee;color:#888}
+.mk.NET{background:#e7f7f1;color:#0a8f76} .mk.OEM{background:#fdecc8;color:#8a5a12}
 .cb-chk input:disabled+*{opacity:.4}
 .cb-chk:has(input:disabled){opacity:.45}
 .cb-wrap{overflow:auto;flex:1;padding:0 18px 18px}
@@ -1009,6 +1015,21 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
       <label class="cb-chk"><input type="checkbox" id="cbRep" checked onchange="renderComb()"> Solo piezas repetidas</label>
       <label class="cb-chk"><input type="checkbox" id="cbBuy" checked onchange="renderComb()"> Solo lo que falta comprar</label>
       <label class="cb-chk kit"><input type="checkbox" id="cbKit" onchange="onKitToggle()"> 🧾 Cotizar kit completo (ignorar stock)</label>
+      <select class="cb-sel" id="cbMarca" onchange="renderComb()" title="Filtrar por marca">
+        <option value="">Marca: todas</option>
+        <option value="CTP">Solo CTP</option>
+        <option value="CAT">Solo CAT</option>
+      </select>
+      <select class="cb-sel" id="cbOem" onchange="renderComb()" title="Filtrar por tipo de precio">
+        <option value="">Precio: todos</option>
+        <option value="NET">Solo NET</option>
+        <option value="OEM">Solo OEM</option>
+      </select>
+      <select class="cb-sel" id="cbComer" onchange="renderComb()" title="Filtrar por comerciable">
+        <option value="">Comerciable: todos</option>
+        <option value="SI">Solo comerciables</option>
+        <option value="NO">Solo NO comerciables</option>
+      </select>
       <span style="flex:1"></span>
       <button class="ot-btn gh" onclick="exportComb()">⬇ Excel</button>
       <button class="ot-btn gh" onclick="pdfComb()">⬇ PDF</button>
@@ -2462,6 +2483,25 @@ function renderPick(){
   }).join('');
 }
 // Suma la demanda de todos los motores elegidos, contra UN stock compartido
+// marca del código por sufijo
+function marcaOf(cod){
+  if(/CTP$/i.test(cod)) return 'CTP';
+  if(/CAT$/i.test(cod)) return 'CAT';
+  return 'OTRO';
+}
+// tipo de precio (OEM / NET) desde el pricebook — de la mejor oferta de proveedor
+function oemOf(cod){
+  const pb=PRICEBOOK[cod]; if(!pb||!pb.offers) return '';
+  const off=pb.offers.find(o=>o.tipo==='prov') || pb.offers[0];
+  return (off && off.kind) ? off.kind.toUpperCase() : '';   // 'NET' | 'OEM' | ''
+}
+// comerciable desde el master (campo 11) — lo llena Alexis en el Excel
+function comerOf(r){
+  const v=r[11];
+  if(v===true || /^s[ií]$/i.test(String(v))) return 'SI';
+  if(v===false || /^no$/i.test(String(v))) return 'NO';
+  return '';   // sin dato
+}
 function combRows(){
   const map = {};   // cod -> {cod,desc,fam,por:{engId:qty},total, r}
   ENGINES.forEach(e=>{
@@ -2484,7 +2524,8 @@ function combRows(){
     const comprar = Math.max(0, falta - arr);
     const nMot    = Object.keys(m.por).length;
     return {...m, alm, arr, aqp, hch, tra, deArr, comprar, nMot,
-            precio: priceOf(m.cod)||0};
+            precio: priceOf(m.cod)||0,
+            marca: marcaOf(m.cod), oem: oemOf(m.cod), comer: comerOf(r)};
   }).sort((a,b)=> b.comprar*b.precio - a.comprar*a.precio || b.nMot-a.nMot);
 }
 function renderComb(){
@@ -2494,6 +2535,10 @@ function renderComb(){
   const q = ($('#cbFind').value||'').toLowerCase().trim();
   if($('#cbRep').checked) rows = rows.filter(x=>x.nMot>1);
   if($('#cbBuy').checked) rows = rows.filter(x=>x.comprar>0);
+  const fMarca=$('#cbMarca').value, fOem=$('#cbOem').value, fComer=$('#cbComer').value;
+  if(fMarca) rows = rows.filter(x=>x.marca===fMarca);
+  if(fOem)   rows = rows.filter(x=>x.oem===fOem);
+  if(fComer) rows = rows.filter(x=>x.comer===fComer);
   if(q) rows = rows.filter(x=> x.cod.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q));
   // KPIs
   const rep   = all.filter(x=>x.nMot>1).length;
@@ -2532,7 +2577,7 @@ function renderComb(){
       if(KIT){
         const q=x.total;
         return `<tr class="${x.nMot>1?'rep':''}">
-          <td class="cod">${x.cod}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
+          <td class="cod">${x.cod}<span class="mk ${x.marca}">${x.marca}</span>${x.oem?`<span class="mk ${x.oem}">${x.oem}</span>`:''}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
           <td class="dsc">${x.desc||'—'}</td>
           <td class="mots">${reparto}</td>
           <td class="buy2">${fmt(q)}</td>
@@ -2541,7 +2586,7 @@ function renderComb(){
         </tr>`;
       }
       return `<tr class="${x.nMot>1?'rep':''}">
-        <td class="cod">${x.cod}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
+        <td class="cod">${x.cod}<span class="mk ${x.marca}">${x.marca}</span>${x.oem?`<span class="mk ${x.oem}">${x.oem}</span>`:''}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
         <td class="dsc">${x.desc||'—'}</td>
         <td class="mots">${reparto}</td>
         <td class="qty">${fmt(x.comprar)}</td>
@@ -2609,6 +2654,10 @@ function combHeaderRows(){
   let rows = combRows();
   if($('#cbRep').checked) rows = rows.filter(x=>x.nMot>1);
   if($('#cbBuy').checked) rows = rows.filter(x=>x.comprar>0);
+  const fMarca=$('#cbMarca').value, fOem=$('#cbOem').value, fComer=$('#cbComer').value;
+  if(fMarca) rows = rows.filter(x=>x.marca===fMarca);
+  if(fOem)   rows = rows.filter(x=>x.oem===fOem);
+  if(fComer) rows = rows.filter(x=>x.comer===fComer);
   const q = ($('#cbFind').value||'').toLowerCase().trim();
   if(q) rows = rows.filter(x=> x.cod.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q));
   const cu = CUR==='USD'?'USD':'PEN', k = CUR==='USD'?1:tc();
@@ -2618,9 +2667,9 @@ function combHeaderRows(){
   if(CB_VIEW==='resumen'){
     const KIT = $('#cbKit') && $('#cbKit').checked;
     if(KIT){
-      const header=['Código SAP','Descripción','En cuántos motores','Reparto por motor',
+      const header=['Código SAP','Marca','Tipo','Comerciable','Descripción','En cuántos motores','Reparto por motor',
         'CANTIDAD NECESARIA',`PRECIO UNITARIO (${cu})`,`TOTAL (${cu})`];
-      const body=rows.map(x=>[x.cod, x.desc||'', x.nMot,
+      const body=rows.map(x=>[x.cod, x.marca, x.oem||'', x.comer||'', x.desc||'', x.nMot,
         Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);
           return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · '),
         x.total,
@@ -2628,15 +2677,15 @@ function combHeaderRows(){
         x.precio? +(x.precio*x.total*k).toFixed(2) : '']);
       const totN=rows.reduce((a,x)=>a+x.total,0);
       const totKit=rows.reduce((a,x)=>a+x.total*x.precio,0)*k;
-      body.push(['','','','TOTAL KIT', totN, '', +totKit.toFixed(2)]);
+      body.push(['','','','','','','TOTAL KIT', totN, '', +totKit.toFixed(2)]);
       return {header, body, rows, sel, tot:totKit, uds:totN, cu, kit:true};
     }
-    const header=['Código SAP','Descripción','En cuántos motores','Reparto por motor',
+    const header=['Código SAP','Marca','Tipo','Comerciable','Descripción','En cuántos motores','Reparto por motor',
       'NECESITA TOTAL','TIENES (ALM01+Arriola)','FALTA','A COMPRAR',
       `PRECIO UNITARIO (${cu})`,`TOTAL (${cu})`];
     const body=rows.map(x=>{
       const disp=x.alm+x.arr, falta=Math.max(0,x.total-disp);
-      return [x.cod, x.desc||'', x.nMot,
+      return [x.cod, x.marca, x.oem||'', x.comer||'', x.desc||'', x.nMot,
         Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);
           return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · '),
         x.total, disp, falta, x.comprar,
@@ -2644,7 +2693,7 @@ function combHeaderRows(){
         x.precio? +(x.precio*x.comprar*k).toFixed(2) : ''];
     });
     const totN=rows.reduce((a,x)=>a+x.total,0);
-    body.push(['','','','TOTAL', totN, '', '', uds, '', +tot.toFixed(2)]);
+    body.push(['','','','','','','TOTAL', totN, '', '', uds, '', +tot.toFixed(2)]);
     return {header, body, rows, sel, tot, uds, cu};
   }
   const header = ['Código SAP','Descripción','Categoría','En cuántos motores',

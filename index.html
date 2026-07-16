@@ -1150,7 +1150,7 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
   <div class="cbadd-box">
     <div class="cbadd-head">
       <div><h3>Agregar códigos a la compra</h3>
-        <p>Elige piezas de los motores seleccionados. Se agrupan por su estado actual.</p></div>
+        <p>Los que ya están en tu compra vienen marcados. Desmarca los que no quieras o marca otros para agregarlos.</p></div>
       <button class="cbadd-x" onclick="closeCbAdd()">✕</button>
     </div>
     <div class="cbadd-tabs" id="cbAddTabs"></div>
@@ -1160,7 +1160,7 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
       <span id="cbAddCount">0 seleccionados</span>
       <div>
         <button class="ot-btn gh" onclick="closeCbAdd()">Cerrar</button>
-        <button class="ot-btn add" onclick="applyCbAdd()">Agregar seleccionados</button>
+        <button class="ot-btn add" onclick="applyCbAdd()">Aplicar selección</button>
       </div>
     </div>
   </div>
@@ -2823,6 +2823,9 @@ let CB_ADD_TAB='comprar';        // pestaña activa
 let CB_ADD_SEL={};               // cod -> true (marcados en la ventana)
 function openCbAdd(){
   CB_ADD_SEL={};
+  // pre-marcar los códigos que YA están en la vista principal (visibles y no excluidos)
+  const visibles = combFilteredRows();
+  visibles.forEach(x=>{ if(!CB_EXCL[x.cod]) CB_ADD_SEL[x.cod]=true; });
   CB_ADD_TAB='comprar';
   document.getElementById('cbAddSearch').value='';
   document.getElementById('cbAddOv').classList.add('on');
@@ -2883,22 +2886,23 @@ function cbAddPick(cod){
   renderCbAdd();
 }
 function applyCbAdd(){
+  // los códigos que aparecen en la ventana (todos los de los grupos)
+  const g=cbAddGroups();
+  const todos=new Set();
+  ['comprar','stock','transito','traslado'].forEach(k=>g[k].forEach(x=>todos.add(x.cod)));
   const picked=Object.keys(CB_ADD_SEL).filter(k=>CB_ADD_SEL[k]);
-  if(!picked.length){ closeCbAdd(); return; }
-  // "Agregar" = asegurarse de que estos códigos aparezcan en la compra:
-  // quitar exclusión, y si el filtro "solo lo que falta comprar" los oculta, apagarlo
+  // marcados → incluir (quitar exclusión); presentes pero desmarcados → excluir
   picked.forEach(cod=>{ delete CB_EXCL[cod]; });
-  // si alguno de los elegidos NO tiene compra sugerida (ej. lo eligió de "en stock"),
-  // desactivar el filtro "solo lo que falta comprar" para que se vea
+  todos.forEach(cod=>{ if(!CB_ADD_SEL[cod]) CB_EXCL[cod]=true; });
+  // si eligió códigos sin compra sugerida o que no se repiten, aflojar filtros para que se vean
   const rows=combRows();
   const algunoSinCompra = picked.some(cod=>{ const x=rows.find(r=>r.cod===cod); return x && x.comprar===0; });
   if(algunoSinCompra && $('#cbBuy').checked) $('#cbBuy').checked=false;
-  // si eligió códigos que no se repiten, apagar "solo repetidas"
   const algunoNoRep = picked.some(cod=>{ const x=rows.find(r=>r.cod===cod); return x && x.nMot<=1; });
   if(algunoNoRep && $('#cbRep').checked) $('#cbRep').checked=false;
   closeCbAdd();
   renderComb();
-  _toast(picked.length+' código(s) agregado(s) a la vista');
+  _toast(picked.length+' código(s) en la compra');
 }
 
 function cbSortCol(col){
@@ -3028,6 +3032,18 @@ function combRows(){
             precio: priceOf(m.cod)||0,
             marca: marcaOf(m.cod), oem: oemOf(m.cod), comer: comerOf(r), zona: zonaOf(m.cod)};
   }).sort((a,b)=> b.comprar*b.precio - a.comprar*a.precio || b.nMot-a.nMot);
+}
+function combFilteredRows(){
+  let rows = combRows();
+  const q = ($('#cbFind').value||'').toLowerCase().trim();
+  if($('#cbRep').checked) rows = rows.filter(x=>x.nMot>1);
+  if($('#cbBuy').checked) rows = rows.filter(x=>x.comprar>0);
+  const fMarca=$('#cbMarca').value, fOem=$('#cbOem').value, fComer=$('#cbComer').value;
+  if(fMarca) rows = rows.filter(x=>x.marca===fMarca);
+  if(fOem)   rows = rows.filter(x=>x.oem===fOem);
+  if(fComer){ if(fComer==='__none') rows=rows.filter(x=>!x.comer); else rows = rows.filter(x=>x.comer===fComer); }
+  if(q) rows = rows.filter(x=> x.cod.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q));
+  return rows;
 }
 function renderComb(){
   const sel = ENGINES.filter(e=>CB_SEL[e.id]>0);

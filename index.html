@@ -856,6 +856,49 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 .cbq:disabled{opacity:.4}
 .cb-t tr.cb-excl{opacity:.5;background:#f7f8fb}
 .cb-t tr.cb-excl .exbtn{color:#0bb89a;border-color:#b8e6d6}
+.cb-t th.sorth{cursor:pointer;user-select:none;transition:.12s}
+.cb-t th.sorth:hover{filter:brightness(1.15)}
+.cb-t th.sorth .sarr{font-size:9px;margin-left:3px;opacity:.9}
+.cb-t th.sorth .sarr.dim{opacity:.4}
+
+/* Ventana flotante Agregar código (General) */
+.ot-btn.add{background:var(--morado);color:#fff;border-color:var(--morado)}
+.ot-btn.add:hover{background:#5a3fe0}
+.cbadd-ov{position:fixed;inset:0;z-index:9600;background:rgba(20,25,45,.5);backdrop-filter:blur(3px);
+ display:none;align-items:center;justify-content:center;padding:20px}
+.cbadd-ov.on{display:flex}
+.cbadd-box{background:#fff;border-radius:18px;width:min(820px,96vw);max-height:88vh;display:flex;flex-direction:column;
+ box-shadow:0 40px 100px -30px rgba(20,30,60,.5);overflow:hidden;animation:gsIn .25s}
+.cbadd-head{display:flex;justify-content:space-between;align-items:flex-start;padding:22px 24px 16px;border-bottom:1px solid var(--line)}
+.cbadd-head h3{font-family:'Orbitron';font-size:17px;color:var(--ink);margin-bottom:4px}
+.cbadd-head p{font-size:12.5px;color:var(--ink3)}
+.cbadd-x{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:15px;cursor:pointer;color:var(--ink2)}
+.cbadd-x:hover{background:#f3f5fa}
+.cbadd-tabs{display:flex;gap:8px;padding:14px 24px 0;flex-wrap:wrap}
+.cbadd-tab{padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:#fbfcfe;font-size:12.5px;
+ font-weight:600;cursor:pointer;font-family:'Exo 2';color:var(--ink2);transition:.12s}
+.cbadd-tab b{font-family:'Orbitron';margin-left:4px}
+.cbadd-tab.on{background:var(--morado);color:#fff;border-color:var(--morado)}
+.cbadd-tab:hover:not(.on){background:#f0f2f8}
+.cbadd-search{padding:14px 24px 8px}
+.cbadd-search input{width:100%;padding:10px 14px;border:1px solid var(--line);border-radius:10px;font-size:13.5px;
+ font-family:'Exo 2';outline:none}
+.cbadd-search input:focus{border-color:var(--morado)}
+.cbadd-list{flex:1;overflow-y:auto;padding:4px 16px 8px;min-height:200px}
+.cbadd-item{display:grid;grid-template-columns:22px 1.4fr 2fr 1fr 1fr;gap:10px;align-items:center;
+ padding:9px 12px;border-radius:10px;cursor:pointer;transition:.1s;border:1px solid transparent}
+.cbadd-item:hover{background:#f6f8fc}
+.cbadd-item.on{background:#eef0ff;border-color:#d5d8ff}
+.cbadd-item input{width:16px;height:16px;accent-color:var(--morado);cursor:pointer}
+.ci-cod{font-family:'Orbitron';font-weight:700;font-size:12px;color:var(--ink)}
+.ci-desc{font-size:12px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ci-qty{font-size:11px;color:var(--ink3);font-weight:600}
+.ci-price{font-size:12px;font-weight:700;color:var(--teal);font-family:'Orbitron';text-align:right}
+.ci-ex{font-size:9px;color:#c0392b;font-style:italic}
+.cbadd-empty{padding:40px;text-align:center;color:var(--ink3);font-size:13px}
+.cbadd-foot{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-top:1px solid var(--line);background:#fafbfe}
+.cbadd-foot #cbAddCount{font-size:12.5px;color:var(--ink2);font-weight:600}
+.cbadd-foot>div{display:flex;gap:10px}
 </style>
 </head>
 <body>
@@ -1093,10 +1136,31 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
         <option value="cod-asc">Código: A → Z</option>
       </select>
       <span style="flex:1"></span>
+      <button class="ot-btn add" onclick="openCbAdd()">➕ Agregar código</button>
       <button class="ot-btn gh" onclick="exportComb()">⬇ Excel</button>
       <button class="ot-btn gh" onclick="pdfComb()">⬇ PDF</button>
     </div>
     <div class="cb-wrap"><table class="cb-t" id="cbTable"></table></div>
+  </div>
+</div>
+
+<div class="cbadd-ov" id="cbAddOv" onclick="if(event.target===this)closeCbAdd()">
+  <div class="cbadd-box">
+    <div class="cbadd-head">
+      <div><h3>Agregar códigos a la compra</h3>
+        <p>Elige piezas de los motores seleccionados. Se agrupan por su estado actual.</p></div>
+      <button class="cbadd-x" onclick="closeCbAdd()">✕</button>
+    </div>
+    <div class="cbadd-tabs" id="cbAddTabs"></div>
+    <div class="cbadd-search"><input id="cbAddSearch" placeholder="Buscar código o descripción…" oninput="renderCbAdd()"></div>
+    <div class="cbadd-list" id="cbAddList"></div>
+    <div class="cbadd-foot">
+      <span id="cbAddCount">0 seleccionados</span>
+      <div>
+        <button class="ot-btn gh" onclick="closeCbAdd()">Cerrar</button>
+        <button class="ot-btn add" onclick="applyCbAdd()">Agregar seleccionados</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2751,6 +2815,106 @@ function onKitToggle(){
   if(kit){ buy.checked=false; rep.checked=false; }
   renderComb();
 }
+
+// ═══ Ventana flotante "Agregar código" del cuadro General ═══
+let CB_ADD_TAB='comprar';        // pestaña activa
+let CB_ADD_SEL={};               // cod -> true (marcados en la ventana)
+function openCbAdd(){
+  CB_ADD_SEL={};
+  CB_ADD_TAB='comprar';
+  document.getElementById('cbAddSearch').value='';
+  document.getElementById('cbAddOv').classList.add('on');
+  renderCbAddTabs();
+  renderCbAdd();
+}
+function closeCbAdd(){ document.getElementById('cbAddOv').classList.remove('on'); }
+// clasifica cada código de los motores seleccionados por estado
+function cbAddGroups(){
+  const rows=combRows();
+  const g={comprar:[], stock:[], transito:[], traslado:[]};
+  rows.forEach(x=>{
+    if(x.comprar>0) g.comprar.push(x);
+    if(x.alm>0)     g.stock.push(x);
+    if(x.tra>0)     g.transito.push(x);
+    if(x.deArr>0)   g.traslado.push(x);
+  });
+  return g;
+}
+function renderCbAddTabs(){
+  const g=cbAddGroups();
+  const tabs=[
+    ['comprar','🛒 A comprar', g.comprar.length],
+    ['stock','📦 En stock', g.stock.length],
+    ['transito','🚚 En tránsito', g.transito.length],
+    ['traslado','↔ Traslado Arriola', g.traslado.length],
+  ];
+  document.getElementById('cbAddTabs').innerHTML = tabs.map(([id,lbl,n])=>
+    `<button class="cbadd-tab ${CB_ADD_TAB===id?'on':''}" onclick="cbAddTab('${id}')">${lbl} <b>${n}</b></button>`
+  ).join('');
+}
+function cbAddTab(t){ CB_ADD_TAB=t; renderCbAddTabs(); renderCbAdd(); }
+function renderCbAdd(){
+  const g=cbAddGroups();
+  const q=(document.getElementById('cbAddSearch').value||'').toLowerCase().trim();
+  let list=g[CB_ADD_TAB]||[];
+  if(q) list=list.filter(x=>x.cod.toLowerCase().includes(q)||(x.desc||'').toLowerCase().includes(q));
+  const qtyLabel = x => CB_ADD_TAB==='comprar'?x.comprar+' a comprar'
+    : CB_ADD_TAB==='stock'?x.alm+' en ALM01'
+    : CB_ADD_TAB==='transito'?x.tra+' en tránsito'
+    : x.deArr+' en Arriola';
+  document.getElementById('cbAddList').innerHTML = list.length ? list.map(x=>{
+    const on=!!CB_ADD_SEL[x.cod], excl=!!CB_EXCL[x.cod];
+    return `<label class="cbadd-item ${on?'on':''}">
+      <input type="checkbox" ${on?'checked':''} onchange="cbAddPick('${x.cod}')">
+      <span class="ci-cod">${x.cod}<span class="mk ${x.marca}">${x.marca}</span>${x.comer?`<span class="mk cm-${x.comer.replace(' ','')}">${x.comer}</span>`:''}</span>
+      <span class="ci-desc">${x.desc||'—'}</span>
+      <span class="ci-qty">${qtyLabel(x)}</span>
+      <span class="ci-price">${x.precio?money(x.precio):'<i>sin precio</i>'}</span>
+      ${excl?'<span class="ci-ex">estaba excluido</span>':''}
+    </label>`;
+  }).join('') : '<div class="cbadd-empty">No hay códigos en esta categoría.</div>';
+  const n=Object.keys(CB_ADD_SEL).filter(k=>CB_ADD_SEL[k]).length;
+  document.getElementById('cbAddCount').textContent = n+' seleccionado'+(n===1?'':'s');
+}
+function cbAddPick(cod){
+  if(CB_ADD_SEL[cod]) delete CB_ADD_SEL[cod]; else CB_ADD_SEL[cod]=true;
+  renderCbAdd();
+}
+function applyCbAdd(){
+  const picked=Object.keys(CB_ADD_SEL).filter(k=>CB_ADD_SEL[k]);
+  if(!picked.length){ closeCbAdd(); return; }
+  // "Agregar" = asegurarse de que estos códigos aparezcan en la compra:
+  // quitar exclusión, y si el filtro "solo lo que falta comprar" los oculta, apagarlo
+  picked.forEach(cod=>{ delete CB_EXCL[cod]; });
+  // si alguno de los elegidos NO tiene compra sugerida (ej. lo eligió de "en stock"),
+  // desactivar el filtro "solo lo que falta comprar" para que se vea
+  const rows=combRows();
+  const algunoSinCompra = picked.some(cod=>{ const x=rows.find(r=>r.cod===cod); return x && x.comprar===0; });
+  if(algunoSinCompra && $('#cbBuy').checked) $('#cbBuy').checked=false;
+  // si eligió códigos que no se repiten, apagar "solo repetidas"
+  const algunoNoRep = picked.some(cod=>{ const x=rows.find(r=>r.cod===cod); return x && x.nMot<=1; });
+  if(algunoNoRep && $('#cbRep').checked) $('#cbRep').checked=false;
+  closeCbAdd();
+  renderComb();
+  _toast(picked.length+' código(s) agregado(s) a la vista');
+}
+
+function cbSortCol(col){
+  const sel=$('#cbSort'); if(!sel) return;
+  const cur=sel.value;
+  // cada columna alterna entre -desc y -asc
+  if(cur===col+'-desc') sel.value=col+'-asc';
+  else if(cur===col+'-asc') sel.value='';       // tercer clic: quita orden
+  else sel.value=col+'-desc';                     // primer clic: mayor a menor
+  renderComb();
+}
+// devuelve la flechita según el estado del dropdown
+function cbArrow(col){
+  const v=$('#cbSort')?$('#cbSort').value:'';
+  if(v===col+'-desc') return '<i class="sarr">▼</i>';
+  if(v===col+'-asc')  return '<i class="sarr">▲</i>';
+  return '<i class="sarr dim">⇅</i>';
+}
 function cbView(v){
   CB_VIEW=v;
   $('#cvT1').classList.toggle('on', v==='resumen');
@@ -2907,8 +3071,8 @@ function renderComb(){
       <th class="buy">CANTIDAD NECESARIA</th><th class="buy">P. UNIT.</th><th class="buy">TOTAL</th>
     </tr></thead>` : `<thead><tr>
       <th>Código SAP</th><th>Descripción</th><th>Reparto por motor</th>
-      <th class="buy">NECESITA TOTAL</th><th>TIENES</th><th class="al2">ALCANZA / FALTA</th>
-      <th class="buy">COMPRAR</th><th class="buy">P. UNIT.</th><th class="buy">TOTAL</th>
+      <th class="buy sorth" onclick="cbSortCol('total')">NECESITA TOTAL ${cbArrow('total')}</th><th>TIENES</th><th class="al2">ALCANZA / FALTA</th>
+      <th class="buy sorth" onclick="cbSortCol('comprar')">COMPRAR ${cbArrow('comprar')}</th><th class="buy sorth" onclick="cbSortCol('precio')">P. UNIT. ${cbArrow('precio')}</th><th class="buy sorth" onclick="cbSortCol('total')">TOTAL ${cbArrow('total')}</th>
     </tr></thead>`;
     const tb = rows.map(x=>{
       const disp = x.alm + x.arr;

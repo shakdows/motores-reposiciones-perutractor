@@ -849,6 +849,13 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 .crow.excl .exbtn{color:#0bb89a;border-color:#b8e6d6}
 .crow.excl .exbtn:hover{background:#eafaf5}
 .exq{color:#c0392b;font-size:10px;font-style:italic}
+.cbq{width:56px;padding:4px 6px;border:1px solid var(--line);border-radius:7px;font-size:14px;font-weight:800;
+ text-align:center;font-family:'Orbitron';color:#e5484d;background:#fff;outline:none}
+.cbq:focus{border-color:var(--morado);box-shadow:0 0 0 3px rgba(109,78,255,.12)}
+.cbq.edited{border-color:#f5a623;background:#fffaf0;color:#b06f00}
+.cbq:disabled{opacity:.4}
+.cb-t tr.cb-excl{opacity:.5;background:#f7f8fb}
+.cb-t tr.cb-excl .exbtn{color:#0bb89a;border-color:#b8e6d6}
 </style>
 </head>
 <body>
@@ -2722,6 +2729,12 @@ function aplicarPegado(){
 // ══════════ DEMANDA COMBINADA (stock compartido entre motores) ══════════
 let CB_SEL = {};   // engineId -> kits (0 = no incluido)
 let CB_VIEW = 'resumen';
+let CB_QTY={};    // cod -> cantidad a comprar fijada a mano en el General
+let CB_EXCL={};   // cod -> excluido del General
+function cbSetQty(cod,val){ const v=parseInt(val); if(isNaN(v)||v<0)delete CB_QTY[cod]; else CB_QTY[cod]=v; renderComb(); }
+function cbResetQty(cod){ delete CB_QTY[cod]; renderComb(); }
+function cbToggleExcl(cod){ if(CB_EXCL[cod])delete CB_EXCL[cod]; else CB_EXCL[cod]=true; renderComb(); }
+function cbQtyOf(x){ return CB_QTY[x.cod]!==undefined ? CB_QTY[x.cod] : x.comprar; }
 function onComerFilter(){
   const val=document.getElementById('cbComer').value;
   // al elegir un filtro de comerciable, quitar "solo repetidas" que escondería casi todo
@@ -2873,9 +2886,9 @@ function renderComb(){
   }
   // KPIs
   const rep   = all.filter(x=>x.nMot>1).length;
-  const buyI  = all.filter(x=>x.comprar>0).length;
-  const buyU  = all.reduce((a,x)=>a+x.comprar,0);
-  const cost  = all.reduce((a,x)=>a+x.comprar*x.precio,0);
+  const buyI  = all.filter(x=>x.comprar>0 && !CB_EXCL[x.cod]).length;
+  const buyU  = all.reduce((a,x)=>a+(CB_EXCL[x.cod]?0:cbQtyOf(x)),0);
+  const cost  = all.reduce((a,x)=>a+(CB_EXCL[x.cod]?0:cbQtyOf(x)*x.precio),0);
   const trasl = all.reduce((a,x)=>a+x.deArr,0);
   $('#cbKpis').innerHTML = [
     ['','Motores incluidos', sel.length+' de '+ENGINES.length],
@@ -2916,20 +2929,29 @@ function renderComb(){
           <td class="sub">${x.precio? money(q*x.precio) : '—'}</td>
         </tr>`;
       }
-      return `<tr class="${x.nMot>1?'rep':''}">
+      const q = cbQtyOf(x);
+      const editada = CB_QTY[x.cod]!==undefined && CB_QTY[x.cod]!==x.comprar;
+      const excl = !!CB_EXCL[x.cod];
+      return `<tr class="${x.nMot>1?'rep':''}${excl?' cb-excl':''}">
         <td class="cod">${x.cod}<span class="mk ${x.marca}">${x.marca}</span>${x.oem?`<span class="mk ${x.oem}">${x.oem}</span>`:''}${x.comer?`<span class="mk cm-${x.comer.replace(' ','')}">${x.comer}</span>`:''}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
         <td class="dsc">${x.desc||'—'}</td>
         <td class="mots">${reparto}</td>
-        <td class="qty">${fmt(x.comprar)}</td>
+        <td class="qty">${fmt(x.total)}</td>
         <td class="n ${disp?'':'z'}">${disp||'·'}</td>
         <td class="alc ${alcanza?'ok':'no'}">${alcanza? '✓ alcanza' : '−'+fmt(falta)}</td>
-        <td class="buy2 ${x.comprar?'':'z'}">${x.comprar? fmt(x.comprar):'·'}</td>
+        <td class="buy2 ${q?'':'z'}">
+          <input class="cbq${editada?' edited':''}" type="number" min="0" step="1" value="${q}"
+            title="Sugerido: ${x.comprar}. Cámbialo para comprar más." onchange="cbSetQty('${x.cod}',this.value)" ${excl?'disabled':''}>
+          ${editada?`<i class="qhint" onclick="cbResetQty('${x.cod}')">↺ ${x.comprar}</i>`:''}
+        </td>
         <td class="pu">${x.precio? money(x.precio)+zonaChip(x.zona) : '<span style="color:#c8cfe0">sin precio</span>'}</td>
-        <td class="sub">${x.precio? money(x.comprar*x.precio) : '—'}</td>
+        <td class="sub">${excl?'<i class="exq">excluido</i>':(x.precio? money(q*x.precio) : '—')}
+          <button class="exbtn" title="${excl?'Volver a incluir':'Quitar de la compra'}" onclick="cbToggleExcl('${x.cod}')">${excl?'＋':'✕'}</button>
+        </td>
       </tr>`;
     }).join('');
-    const totU = rows.reduce((a,x)=>a+qtyOf(x),0);
-    const totC = rows.reduce((a,x)=>a+qtyOf(x)*x.precio,0);
+    const totU = KIT ? rows.reduce((a,x)=>a+x.total,0) : rows.reduce((a,x)=>a+(CB_EXCL[x.cod]?0:cbQtyOf(x)),0);
+    const totC = KIT ? rows.reduce((a,x)=>a+x.total*x.precio,0) : rows.reduce((a,x)=>a+(CB_EXCL[x.cod]?0:cbQtyOf(x)*x.precio),0);
     const tf = KIT ? `<tfoot><tr>
       <td colspan="3">${rows.length} código(s) · KIT COMPLETO${rows.length!==all.length?` de ${all.length}`:''}</td>
       <td style="text-align:center">${fmt(totU)}</td><td></td>
@@ -3031,19 +3053,22 @@ function combHeaderRows(){
     const header=['Código SAP','Marca','Tipo','Comerciable','Descripción','En cuántos motores','Reparto por motor',
       'NECESITA TOTAL','TIENES (ALM01+Arriola)','FALTA','A COMPRAR',
       `PRECIO UNITARIO (${cu})`,'Zona precio',`TOTAL (${cu})`];
-    const body=rows.map(x=>{
-      const disp=x.alm+x.arr, falta=Math.max(0,x.total-disp);
+    const rowsInc=rows.filter(x=>!CB_EXCL[x.cod]);   // los excluidos no van al Excel
+    const body=rowsInc.map(x=>{
+      const disp=x.alm+x.arr, falta=Math.max(0,x.total-disp), q=cbQtyOf(x);
       return [x.cod, x.marca, x.oem||'', x.comer||'', x.desc||'', x.nMot,
         Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);
           return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · '),
-        x.total, disp, falta, x.comprar,
+        x.total, disp, falta, q,
         x.precio? +(x.precio*k).toFixed(2) : '',
         zonaTxt(x.zona),
-        x.precio? +(x.precio*x.comprar*k).toFixed(2) : ''];
+        x.precio? +(x.precio*q*k).toFixed(2) : ''];
     });
-    const totN=rows.reduce((a,x)=>a+x.total,0);
-    body.push(['','','','','','','TOTAL', totN, '', '', uds, '', '', +tot.toFixed(2)]);
-    return {header, body, rows, sel, tot, uds, cu};
+    const totN=rowsInc.reduce((a,x)=>a+x.total,0);
+    const totUds=rowsInc.reduce((a,x)=>a+cbQtyOf(x),0);
+    const totVal=rowsInc.reduce((a,x)=>a+cbQtyOf(x)*x.precio,0)*k;
+    body.push(['','','','','','','TOTAL', totN, '', '', totUds, '', '', +totVal.toFixed(2)]);
+    return {header, body, rows:rowsInc, sel, tot:totVal, uds:totUds, cu};
   }
   const header = ['Código SAP','Descripción','Categoría','En cuántos motores',
     ...sel.map(e=>`${e.label} (×${CB_SEL[e.id]} kit)`),

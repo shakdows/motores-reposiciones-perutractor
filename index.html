@@ -764,6 +764,9 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
 .cb-sel:focus{border-color:var(--morado)}
 .mk{display:inline-block;font-size:8.5px;font-weight:800;padding:1px 5px;border-radius:4px;font-family:'Orbitron';margin-left:5px}
 .mk.CTP{background:#e8f0ff;color:#2f6bff} .mk.CAT{background:#fff0e6;color:#d1691a} .mk.OTRO{background:#eee;color:#888}
+.mk.CGR{background:#e9f6ff;color:#0a6ebd}
+.mk.DIR{background:#f0e9ff;color:#6b3fb5}
+.mk.DISA{background:#fff0f6;color:#b5306e}
 .mk.NET{background:#e7f7f1;color:#0a8f76} .mk.OEM{background:#fdecc8;color:#8a5a12}
 .cb-chk input:disabled+*{opacity:.4}
 .cb-chk:has(input:disabled){opacity:.45}
@@ -1112,8 +1115,6 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
       <label class="cb-chk kit"><input type="checkbox" id="cbKit" onchange="onKitToggle()"> 🧾 Cotizar kit completo (ignorar stock)</label>
       <select class="cb-sel" id="cbMarca" onchange="renderComb()" title="Filtrar por marca">
         <option value="">Marca: todas</option>
-        <option value="CTP">Solo CTP</option>
-        <option value="CAT">Solo CAT</option>
       </select>
       <select class="cb-sel" id="cbOem" onchange="renderComb()" title="Filtrar por tipo de precio">
         <option value="">Precio: todos</option>
@@ -1129,13 +1130,20 @@ mark{background:#fff3c4;color:inherit;padding:0 2px;border-radius:3px}
       </select>
       <select class="cb-sel" id="cbSort" onchange="renderComb()" title="Ordenar la tabla">
         <option value="">Orden: por defecto</option>
-        <option value="precio-asc">Precio: menor a mayor</option>
-        <option value="precio-desc">Precio: mayor a menor</option>
-        <option value="total-desc">Total US$: mayor a menor</option>
-        <option value="total-asc">Total US$: menor a mayor</option>
+        <option value="cod-asc">Código: A → Z</option>
+        <option value="cod-desc">Código: Z → A</option>
+        <option value="desc-asc">Descripción: A → Z</option>
+        <option value="desc-desc">Descripción: Z → A</option>
+        <option value="necesita-desc">Necesita: mayor a menor</option>
+        <option value="necesita-asc">Necesita: menor a mayor</option>
+        <option value="tienes-desc">Tienes: mayor a menor</option>
+        <option value="tienes-asc">Tienes: menor a mayor</option>
         <option value="comprar-desc">Cantidad a comprar: mayor a menor</option>
         <option value="comprar-asc">Cantidad a comprar: menor a mayor</option>
-        <option value="cod-asc">Código: A → Z</option>
+        <option value="precio-desc">Precio: mayor a menor</option>
+        <option value="precio-asc">Precio: menor a mayor</option>
+        <option value="total-desc">Total US$: mayor a menor</option>
+        <option value="total-asc">Total US$: menor a mayor</option>
       </select>
       <span style="flex:1"></span>
       <button class="ot-btn add" onclick="openCbAdd()">➕ Agregar código</button>
@@ -1400,6 +1408,7 @@ async function syncSheets(){
   // recalcular KPIs de cada motor tocado y re-pintar
   try{ recalcKPIs(); }catch(e){}
   try{ renderGrid(); }catch(e){}
+  try{ llenarMarcas(); }catch(e){}
   try{ (typeof refreshGlobalKPIs==='function') && refreshGlobalKPIs(); }catch(e){}
   _syncBadge();
 }
@@ -2932,8 +2941,18 @@ function openComb(){
     // por defecto: TODOS menos el Consolidado (se solapa con los 4 submotores)
     ENGINES.forEach(e=>{ CB_SEL[e.id] = (e.id==='CONS') ? 0 : 1; });
   }
+  llenarMarcas();
   $('#cbOv').classList.add('on');
   renderPick(); renderComb();
+}
+// llena el dropdown de marca con las que existen en los datos
+function llenarMarcas(){
+  const sel=$('#cbMarca'); if(!sel) return;
+  const actual=sel.value;
+  const marcas=marcasPresentes();
+  sel.innerHTML='<option value="">Marca: todas</option>'+
+    marcas.map(m=>`<option value="${m}">Solo ${m}</option>`).join('');
+  if(marcas.includes(actual)) sel.value=actual;   // conservar selección si sigue válida
 }
 function closeComb(){ $('#cbOv').classList.remove('on'); }
 function cbToggle(id){ CB_SEL[id] = CB_SEL[id] ? 0 : 1; renderPick(); renderComb(); }
@@ -2950,10 +2969,20 @@ function renderPick(){
 }
 // Suma la demanda de todos los motores elegidos, contra UN stock compartido
 // marca del código por sufijo
+// marcas conocidas (se pueden ampliar). El resto del código NO es marca.
+const MARCAS = ['CTP','CAT','CGR','DIR','DISA'];
 function marcaOf(cod){
-  if(/CTP$/i.test(cod)) return 'CTP';
-  if(/CAT$/i.test(cod)) return 'CAT';
+  for(const mk of MARCAS){
+    if(new RegExp(mk+'$','i').test(cod)) return mk;
+  }
   return 'OTRO';
+}
+// devuelve todas las marcas presentes en los códigos de los motores seleccionados
+function marcasPresentes(){
+  const set=new Set();
+  ENGINES.forEach(e=>e.items.forEach(it=>{ const m=marcaOf(it[0]); if(m!=='OTRO') set.add(m); }));
+  // ordenar según el orden de MARCAS
+  return MARCAS.filter(m=>set.has(m)).concat([...set].filter(m=>!MARCAS.includes(m)));
 }
 // tipo de precio (OEM / NET) desde el pricebook — de la mejor oferta de proveedor
 function oemOf(cod){
@@ -3063,6 +3092,7 @@ function renderComb(){
   if(sort){
     const qtyKit = x => KIT_ord ? x.total : x.comprar;      // cantidad según vista
     const totOf  = x => (KIT_ord ? x.total : x.comprar) * (x.precio||0);
+    const tienesOf = x => (x.alm||0)+(x.arr||0);
     const cmp={
       'precio-asc':(a,b)=>(a.precio||0)-(b.precio||0),
       'precio-desc':(a,b)=>(b.precio||0)-(a.precio||0),
@@ -3070,7 +3100,16 @@ function renderComb(){
       'total-desc':(a,b)=>totOf(b)-totOf(a),
       'comprar-asc':(a,b)=>qtyKit(a)-qtyKit(b),
       'comprar-desc':(a,b)=>qtyKit(b)-qtyKit(a),
-      'cod-asc':(a,b)=>a.cod.localeCompare(b.cod),
+      'necesita-asc':(a,b)=>(a.total||0)-(b.total||0),
+      'necesita-desc':(a,b)=>(b.total||0)-(a.total||0),
+      'tienes-asc':(a,b)=>tienesOf(a)-tienesOf(b),
+      'tienes-desc':(a,b)=>tienesOf(b)-tienesOf(a),
+      'nmot-asc':(a,b)=>(a.nMot||0)-(b.nMot||0),
+      'nmot-desc':(a,b)=>(b.nMot||0)-(a.nMot||0),
+      'cod-asc':(a,b)=>a.cod.localeCompare(b.cod,'es'),
+      'cod-desc':(a,b)=>b.cod.localeCompare(a.cod,'es'),
+      'desc-asc':(a,b)=>(a.desc||'').localeCompare(b.desc||'','es'),
+      'desc-desc':(a,b)=>(b.desc||'').localeCompare(a.desc||'','es'),
     }[sort];
     if(cmp) rows=rows.slice().sort(cmp);
   }
@@ -3093,11 +3132,11 @@ function renderComb(){
     const KIT = $('#cbKit') && $('#cbKit').checked;   // cotizar kit completo (ignora stock)
     const qtyOf = x => KIT ? x.total : x.comprar;     // kit completo = cantidad necesaria
     const th = KIT ? `<thead><tr>
-      <th>Código SAP</th><th>Descripción</th><th>Reparto por motor</th>
-      <th class="buy">CANTIDAD NECESARIA</th><th class="buy">P. UNIT.</th><th class="buy">TOTAL</th>
+      <th class="sorth" onclick="cbSortCol('cod')">Código SAP ${cbArrow('cod')}</th><th class="sorth" onclick="cbSortCol('desc')">Descripción ${cbArrow('desc')}</th><th class="sorth" onclick="cbSortCol('nmot')">Reparto por motor ${cbArrow('nmot')}</th>
+      <th class="buy sorth" onclick="cbSortCol('necesita')">CANTIDAD NECESARIA ${cbArrow('necesita')}</th><th class="buy sorth" onclick="cbSortCol('precio')">P. UNIT. ${cbArrow('precio')}</th><th class="buy sorth" onclick="cbSortCol('total')">TOTAL ${cbArrow('total')}</th>
     </tr></thead>` : `<thead><tr>
-      <th>Código SAP</th><th>Descripción</th><th>Reparto por motor</th>
-      <th class="buy sorth" onclick="cbSortCol('total')">NECESITA TOTAL ${cbArrow('total')}</th><th>TIENES</th><th class="al2">ALCANZA / FALTA</th>
+      <th class="sorth" onclick="cbSortCol('cod')">Código SAP ${cbArrow('cod')}</th><th class="sorth" onclick="cbSortCol('desc')">Descripción ${cbArrow('desc')}</th><th class="sorth" onclick="cbSortCol('nmot')">Reparto por motor ${cbArrow('nmot')}</th>
+      <th class="buy sorth" onclick="cbSortCol('necesita')">NECESITA TOTAL ${cbArrow('necesita')}</th><th class="sorth" onclick="cbSortCol('tienes')">TIENES ${cbArrow('tienes')}</th><th class="al2">ALCANZA / FALTA</th>
       <th class="buy sorth" onclick="cbSortCol('comprar')">COMPRAR ${cbArrow('comprar')}</th><th class="buy sorth" onclick="cbSortCol('precio')">P. UNIT. ${cbArrow('precio')}</th><th class="buy sorth" onclick="cbSortCol('total')">TOTAL ${cbArrow('total')}</th>
     </tr></thead>`;
     const tb = rows.map(x=>{

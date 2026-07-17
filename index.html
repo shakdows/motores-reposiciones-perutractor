@@ -3339,6 +3339,364 @@ function pdfComb(){
 
 
 try{_initLock();}catch(e){console.error(e);}
+
+/* ═══════════════════════════════════════════════════════════════
+   ASISTENTE / ARMADOR DE MOTOR — chat local (gratis, sin API)
+   Responde sobre el motor abierto y los 11 motores:
+   nombre de pieza + cantidad necesaria, dónde va cada pieza,
+   y arma/desarma el motor por secciones (familias) como un rompecabezas.
+   ═══════════════════════════════════════════════════════════════ */
+(function(){
+  if(typeof ENGINES==='undefined' || !ENGINES.length) return;
+
+  // ---- estilos ----
+  const css = `
+  #asisFab{position:fixed;right:22px;bottom:22px;z-index:400;width:60px;height:60px;border-radius:50%;
+    border:none;cursor:pointer;background:linear-gradient(135deg,#6d4eff,#0bb89a);color:#fff;
+    box-shadow:0 16px 34px -12px rgba(109,78,255,.7);display:grid;place-items:center;transition:transform .25s,box-shadow .25s}
+  #asisFab:hover{transform:translateY(-3px) scale(1.05);box-shadow:0 22px 44px -14px rgba(109,78,255,.85)}
+  #asisFab svg{width:26px;height:26px}
+  #asisFab .dot{position:absolute;top:6px;right:6px;width:12px;height:12px;border-radius:50%;
+    background:#0bb89a;border:2px solid #fff;animation:pulse 2s infinite}
+  #asisPanel{position:fixed;right:22px;bottom:92px;z-index:401;width:min(420px,94vw);height:min(620px,78vh);
+    display:none;flex-direction:column;background:linear-gradient(162deg,#131d36,#0b1020);
+    border:1px solid rgba(140,120,255,.28);border-radius:20px;overflow:hidden;
+    box-shadow:0 50px 100px -34px rgba(0,0,0,.85),0 0 46px -20px rgba(109,78,255,.6)}
+  #asisPanel.open{display:flex}
+  .asis-top{display:flex;align-items:center;gap:11px;padding:15px 16px;border-bottom:1px solid rgba(140,120,255,.2);
+    background:linear-gradient(120deg,rgba(109,78,255,.18),transparent)}
+  .asis-top .av{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6d4eff,#0bb89a);
+    display:grid;place-items:center;flex:0 0 auto;font-size:19px}
+  .asis-top .tt{font-family:'Orbitron',sans-serif;font-weight:700;font-size:14px;color:#EDF1FB}
+  .asis-top .sub{font-size:10.5px;color:#00FFD1;letter-spacing:.3px}
+  .asis-top .cls{margin-left:auto;background:transparent;border:none;color:#8ea3cf;font-size:22px;cursor:pointer;line-height:1}
+  .asis-top .cls:hover{color:#fff}
+  .asis-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+  .asis-msg{max-width:92%;font-size:12.6px;line-height:1.55;padding:11px 13px;border-radius:14px;color:#e7ecfb}
+  .asis-msg.bot{background:rgba(255,255,255,.05);border:1px solid rgba(140,120,255,.16);align-self:flex-start;border-top-left-radius:5px}
+  .asis-msg.me{background:linear-gradient(135deg,#6d4eff,#5a3ee0);color:#fff;align-self:flex-end;border-top-right-radius:5px}
+  .asis-msg b{color:#fff}
+  .asis-h{font-family:'Orbitron',sans-serif;font-size:12.5px;color:#fff;margin-bottom:6px}
+  .asis-hint{font-size:10.5px;color:#8ea3cf;margin-bottom:9px}
+  .asis-part{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid rgba(140,120,255,.13)}
+  .asis-part:first-child{border-top:none}
+  .asis-qty{flex:0 0 auto;min-width:34px;height:34px;padding:0 6px;border-radius:9px;background:linear-gradient(135deg,#FFB547,#f59e0b);
+    color:#161d33;font-family:'Orbitron',sans-serif;font-weight:800;font-size:14px;display:grid;place-items:center}
+  .asis-pinfo{flex:1;min-width:0}
+  .asis-pinfo b{display:block;font-size:12px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .asis-pinfo span{font-size:10px;color:#8798bd}
+  .asis-pstat{flex:0 0 auto;font-size:10px;color:#8ea3cf;text-align:right}
+  .asis-tag{display:inline-block;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:6px;margin-left:4px}
+  .asis-tag.buy{background:rgba(229,72,77,.18);color:#ff8f92}
+  .asis-tag.tr{background:rgba(47,107,255,.18);color:#8fb2ff}
+  .asis-sec{border:1px solid rgba(140,120,255,.16);border-radius:11px;margin-bottom:7px;overflow:hidden;background:rgba(255,255,255,.03)}
+  .asis-sec-head{display:flex;align-items:center;gap:9px;padding:10px 12px;cursor:pointer;transition:background .15s}
+  .asis-sec-head:hover{background:rgba(109,78,255,.12)}
+  .asis-sec-name{font-weight:700;font-size:12px;color:#fff;flex:1}
+  .asis-sec-meta{font-size:10px;color:#8ea3cf}
+  .asis-chev{color:#00FFD1;font-size:12px;transition:transform .2s}
+  .asis-sec.open .asis-chev{transform:rotate(90deg)}
+  .asis-sec-body{padding:2px 12px 10px}
+  .asis-openlink{display:inline-block;margin-top:8px;font-size:11px;color:#00FFD1;cursor:pointer;font-weight:600}
+  .asis-openlink:hover{text-decoration:underline}
+  .asis-chips{display:flex;gap:7px;flex-wrap:wrap;padding:0 16px 8px}
+  .asis-chip{font-size:11px;color:#c3cbe4;background:rgba(255,255,255,.06);border:1px solid rgba(140,120,255,.2);
+    padding:6px 11px;border-radius:16px;cursor:pointer;transition:.15s}
+  .asis-chip:hover{background:rgba(109,78,255,.25);color:#fff;border-color:rgba(140,120,255,.5)}
+  .asis-input{display:flex;gap:8px;padding:12px 14px;border-top:1px solid rgba(140,120,255,.2);background:rgba(0,0,0,.2)}
+  .asis-input input{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(140,120,255,.24);border-radius:12px;
+    padding:11px 13px;color:#fff;font-size:12.5px;font-family:'Exo 2',sans-serif;outline:none}
+  .asis-input input:focus{border-color:rgba(140,120,255,.6)}
+  .asis-input input::placeholder{color:#7c89ad}
+  .asis-input button{background:linear-gradient(135deg,#6d4eff,#0bb89a);border:none;color:#fff;border-radius:12px;
+    width:44px;cursor:pointer;display:grid;place-items:center}
+  .asis-input button svg{width:19px;height:19px}
+  .asis-foot{font-size:9.5px;color:#788;text-align:center;padding:0 14px 10px;color:#6b76a0}
+  @media(max-width:520px){#asisPanel{right:3vw;left:3vw;width:auto;bottom:88px}}
+  `;
+  const st=document.createElement('style'); st.textContent=css; document.head.appendChild(st);
+
+  // ---- UI ----
+  const root=document.createElement('div');
+  root.innerHTML=`
+  <button id="asisFab" title="Asistente de piezas" aria-label="Abrir asistente">
+    <span class="dot"></span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 2a2 2 0 0 1 2 2v1h2a2 2 0 0 1 2 2v2h1a2 2 0 0 1 0 4h-1v2a2 2 0 0 1-2 2h-2v1a2 2 0 0 1-4 0v-1H8a2 2 0 0 1-2-2v-2H5a2 2 0 0 1 0-4h1V7a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2z"/>
+    </svg>
+  </button>
+  <div id="asisPanel" role="dialog" aria-label="Asistente de piezas">
+    <div class="asis-top">
+      <div class="av">🧩</div>
+      <div><div class="tt">Armador de Motor</div><div class="sub">asistente de piezas · local</div></div>
+      <button class="cls" id="asisClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="asis-body" id="asisBody"></div>
+    <div class="asis-chips" id="asisChips"></div>
+    <div class="asis-input">
+      <input id="asisInput" type="text" placeholder="Pregunta: ¿qué lleva el C9?, cuánto liner, arma el 3406…" autocomplete="off">
+      <button id="asisSend" aria-label="Enviar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+    <div class="asis-foot">Asistente local gratis · funciona sin internet sobre tus datos SAP</div>
+  </div>`;
+  document.body.appendChild(root);
+
+  const $b=document.getElementById('asisBody');
+  const $in=document.getElementById('asisInput');
+  const $panel=document.getElementById('asisPanel');
+  const esc=(typeof _esc==='function')?_esc:(s=>String(s==null?'':s));
+
+  // ---- helpers de datos ----
+  // item r: [0]cod [1]desc [2]necesita [3]stockALM [5]enArriola [6]trasladar [7]comprar [11]comerciable [14]familia
+  const norm=s=>(s||'').toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,'');
+  const detailOpen=()=>{const v=document.getElementById('viewDetail');return v && !v.classList.contains('hidden');};
+  const engIndex=e=>ENGINES.indexOf(e);
+
+  const ALIAS=[
+    ['3306 id','3306ID'],['3306id','3306ID'],['3306 pc','3306PC'],['3306pc','3306PC'],
+    ['3304 id','3304ID'],['3304id','3304ID'],['3304 pc','3304PC'],['3304pc','3304PC'],
+    ['3054c','3054C'],['c4.4','C4.4'],['c4 4','C4.4'],['c44','C4.4'],
+    ['c15','C15'],['3406','3406'],['3054','3054'],['c9','C9'],
+    ['consolidado','CONS'],['cons','CONS'],['3306','CONS'],['3304','CONS']
+  ];
+  function detectEngine(t){
+    const n=norm(t);
+    for(const [k,id] of ALIAS){ if(n.includes(k)){ const e=ENGINES.find(x=>x.id===id); if(e) return e; } }
+    return null;
+  }
+  const FAMS=[...new Set([].concat(...ENGINES.map(e=>e.items.map(r=>r[14]||'Otros'))))];
+  const FAM_SYN={valvula:'Válvulas',piston:'Pistón/Anillos',anillo:'Pistón/Anillos',biela:'Biela/Metales',
+    metal:'Biela/Metales',culata:'Culata',inyec:'Inyección',bomba:'Bombas',turbo:'Turbo',cigue:'Cigüeñal',
+    volante:'Volante',carter:'Cárter',sello:'Sellos/Juntas',junta:'Sellos/Juntas',liner:'Camiseta/Liner',
+    camiseta:'Camiseta/Liner',leva:'Árbol de levas',distribuc:'Distribución',monoblock:'Monoblock',
+    manifold:'Manifold/Escape',escape:'Manifold/Escape',enfria:'Enfriamiento'};
+  function detectFamily(t){
+    for(const f of FAMS){ const key=norm(f).split('/')[0]; if(key.length>=4 && new RegExp('\\b'+key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).test(t)) return f; }
+    for(const k in FAM_SYN){ if(new RegExp('\\b'+k).test(t) && FAMS.includes(FAM_SYN[k])) return FAM_SYN[k]; } // \b evita que "lleva" active "leva"
+    return null;
+  }
+  const STOP=new Set(['cuanto','cuantos','cuanta','cuantas','de','del','el','la','los','las','motor','motores',
+    'lleva','llevan','necesita','necesito','pieza','piezas','parte','partes','codigo','va','van','donde','en','que',
+    'cuales','se','usa','usan','tiene','hay','y','para','un','una','busca','buscar','muestra','dame','quiero','ver',
+    'con','como','cual','este','esta','a','al','me','dime','cuanto','info','sobre','todas','todos','tienen']);
+  function extractPartQuery(raw){
+    let n=norm(raw).replace(/[¿?¡!.,;:]/g,' ');
+    for(const [k] of ALIAS){ n=n.split(k).join(' '); }
+    return n.split(/\s+/).filter(w=>w && !STOP.has(w) && !/^\d{4}$/.test(w)).join(' ').trim();
+  }
+  function kitMult(e){ try{ if(detailOpen() && ENGINES[curIdx]===e && typeof KITS==='function') return KITS(); }catch(_){} return 1; }
+
+  // ---- render de piezas ----
+  function partRow(r,mult){
+    mult=mult||1; const need=r[2]*mult;
+    const buy=r[7]>0?`<span class="asis-tag buy">comprar ${r[7]*mult}</span>`:'';
+    const tr =r[6]>0?`<span class="asis-tag tr">traer ${r[6]*mult}</span>`:'';
+    return `<div class="asis-part">
+      <div class="asis-qty">${need}</div>
+      <div class="asis-pinfo"><b>${esc(r[1]||'—')}</b><span>${esc(r[0])} · ${esc(r[14]||'Otros')}</span></div>
+      <div class="asis-pstat">stock ${r[3]||0}${buy}${tr}</div>
+    </div>`;
+  }
+  function openLink(e){ return `<span class="asis-openlink" data-open="${engIndex(e)}">→ abrir ${esc(e.label)}</span>`; }
+
+  // ---- respuestas ----
+  function help(){
+    return `¡Hola! 🧩 Soy el <b>Armador de Motor</b>. Puedo decirte, de cada motor, <b>qué piezas lleva y cuántas</b>, dónde va cada una y armarlo por secciones.<br><br>Prueba:<br>• <b>¿Qué lleva el C9?</b><br>• <b>¿Cuántas válvulas necesita el 3406?</b><br>• <b>Arma el C15 por secciones</b><br>• <b>¿En qué motores va 4695312CTP?</b><br>• <b>¿Qué falta comprar del 3054?</b>`;
+  }
+  function needEngine(extra){
+    return `¿De qué motor? Dime uno de los 11 ${extra?('('+extra+')'):''}:<br><b>C9 · 3406 · C15 · 3054 · 3054C · C4.4 · 3306 ID/PC · 3304 ID/PC · Consolidado</b>`;
+  }
+  function listParts(e,fam){
+    const mult=kitMult(e);
+    let items=e.items.slice();
+    if(fam) items=items.filter(r=>(r[14]||'Otros')===fam);
+    items.sort((a,b)=>b[2]-a[2]);
+    if(!items.length) return `El ${esc(e.label)} no tiene piezas en la sección <b>${esc(fam)}</b>.`;
+    const tot=items.reduce((a,r)=>a+r[2]*mult,0);
+    const cap=items.slice(0,40);
+    let h=`<div class="asis-h">${esc(e.label)}${fam?(' · '+esc(fam)):''}</div>
+      <div class="asis-hint">${items.length} piezas · ${tot} unidades necesarias${mult>1?(' (para '+mult+' kits)'):' (por kit)'}</div>`;
+    h+=cap.map(r=>partRow(r,mult)).join('');
+    if(items.length>cap.length) h+=`<div class="asis-hint" style="margin-top:8px">…y ${items.length-cap.length} piezas más. Filtra por sección (ej: "válvulas del ${esc(e.id)}").</div>`;
+    h+=openLink(e);
+    return h;
+  }
+  function renderSecciones(e){
+    const map={}; e.items.forEach(r=>{const f=r[14]||'Otros';(map[f]=map[f]||[]).push(r);});
+    const fams=Object.keys(map).sort((a,b)=>map[b].length-map[a].length);
+    const mult=kitMult(e);
+    let h=`<div class="asis-h">🧩 ${esc(e.label)} — ${e.items.length} piezas en ${fams.length} secciones</div>
+      <div class="asis-hint">Toca una sección para <b>desarmarla</b> y ver sus piezas y cantidades.</div>`;
+    fams.forEach((f,i)=>{
+      const it=map[f].slice().sort((a,b)=>b[2]-a[2]);
+      const uds=it.reduce((a,r)=>a+r[2]*mult,0);
+      h+=`<div class="asis-sec"><div class="asis-sec-head" data-sec="${i}">
+        <span class="asis-sec-name">${esc(f)}</span>
+        <span class="asis-sec-meta">${it.length} piezas · ${uds} uds</span>
+        <span class="asis-chev">▸</span></div>
+        <div class="asis-sec-body" hidden>${it.map(r=>partRow(r,mult)).join('')}</div></div>`;
+    });
+    h+=openLink(e);
+    return h;
+  }
+  function listBy(e,tipo){
+    const mult=kitMult(e);
+    const idx=tipo==='comprar'?7:6;
+    const items=e.items.filter(r=>r[idx]>0).sort((a,b)=>b[idx]-a[idx]);
+    const lbl=tipo==='comprar'?'comprar':'trasladar de Arriola';
+    if(!items.length) return `✅ El ${esc(e.label)} no tiene piezas por <b>${lbl}</b> ahora mismo.`;
+    const uds=items.reduce((a,r)=>a+r[idx]*mult,0);
+    let h=`<div class="asis-h">${esc(e.label)} — por ${lbl}</div>
+      <div class="asis-hint">${items.length} piezas · ${uds} unidades${mult>1?(' (para '+mult+' kits)'):''}</div>`;
+    h+=items.slice(0,40).map(r=>partRow(r,mult)).join('')+openLink(e);
+    return h;
+  }
+  function kitsInfo(e){
+    const armables=Math.min(...e.items.map(r=> r[2]>0 ? Math.floor((r[3]||0)/r[2]) : 999));
+    const comprar=e.items.filter(r=>r[7]>0);
+    return `Con el stock actual del almacén principal, el <b>${esc(e.label)}</b> puede armar <b>${armables} kit(s) completo(s)</b>.<br>`+
+      (comprar.length? `Faltan <b>${comprar.length}</b> piezas por comprar para cerrar el kit. Escribe <b>"qué comprar del ${esc(e.id)}"</b>.`:`Está 100% cubierto. 🎉`)+
+      `<br>${openLink(e)}`;
+  }
+  function partsAnswer(e,q,found){
+    const mult=kitMult(e);
+    found=found.slice().sort((a,b)=>b[2]-a[2]);
+    if(found.length===1){
+      const r=found[0], need=r[2]*mult;
+      let h=`El <b>${esc(e.label)}</b> lleva <b>${need} ${need===1?'unidad':'unidades'}</b> de <b>${esc(r[1])}</b> (${esc(r[0])}) · sección ${esc(r[14]||'Otros')}.<br>`;
+      h+=`Stock almacén: ${r[3]||0}`+(r[5]>0?` · en Arriola: ${r[5]}`:'')+(r[7]>0?` · <span style="color:#ff8f92">a comprar: ${r[7]*mult}</span>`:` · ✅ cubierto`)+'.';
+      // ¿en qué otros motores va?
+      const otros=ENGINES.filter(x=>x!==e && x.items.some(rr=>rr[0]===r[0]));
+      if(otros.length) h+=`<br><span class="asis-hint">También va en: ${otros.map(x=>esc(x.id)).join(', ')}. Pregunta "¿en qué motores va ${esc(r[0])}?"</span>`;
+      h+='<br>'+openLink(e);
+      return h;
+    }
+    let h=`<div class="asis-h">${esc(e.label)} · "${esc(q)}" (${found.length})</div>`;
+    h+=found.slice(0,30).map(r=>partRow(r,mult)).join('')+openLink(e);
+    return h;
+  }
+  function acrossAnswer(q){
+    if(!q||q.length<2) return `Dime el <b>nombre o código</b> de la pieza que quieres ubicar. Ej: "¿en qué motores va pistón?".`;
+    const nq=norm(q); const hits=[];
+    ENGINES.forEach(e=>e.items.forEach(r=>{ if(norm(r[0]).includes(nq)||norm(r[1]).includes(nq)) hits.push({e,r}); }));
+    if(!hits.length) return `No encontré ninguna pieza que coincida con <b>"${esc(q)}"</b> en los 11 motores.`;
+    // agrupar por código
+    const byCod={};
+    hits.forEach(({e,r})=>{ (byCod[r[0]]=byCod[r[0]]||{desc:r[1],fam:r[14],rows:[]}).rows.push({e,r}); });
+    const cods=Object.keys(byCod).slice(0,8);
+    let h=`<div class="asis-h">🔎 "${esc(q)}" en los motores</div>
+      <div class="asis-hint">${Object.keys(byCod).length} código(s) · dónde va cada uno y cuánto.</div>`;
+    cods.forEach(cod=>{
+      const g=byCod[cod];
+      h+=`<div class="asis-sec"><div class="asis-sec-head" data-sec="x">
+        <span class="asis-sec-name">${esc(g.desc||cod)}</span>
+        <span class="asis-sec-meta">${cod} · ${g.rows.length} motor(es)</span>
+        <span class="asis-chev">▸</span></div><div class="asis-sec-body" hidden>`;
+      h+=g.rows.map(({e,r})=>`<div class="asis-part">
+        <div class="asis-qty">${r[2]}</div>
+        <div class="asis-pinfo"><b>${esc(e.label)}</b><span>necesita ${r[2]} · stock ${r[3]||0}${r[7]>0?' · comprar '+r[7]:''}</span></div>
+        <div class="asis-pstat"><span class="asis-openlink" data-open="${engIndex(e)}">abrir</span></div>
+      </div>`).join('');
+      h+=`</div></div>`;
+    });
+    if(Object.keys(byCod).length>cods.length) h+=`<div class="asis-hint">…y ${Object.keys(byCod).length-cods.length} código(s) más. Afina la búsqueda.</div>`;
+    return h;
+  }
+
+  // ---- router ----
+  function answer(raw){
+    const t=norm(raw).trim();
+    if(!t || /^(hola|buenas|hey|ayuda|help|que puedes|menu|inicio)\b/.test(t)) return help();
+    const openE = detailOpen()? ENGINES[curIdx] : null;
+    const eng = detectEngine(raw) || openE;
+    // cross-engine: dónde va / en qué motores
+    if(/(en que motor|en cuales motor|que motores|donde va|donde se usa|comparten|repetid|se repite|todos los motores)/.test(t)){
+      return acrossAnswer(extractPartQuery(raw));
+    }
+    // secciones / rompecabezas / armar
+    if(/(seccion|secci|rompecabeza|arma|desarma|por parte|componen|se compone|familias|estructura|despiece)/.test(t)){
+      return eng? renderSecciones(eng) : needEngine('para armarlo por secciones');
+    }
+    // comprar
+    if(/(comprar|falta|por comprar|que compro|hay que comprar|lista de compra)/.test(t)){
+      return eng? listBy(eng,'comprar') : needEngine('para ver qué comprar');
+    }
+    // trasladar
+    if(/(traslad|arriola|mover de|traer de)/.test(t)){
+      return eng? listBy(eng,'trasladar') : needEngine('para ver traslados');
+    }
+    // kits armables
+    if(/(cuantos kit|kits armable|se puede armar|puedo armar|kits completos)/.test(t)){
+      return eng? kitsInfo(eng) : needEngine();
+    }
+    // listar piezas (con posible filtro de sección)
+    const fam=detectFamily(t);
+    if(/(que piezas|que lleva|piezas de|todas las piezas|componentes|que items|cuantas piezas|lista|inventario|que necesita|que partes)/.test(t) || (fam && eng)){
+      return eng? listParts(eng,fam) : needEngine('para listar sus piezas');
+    }
+    // búsqueda de pieza suelta
+    const q=extractPartQuery(raw);
+    if(q && q.length>=2){
+      if(eng){ const found=eng.items.filter(r=>norm(r[0]).includes(norm(q))||norm(r[1]).includes(norm(q))); if(found.length) return partsAnswer(eng,q,found); }
+      const across=acrossAnswer(q); if(!/No encontré/.test(across)) return across;
+    }
+    return eng
+      ? `No estoy seguro de qué buscas del <b>${esc(eng.label)}</b>. Prueba: "qué lleva", "arma por secciones", "qué comprar", o el nombre de una pieza.`
+      : help();
+  }
+
+  // ---- mensajería ----
+  function addMsg(html,who){
+    const d=document.createElement('div');
+    d.className='asis-msg '+(who||'bot');
+    d.innerHTML=html;
+    $b.appendChild(d);
+    $b.scrollTop=$b.scrollHeight;
+  }
+  function send(text){
+    text=(text||'').trim(); if(!text) return;
+    addMsg(esc(text),'me');
+    $in.value='';
+    setTimeout(()=>{ try{ addMsg(answer(text),'bot'); }catch(err){ addMsg('Ups, no pude procesar eso. Intenta de otra forma.','bot'); console.error(err);} },180);
+  }
+
+  // ---- chips dinámicos según contexto ----
+  function refreshChips(){
+    const wrap=document.getElementById('asisChips');
+    const e=detailOpen()?ENGINES[curIdx]:null;
+    const chips = e
+      ? [['¿Qué lleva '+e.id+'?','que lleva el '+e.id],['🧩 Ármalo por secciones','arma el '+e.id+' por secciones'],['¿Qué comprar?','que comprar del '+e.id],['Buscar en todos','']]
+      : [['¿Qué lleva el C9?','que lleva el C9'],['🧩 Arma el 3406','arma el 3406 por secciones'],['¿Qué comprar del C15?','que comprar del C15'],['¿Dónde va una pieza?','']];
+    wrap.innerHTML=chips.map((c,i)=>`<span class="asis-chip" data-q="${esc(c[1])}">${esc(c[0])}</span>`).join('');
+  }
+
+  // ---- eventos ----
+  function openPanel(){
+    $panel.classList.add('open');
+    refreshChips();
+    if(!$b.dataset.greeted){ addMsg(help(),'bot'); $b.dataset.greeted='1'; }
+    setTimeout(()=>$in.focus(),80);
+  }
+  document.getElementById('asisFab').addEventListener('click',()=>{ $panel.classList.contains('open')?$panel.classList.remove('open'):openPanel(); });
+  document.getElementById('asisClose').addEventListener('click',()=>$panel.classList.remove('open'));
+  document.getElementById('asisSend').addEventListener('click',()=>send($in.value));
+  $in.addEventListener('keydown',e=>{ if(e.key==='Enter') send($in.value); });
+  document.getElementById('asisChips').addEventListener('click',e=>{
+    const c=e.target.closest('.asis-chip'); if(!c) return;
+    const q=c.getAttribute('data-q');
+    if(q) send(q); else { $in.focus(); $in.placeholder='Escribe el nombre o código de la pieza…'; }
+  });
+  // delegación: expandir secciones + abrir motor
+  $b.addEventListener('click',e=>{
+    const head=e.target.closest('.asis-sec-head');
+    if(head){ head.parentElement.classList.toggle('open');
+      const body=head.nextElementSibling; if(body) body.hidden=!head.parentElement.classList.contains('open'); return; }
+    const op=e.target.closest('[data-open]');
+    if(op){ const i=+op.getAttribute('data-open'); if(!isNaN(i)&&typeof openEngine==='function'){ openEngine(i); $panel.classList.remove('open'); } }
+  });
+})();
 </script>
 </body>
 </html>

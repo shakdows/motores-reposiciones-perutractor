@@ -3350,8 +3350,8 @@ try{_initLock();}catch(e){console.error(e);}
 
 // Abre el visor 3D del motor actual (despiece interactivo por piezas)
 function open3D(){
-  try{ const e=ENGINES[curIdx]; window.open('motor-3d.html?engine='+encodeURIComponent(e.id),'_blank'); }
-  catch(err){ window.open('motor-3d.html','_blank'); }
+  try{ const e=ENGINES[curIdx]; window.open('motor3d.html?engine='+encodeURIComponent(e.id),'_blank'); }
+  catch(err){ window.open('motor3d.html','_blank'); }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -3710,7 +3710,7 @@ function open3D(){
     const op=e.target.closest('[data-open]');
     if(op){ const i=+op.getAttribute('data-open'); if(!isNaN(i)&&typeof openEngine==='function'){ openEngine(i); $panel.classList.remove('open'); } return; }
     const d3=e.target.closest('[data-3d]');
-    if(d3){ window.open('motor-3d.html?engine='+encodeURIComponent(d3.getAttribute('data-3d')),'_blank'); }
+    if(d3){ window.open('motor3d.html?engine='+encodeURIComponent(d3.getAttribute('data-3d')),'_blank'); }
   });
 })();
 </script>

@@ -161,9 +161,9 @@ const DATA = [{"id":"C9","label":"Motor C9","grupo":"C9","coti":"00530","sec":{"
   // ═══ escena ═══
   const canvas=document.getElementById('scene');
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.5));
   renderer.setSize(innerWidth,innerHeight);
-  renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap; renderer.shadowMap.autoUpdate=false;
   renderer.outputEncoding=THREE.sRGBEncoding; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0.95;
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,0.1,200);
@@ -177,7 +177,7 @@ const DATA = [{"id":"C9","label":"Motor C9","grupo":"C9","coti":"00530","sec":{"
 
   scene.add(new THREE.AmbientLight(0xffffff,0.12));
   const key=new THREE.DirectionalLight(0xffffff,1.35); key.position.set(9,14,10); key.castShadow=true;
-  key.shadow.mapSize.set(2048,2048); key.shadow.camera.left=-9;key.shadow.camera.right=9;key.shadow.camera.top=9;key.shadow.camera.bottom=-9;key.shadow.camera.far=50; key.shadow.bias=-0.0004; scene.add(key);
+  key.shadow.mapSize.set(1024,1024); key.shadow.camera.left=-9;key.shadow.camera.right=9;key.shadow.camera.top=9;key.shadow.camera.bottom=-9;key.shadow.camera.far=50; key.shadow.bias=-0.0004; scene.add(key);
   const rim=new THREE.DirectionalLight(0xffd9a0,0.8); rim.position.set(-8,10,-11); scene.add(rim);
   const floor=new THREE.Mesh(new THREE.CircleGeometry(30,64),new THREE.MeshStandardMaterial({color:0x090d16,roughness:0.85,metalness:0,envMapIntensity:0.12}));
   floor.rotation.x=-Math.PI/2; floor.position.y=-5; floor.receiveShadow=true; scene.add(floor);
@@ -208,24 +208,28 @@ const DATA = [{"id":"C9","label":"Motor C9","grupo":"C9","coti":"00530","sec":{"
     });
     engineGroup.position.sub(gc);
     document.getElementById('load').style.display='none';
+    renderer.shadowMap.needsUpdate=true; invalidate();
     window.__ready=true;
   },undefined,(e)=>{ document.getElementById('load').innerHTML='<div style="text-align:center;max-width:380px;padding:20px">No se pudo cargar el modelo 3D (engine_real.glb). Debe estar junto a este archivo.</div>'; });
 
-  function applyExp(){ meshes.forEach(m=>{ const b=m.userData.base,d=m.userData.dir; m.position.set(b.x+d.x*EXP*SPREAD,b.y+d.y*EXP*SPREAD,b.z+d.z*EXP*SPREAD); }); }
+  function applyExp(){ meshes.forEach(m=>{ const b=m.userData.base,d=m.userData.dir; m.position.set(b.x+d.x*EXP*SPREAD,b.y+d.y*EXP*SPREAD,b.z+d.z*EXP*SPREAD); }); renderer.shadowMap.needsUpdate=true; invalidate(); }
 
-  // ═══ cámara orbital ═══
+  // ═══ cámara orbital (con inercia + render bajo demanda) ═══
   let theta=0.7, phi=1.15, radius=13, target=new THREE.Vector3(0,0,0), autoRot=false;
+  let tTheta=theta, tPhi=phi, tRadius=radius, needsRender=true;
+  const invalidate=()=>{ needsRender=true; };
   function updateCam(){ const r=radius; camera.position.set(target.x+r*Math.sin(phi)*Math.cos(theta),target.y+r*Math.cos(phi),target.z+r*Math.sin(phi)*Math.sin(theta)); camera.lookAt(target); }
   let dragging=false,lastX=0,lastY=0,moved=0;
   canvas.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;moved=0;canvas.setPointerCapture(e.pointerId);});
-  canvas.addEventListener('pointermove',e=>{ if(dragging){const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);theta-=dx*0.008;phi=Math.max(0.25,Math.min(2.7,phi-dy*0.008));} else hoverTest(e); });
+  let lastHover=0;
+  canvas.addEventListener('pointermove',e=>{ if(dragging){const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;moved+=Math.abs(dx)+Math.abs(dy);tTheta-=dx*0.01;tPhi=Math.max(0.12,Math.min(3.02,tPhi-dy*0.01));invalidate();} else { const now=performance.now(); if(now-lastHover>55){ lastHover=now; hoverTest(e);} } });
   window.addEventListener('pointerup',e=>{ if(dragging){dragging=false; if(moved<6) clickTest(e);} });
-  canvas.addEventListener('wheel',e=>{e.preventDefault();radius=Math.max(6,Math.min(30,radius+(e.deltaY>0?1:-1)*0.9));},{passive:false});
+  canvas.addEventListener('wheel',e=>{e.preventDefault();tRadius=Math.max(5,Math.min(34,tRadius+(e.deltaY>0?1:-1)*1.1));invalidate();},{passive:false});
 
   const ray=new THREE.Raycaster(),mouse=new THREE.Vector2(),tip=document.getElementById('tip');
   function pick(e){ const r=canvas.getBoundingClientRect(); mouse.x=((e.clientX-r.left)/r.width)*2-1; mouse.y=-((e.clientY-r.top)/r.height)*2+1; ray.setFromCamera(mouse,camera); return ray.intersectObjects(meshes,false); }
   function setHi(m,on){ if(!m)return; if(m.material.emissive){ m.material.emissive.setHex(on?0xffb300:0x000000); m.material.emissiveIntensity=on?0.45:1; } }
-  function hoverTest(e){ const hit=pick(e); if(hit.length){ if(hovered!==hit[0].object){ setHi(hovered,false); hovered=hit[0].object; setHi(hovered,true);} canvas.style.cursor='pointer'; tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY+14)+'px'; tip.innerHTML=`Pieza del motor<span>modelo 3D real · gírala y despiézala</span>`; } else { setHi(hovered,false); hovered=null; canvas.style.cursor='grab'; tip.style.display='none'; } }
+  function hoverTest(e){ const hit=pick(e); if(hit.length){ if(hovered!==hit[0].object){ setHi(hovered,false); hovered=hit[0].object; setHi(hovered,true); invalidate();} canvas.style.cursor='pointer'; tip.style.display='block'; tip.style.left=(e.clientX+14)+'px'; tip.style.top=(e.clientY+14)+'px'; tip.innerHTML=`Pieza del motor<span>modelo 3D real · gírala y despiézala</span>`; } else { if(hovered){ setHi(hovered,false); hovered=null; invalidate();} canvas.style.cursor='grab'; tip.style.display='none'; } }
   function clickTest(e){ const hit=pick(e); if(hit.length){ hideHint(); /* resalta la pieza tocada */ } }
   canvas.addEventListener('pointerleave',()=>{tip.style.display='none';});
 
@@ -270,12 +274,20 @@ const DATA = [{"id":"C9","label":"Motor C9","grupo":"C9","coti":"00530","sec":{"
   expSlider.addEventListener('input',()=>{EXP=expSlider.value/100;expBadge.textContent=expSlider.value+'%';applyExp();hideHint();});
   document.getElementById('btnRot').addEventListener('click',function(){autoRot=!autoRot;this.classList.toggle('on',autoRot);});
   document.getElementById('btnExplode').addEventListener('click',function(){const to=EXP>0.5?0:1;animExp(to);this.classList.toggle('on',to>0.5);hideHint();});
-  document.getElementById('btnReset').addEventListener('click',()=>{theta=0.7;phi=1.15;radius=13;target.set(0,0,0);});
+  document.getElementById('btnReset').addEventListener('click',()=>{tTheta=0.7;tPhi=1.15;tRadius=13;target.set(0,0,0);invalidate();});
   function animExp(to){const from=EXP,t0=performance.now(),dur=900;(function s(now){const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,3);EXP=from+(to-from)*e;expSlider.value=Math.round(EXP*100);expBadge.textContent=expSlider.value+'%';applyExp();if(k<1)requestAnimationFrame(s);})(t0);}
   let hintTimer=setTimeout(hideHint,8000);
   function hideHint(){const h=document.getElementById('hint');if(h){h.style.opacity='0';setTimeout(()=>h.remove(),600);}clearTimeout(hintTimer);}
 
-  function tick(){ if(autoRot)theta+=0.0035; updateCam(); renderer.render(scene,camera); requestAnimationFrame(tick); }
+  function tick(){
+    if(autoRot){ tTheta+=0.004; }
+    const d=0.2;
+    if(Math.abs(tTheta-theta)>1e-4||Math.abs(tPhi-phi)>1e-4||Math.abs(tRadius-radius)>1e-4){
+      theta+=(tTheta-theta)*d; phi+=(tPhi-phi)*d; radius+=(tRadius-radius)*d; needsRender=true;
+    }
+    if(needsRender){ updateCam(); renderer.render(scene,camera); needsRender=false; }
+    requestAnimationFrame(tick);
+  }
   updateCam(); tick();
   window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);});
 })();

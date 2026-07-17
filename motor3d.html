@@ -151,24 +151,56 @@ const DATA = [{"id":"C9","label":"Motor C9","grupo":"C9","coti":"00530","sec":{"
     document.getElementById('load').innerHTML='<div style="text-align:center;max-width:360px;padding:20px">No se pudo cargar la librería 3D (three.min.js). Asegúrate de que el archivo <b>three.min.js</b> esté junto a este HTML.</div>'; return; }
 
   // ═══ colores de materiales ═══
-  const C={ yellow:0xE0A81C, yellowD:0xC8901A, steel:0xB8BFC9, steelD:0x8a929e, dark:0x2a2e35,
-    copper:0xC57B3A, black:0x1c1f26, chrome:0xd7dde6 };
-  function mat(color,rough,metal){ return new THREE.MeshStandardMaterial({color,roughness:rough==null?0.55:rough,metalness:metal==null?0.35:metal}); }
-  function box(w,h,d,m){ return new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m); }
-  function cyl(rt,rb,h,m,seg){ const g=new THREE.CylinderGeometry(rt,rb,h,seg||24); return new THREE.Mesh(g,m); }
-  function torus(r,t,m){ return new THREE.Mesh(new THREE.TorusGeometry(r,t,12,28),m); }
+  const C={ yellow:0xEC9A0A, yellowD:0xBE7A06, steel:0xC2C8D0, steelD:0x9299a3, dark:0x22252b,
+    copper:0xC57B3A, black:0x1c1f26, chrome:0xdfe4ea };
+
+  // --- micro-rugosidad procedural (textura de fundición, sin archivos) ---
+  function makeNoiseRough(){
+    const s=256,c=document.createElement('canvas');c.width=c.height=s;const g=c.getContext('2d');
+    const img=g.createImageData(s,s);
+    for(let i=0;i<img.data.length;i+=4){ let v=165 + (Math.random()*2-1)*48; v=Math.max(110,Math.min(220,v));
+      img.data[i]=img.data[i+1]=img.data[i+2]=v; img.data[i+3]=255; }
+    g.putImageData(img,0,0);
+    const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(4,4); return t;
+  }
+  const ROUGH=makeNoiseRough();
+
+  // --- fábrica de materiales PBR realistas ---
+  function painted(color){ return new THREE.MeshPhysicalMaterial({color,metalness:0.3,roughness:0.5,clearcoat:0.32,clearcoatRoughness:0.45,roughnessMap:ROUGH,envMapIntensity:0.38}); }
+  function metal(color,rough){ return new THREE.MeshStandardMaterial({color,metalness:1.0,roughness:rough==null?0.36:rough,roughnessMap:ROUGH,envMapIntensity:1.05}); }
+  function darkMetal(color){ return new THREE.MeshStandardMaterial({color,metalness:0.8,roughness:0.52,roughnessMap:ROUGH,envMapIntensity:0.7}); }
+  function rubber(color){ return new THREE.MeshStandardMaterial({color,metalness:0.0,roughness:0.88}); }
+
+  // --- caja de bordes redondeados (aspecto fundido/fabricado) ---
+  function roundedBoxGeo(w,h,d,r){
+    r=Math.max(0.01,Math.min(r,w/2-0.01,h/2-0.01,d/2-0.01));
+    const iw=w-2*r, ih=h-2*r, sh=new THREE.Shape();
+    sh.moveTo(-iw/2,-ih/2); sh.lineTo(iw/2,-ih/2); sh.lineTo(iw/2,ih/2); sh.lineTo(-iw/2,ih/2); sh.lineTo(-iw/2,-ih/2);
+    const geo=new THREE.ExtrudeGeometry(sh,{depth:d-2*r,bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:2,steps:1,curveSegments:1});
+    geo.translate(0,0,-(d-2*r)/2); geo.computeVertexNormals(); return geo;
+  }
+  function box(w,h,d,m){ const r=Math.min(w,h,d)*0.14; return new THREE.Mesh(roundedBoxGeo(w,h,d,r),m); }
+  function cyl(rt,rb,h,m,seg){ const g=new THREE.CylinderGeometry(rt,rb,h,seg||28); return new THREE.Mesh(g,m); }
+  function torus(r,t,m){ return new THREE.Mesh(new THREE.TorusGeometry(r,t,16,36),m); }
+  // perno/tornillo hexagonal
+  function bolt(m){ const b=cyl(0.055,0.055,0.09,m||metal(0xd0d5dd,0.3),6); return b; }
+  function boltRow(n,x0,dx,y,z,m){ const a=[]; for(let i=0;i<n;i++){ const b=bolt(m); b.position.set(x0+i*dx,y,z); a.push(b);} return a; }
 
   // ═══ definición de secciones: shape + posición + dirección de explosión ═══
-  // cada builder retorna un THREE.Group; explode = desplazamiento final al 100%
-  const YELLOW=()=>mat(C.yellow,0.5,0.35), YELLOWD=()=>mat(C.yellowD,0.55,0.3),
-        STEEL=()=>mat(C.steel,0.35,0.75), STEELD=()=>mat(C.steelD,0.4,0.7),
-        DARK=()=>mat(C.dark,0.6,0.5), CHROME=()=>mat(C.chrome,0.2,0.9), COPPER=()=>mat(C.copper,0.4,0.7);
+  const YELLOW=()=>painted(C.yellow), YELLOWD=()=>painted(C.yellowD),
+        STEEL=()=>metal(C.steel,0.3), STEELD=()=>metal(C.steelD,0.44),
+        DARK=()=>darkMetal(C.dark), CHROME=()=>metal(C.chrome,0.12), COPPER=()=>metal(C.copper,0.4);
+  function mat(color,rough,metal2){ return new THREE.MeshStandardMaterial({color,roughness:rough==null?0.55:rough,metalness:metal2==null?0.35:metal2,roughnessMap:ROUGH,envMapIntensity:0.9}); }
   function g(children,pos){ const grp=new THREE.Group(); children.forEach(c=>grp.add(c)); if(pos)grp.position.set(pos[0],pos[1],pos[2]); return grp; }
 
   const DEF = {
    'Monoblock':{ ex:[0,-0.2,0], build(){ const b=box(4.6,2.2,2.0,YELLOW()); const dk=box(4.62,0.5,2.02,YELLOWD()); dk.position.y=-0.7;
-      const holes=[]; for(let i=0;i<4;i++){ const h=cyl(0.42,0.42,0.4,DARK(),20); h.rotation.x=0; h.position.set(-1.5+i,1.05,0); holes.push(h);} return g([b,dk,...holes]); } },
-   'Culata':{ ex:[0,2.7,0], build(){ const h=box(4.1,0.72,1.9,YELLOW()); const p=[]; for(let i=0;i<4;i++){const c=cyl(0.16,0.16,0.5,STEEL(),14);c.position.set(-1.5+i,0.5,0.5);p.push(c);} return g([h,...p],[0,1.56,0]); } },
+      const deck=box(4.5,0.12,1.95,YELLOWD()); deck.position.y=1.02;
+      const holes=[]; for(let i=0;i<4;i++){ const h=cyl(0.42,0.42,0.4,DARK(),24); h.position.set(-1.5+i,1.05,0); holes.push(h);}
+      const bolts=[...boltRow(5,-2.0,1.0,1.09,0.82), ...boltRow(5,-2.0,1.0,1.09,-0.82)];
+      const ribs=[]; for(let i=0;i<3;i++){ const rb=box(0.1,1.6,0.1,YELLOWD()); rb.position.set(-1.0+i,0.1,1.01); ribs.push(rb);} return g([b,dk,deck,...holes,...bolts,...ribs]); } },
+   'Culata':{ ex:[0,2.7,0], build(){ const h=box(4.1,0.72,1.9,YELLOW()); const p=[]; for(let i=0;i<4;i++){const c=cyl(0.16,0.16,0.5,STEELD(),16);c.position.set(-1.5+i,0.5,0.5);p.push(c);}
+      const bolts=[...boltRow(5,-1.9,0.95,0.38,0.78), ...boltRow(5,-1.9,0.95,0.38,-0.78)]; return g([h,...p,...bolts],[0,1.56,0]); } },
    'Válvulas':{ ex:[0,4.4,0], build(){ const cov=box(4.0,0.5,1.5,YELLOWD()); const cap=cyl(0.28,0.28,0.18,DARK(),18);cap.position.set(-1.4,0.34,0);
       const vs=[]; for(let i=0;i<8;i++){ const v=cyl(0.05,0.05,0.55,CHROME(),10); v.position.set(-1.6+ (i%4), -0.35, i<4?-0.35:0.35); vs.push(v);} return g([cov,cap,...vs],[0,2.15,0]); } },
    'Camiseta/Liner':{ ex:[0,3.5,0], build(){ const t=[]; for(let i=0;i<4;i++){ const l=cyl(0.44,0.44,1.4,STEELD(),24); l.position.set(-1.5+i,0,0);
@@ -214,21 +246,37 @@ const DATA = [{"id":"C9","label":"Motor C9","grupo":"C9","coti":"00530","sec":{"
   renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   renderer.setSize(window.innerWidth,window.innerHeight);
   renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.outputEncoding=THREE.sRGBEncoding;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure=0.92;
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(42,window.innerWidth/window.innerHeight,0.1,100);
 
-  // luces
-  scene.add(new THREE.AmbientLight(0x99aaff,0.45));
-  const hemi=new THREE.HemisphereLight(0xcfe0ff,0x20263a,0.7); scene.add(hemi);
-  const key=new THREE.DirectionalLight(0xffffff,1.05); key.position.set(6,10,7); key.castShadow=true;
-  key.shadow.mapSize.set(1024,1024); key.shadow.camera.near=1; key.shadow.camera.far=40;
-  key.shadow.camera.left=-10;key.shadow.camera.right=10;key.shadow.camera.top=10;key.shadow.camera.bottom=-10; scene.add(key);
-  const rim=new THREE.DirectionalLight(0x6d8cff,0.5); rim.position.set(-7,4,-6); scene.add(rim);
-  const warm=new THREE.PointLight(0xffb300,0.5,30); warm.position.set(-4,3,4); scene.add(warm);
+  // ── mapa de entorno de estudio (da reflejos reales al metal) ──
+  function makeEnv(){
+    const pmrem=new THREE.PMREMGenerator(renderer); pmrem.compileEquirectangularShader();
+    const s=new THREE.Scene();
+    const surround=new THREE.Mesh(new THREE.SphereGeometry(40,24,16), new THREE.MeshBasicMaterial({color:0x232a3e,side:THREE.BackSide})); s.add(surround);
+    function panel(x,y,z,col,w,h){ const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h), new THREE.MeshBasicMaterial({color:col})); m.position.set(x,y,z); m.lookAt(0,0,0); s.add(m); }
+    panel(0,22,0,0xdfe6f2,22,22);      // softbox cenital
+    panel(-18,7,13,0x7d95c8,12,18);    // relleno frío izq
+    panel(17,5,-11,0xd8b980,11,16);    // cálido der
+    panel(0,3,23,0xcad4e6,9,9);        // frontal
+    const tex=pmrem.fromScene(s,0,0.1,100).texture; pmrem.dispose(); return tex;
+  }
+  scene.environment=makeEnv();
 
-  // piso reflejo sutil
-  const floor=new THREE.Mesh(new THREE.CircleGeometry(14,48), new THREE.MeshStandardMaterial({color:0x0d1424,roughness:0.9,metalness:0.1}));
-  floor.rotation.x=-Math.PI/2; floor.position.y=-2.7; floor.receiveShadow=true; scene.add(floor);
+  // luces
+  scene.add(new THREE.AmbientLight(0xffffff,0.1));
+  const key=new THREE.DirectionalLight(0xffffff,1.35); key.position.set(7,12,8); key.castShadow=true;
+  key.shadow.mapSize.set(2048,2048); key.shadow.camera.near=1; key.shadow.camera.far=44; key.shadow.bias=-0.0004;
+  key.shadow.camera.left=-11;key.shadow.camera.right=11;key.shadow.camera.top=11;key.shadow.camera.bottom=-11; scene.add(key);
+  const fill=new THREE.DirectionalLight(0xbcd0ff,0.55); fill.position.set(-9,5,7); scene.add(fill);
+  const rim=new THREE.DirectionalLight(0xffd9a0,0.85); rim.position.set(-6,8,-9); scene.add(rim);
+
+  // piso con reflejo sutil + sombra de contacto
+  const floor=new THREE.Mesh(new THREE.CircleGeometry(22,64), new THREE.MeshStandardMaterial({color:0x090d16,roughness:0.82,metalness:0.0,envMapIntensity:0.12}));
+  floor.rotation.x=-Math.PI/2; floor.position.y=-4.6; floor.receiveShadow=true; scene.add(floor);
 
   const engineGroup=new THREE.Group(); scene.add(engineGroup);
 

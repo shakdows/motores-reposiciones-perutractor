@@ -1943,10 +1943,10 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
       <option value="done">Sin pendientes</option>
     </select>
     <select class="fsel" id="twSort" aria-label="Ordenar motores" onchange="twSet('sort',this.value)">
+      <option value="name">Nombre: A → Z</option>
       <option value="buy">Mayor pendiente de compra</option>
       <option value="cov">Menor cobertura</option>
       <option value="need">Mayor demanda</option>
-      <option value="name">Nombre</option>
     </select>
     <button class="fsel" type="button" onclick="twLimpiar()">Limpiar filtros</button>
     <span class="tw-res" id="twRes"></span>
@@ -2035,7 +2035,7 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
         <button data-v="tra" onclick="cbSetExis('tra')" title="Ya hay unidades en camino">En tránsito</button>
       </span>
       <select class="cb-sel" id="cbSort" onchange="renderComb()" title="Ordenar la tabla">
-        <option value="">Orden: mayor impacto en compra</option>
+        <option value="">Orden: código A → Z</option>
         <option value="cod-asc">Código: A → Z</option>
         <option value="cod-desc">Código: Z → A</option>
         <option value="desc-asc">Descripción: A → Z</option>
@@ -2209,11 +2209,11 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
         <option value="sin">Sin stock propio</option>
       </select>
       <select class="fsel" id="fSort" aria-label="Ordenar motores">
+        <option value="name">Nombre: A → Z</option>
         <option value="buy">Mayor faltante</option>
         <option value="move">Mayor traslado</option>
         <option value="excess">Mayor exceso</option>
         <option value="cov">% completado</option>
-        <option value="name">Nombre</option>
       </select>
       <button class="fsel" id="fClear" type="button">Limpiar filtros</button>
       <div class="seg" id="fView" role="group" aria-label="Forma de ver los motores">
@@ -2863,7 +2863,7 @@ function gradFor(g){
 //  HOME — indicadores, filtros, tarjetas y tabla de motores
 //  Solo presentación: los cálculos siguen saliendo de e.kpi.
 // ═══════════════════════════════════════════════════════════════
-const HOME={q:'',estado:'',fam:'',alm:'',sort:'buy',view:'flow'};
+const HOME={q:'',estado:'',fam:'',alm:'',sort:'name',view:'flow'};
 
 // Estado dominante de un motor. El orden importa: primero lo que bloquea.
 function engStatus(e){
@@ -3104,8 +3104,7 @@ function PartsDetailTable(idx){
     todas=todas.slice().sort((a,b)=>{ const A=g(a),B=g(b);
       return (typeof A==='string'? A.localeCompare(B,'es',{numeric:true}) : A-B)*k; });
   }else{
-    const orden={alm:(a,b)=>b.deAlm-a.deAlm, arr:(a,b)=>b.deArr-a.deArr, buy:(a,b)=>b.compra-a.compra};
-    todas=todas.slice().sort(orden[f]||((a,b)=>b.compra-a.compra||b.deArr-a.deArr||b.nec-a.nec));
+    todas=todas.slice().sort(porCodigo);
   }
   const ver=FLOW.todas[idx] ? todas : todas.slice(0,FL_TOPE);
   const tab=(k,l,n)=>`<button type="button" class="fl-tab ${k||''}${f===k?' on':''}" ${n===0&&k?'disabled':''}
@@ -3641,10 +3640,11 @@ function renderActions(){
   const e=ENGINES[curIdx]; const q=($('#dSearch').value||'').trim().toUpperCase();
   const match=r=> !q || r[0].toUpperCase().includes(q) || (r[1]||'').toUpperCase().includes(q);
   const it=piezasComer(e.items).filter(match); const N=KITS();
-  const comprar=it.filter(r=>calc(r,N).comprar>0);
-  const trasl  =it.filter(r=>calc(r,N).trasl>0);
-  const exceso =it.filter(r=>calc(r,N).exceso>0);
-  const suf    =it.filter(r=>{const c=calc(r,N);return c.comprar===0&&c.trasl===0&&c.exceso===0;});
+  const az=l=>l.slice().sort(porCodigo);       // código A→Z, igual que el resto
+  const comprar=az(it.filter(r=>calc(r,N).comprar>0));
+  const trasl  =az(it.filter(r=>calc(r,N).trasl>0));
+  const exceso =az(it.filter(r=>calc(r,N).exceso>0));
+  const suf    =az(it.filter(r=>{const c=calc(r,N);return c.comprar===0&&c.trasl===0&&c.exceso===0;}));
   const show = t => curTab==='all' || curTab===t;
   let out='';
   if(show('C')) out+=section('c','on-c',ICON.cart,'Comprar','Ítems que no hay ni en ALM01 ni en Arriola',
@@ -3829,7 +3829,7 @@ function setMode(m){
   $('#kitStepWrap').style.display = m==='kit' ? '' : 'none';
   renderCost();
 }
-let SORT={key:'sub', dir:'desc'};   // orden por defecto: subtotal mayor→menor
+let SORT={key:'cod', dir:'asc'};   // orden por defecto: código A→Z, no se mueve al cambiar kits
 function sortBy(k){
   if(SORT.key===k){ SORT.dir = SORT.dir==='asc' ? 'desc' : 'asc'; }
   else { SORT={key:k, dir: (k==='cod'||k==='desc'||k==='sup') ? 'asc' : 'desc'}; }
@@ -3974,7 +3974,7 @@ function costRows(){
       const sa=String(va), sb=String(vb);
       if(!sa && sb) return 1;      // sin valor siempre al final
       if(sa && !sb) return -1;
-      return sa.localeCompare(sb,'es') * dir;
+      return sa.localeCompare(sb,'es',{sensitivity:'base'}) * dir;
     }
     return (va-vb)*dir;
   });
@@ -5069,6 +5069,13 @@ function zonaChip(z){
   if(z==='MAN') return '<span class="zchip man" title="Precio manual">Manual</span>';
   return '';
 }
+/* Orden por defecto en toda la aplicación: código A→Z. Es el único criterio
+   que no depende de las cantidades, así que las filas no se mueven cuando
+   cambias los kits. Las columnas y los desplegables siguen dejando ordenar
+   por impacto, precio o lo que haga falta. */
+// A→Z literal: en códigos de repuesto la colación numérica pone 2A4429 antes
+// que 1512939, que al leer la lista despista más de lo que ayuda.
+const porCodigo = (a,b)=> String(a.cod||a[0]||'').localeCompare(String(b.cod||b[0]||''),'es',{sensitivity:'base'});
 function combRows(seleccion){
   const S = seleccion || CB_SEL;      // permite consolidar sin tocar la selección del usuario
   const map = {};   // cod -> {cod,desc,fam,por:{engId:qty},total, r}
@@ -5095,7 +5102,7 @@ function combRows(seleccion){
             smin: (r[10]===null||r[10]===undefined) ? null : r[10],
             precio: priceOf(m.cod)||0,
             marca: marcaOf(m.cod), oem: oemOf(m.cod), comer: comerOf(r), zona: zonaOf(m.cod)};
-  }).sort((a,b)=> b.comprar*b.precio - a.comprar*a.precio || b.nMot-a.nMot);
+  }).sort(porCodigo);
 }
 /* Los filtros vivían copiados en tres sitios y se habían desincronizado: los
    KPIs contaban TODO mientras la tabla y el Excel mostraban lo filtrado, así
@@ -5877,7 +5884,7 @@ function openReal(){
     if(s.mode==='kit'||s.mode==='min') setMode(s.mode);
     if(s.home){
       HOME.estado=s.home.estado||''; HOME.fam=s.home.fam||''; HOME.alm=s.home.alm||'';
-      HOME.sort=s.home.sort||'buy';  HOME.view=['table','grid','flow'].includes(s.home.view)? s.home.view : 'flow';
+      HOME.sort=s.home.sort||'name';  HOME.view=['table','grid','flow'].includes(s.home.view)? s.home.view : 'flow';
       $('#fEstado').value=HOME.estado; $('#fSort').value=HOME.sort; $('#fAlm').value=HOME.alm;
       [...$('#fView').querySelectorAll('button')].forEach(b=>{
         const on=b.dataset.view===HOME.view; b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on));
@@ -6077,7 +6084,7 @@ const MK=(function(){
       if(c.trasl>0) out.push({eng:e,i,cod:r[0],desc:r[1],fam:r[14]||'Otros',
         need:c.need,alm:c.alm,arr:c.arr,mover:c.trasl,comprar:c.comprar,precio:priceOf(r[0])||0});
     }));
-    return out.sort((a,b)=> b.mover*b.precio - a.mover*a.precio || b.mover-a.mover);
+    return out.sort(porCodigo);
   });
   // compra evitada gracias al traslado interno (solo piezas con precio conocido)
   const ahorroTraslado = N => memo('ah@'+(N||1),()=>{
@@ -6205,7 +6212,7 @@ const pct = x => Math.round(x*100);
    Misma familia de componentes que el Origen del stock: un solo bloque que
    recibe los datos del motor, igual para los actuales y para los que lleguen
    por Google Sheets. Aquí el acordeón deja una sola tarjeta abierta. */
-const TW={q:'', estado:'', sort:'buy'};
+const TW={q:'', estado:'', sort:'name'};
 function twCoincide(e,i,q){
   if(!q) return true;
   const t=(e.label+' '+e.grupo+' '+(e.coti||'')).toLowerCase();
@@ -6229,7 +6236,7 @@ function twFilas(){
     cov:(a,b)=>a.b.cob-b.b.cob,
     need:(a,b)=>b.b.t.nec-a.b.t.nec,
     name:(a,b)=>a.e.label.localeCompare(b.e.label,'es',{numeric:true}),
-  }[TW.sort]||((a,b)=>b.b.t.buy-a.b.t.buy);
+  }[TW.sort]||((a,b)=>a.e.label.localeCompare(b.e.label,'es',{numeric:true}));
   // desempate por nombre: sin él, dos motores con el mismo valor pueden
   // intercambiarse entre repintados
   return L.sort((a,b)=>cmp(a,b) || a.e.label.localeCompare(b.e.label,'es',{numeric:true}));
@@ -6257,7 +6264,7 @@ function twFiltros(){
   btn.setAttribute('aria-expanded',String(abrir));
 }
 function twLimpiar(){
-  TW.q=''; TW.estado=''; TW.sort='buy'; FLOW.comer='';
+  TW.q=''; TW.estado=''; TW.sort='name'; FLOW.comer='';
   $('#twQ').value=''; $('#twEstado').value=''; $('#twSort').value='buy';
   renderTowerPlan();
 }
@@ -6636,7 +6643,7 @@ function capIndiv(i,modo){
       if(k<min) min=k;
     });
     if(min===Infinity) min=0;
-    const frenos=kits.filter(x=>x.k===min).sort((a,b)=>(b.nec-b.disp)-(a.nec-a.disp));
+    const frenos=kits.filter(x=>x.k===min).sort((a,b)=>(b.nec-b.disp)-(a.nec-a.disp)||porCodigo(a,b));
     return {kits:min, frenos, completas, total};
   });
 }
@@ -6668,7 +6675,7 @@ function capSimular(){
     });
     if(min===Infinity) min=0;
     const arma=Math.min(pide,min);
-    const frenos=kits.filter(x=>x.k===min).sort((a,b)=>(b.nec-b.disp)-(a.nec-a.disp));
+    const frenos=kits.filter(x=>x.k===min).sort((a,b)=>(b.nec-b.disp)-(a.nec-a.disp)||porCodigo(a,b));
     const consume = resv ? pide : arma;
     let uds=0;
     if(consume>0) e.items.forEach(r=>{
@@ -6679,7 +6686,7 @@ function capSimular(){
       p.arr-=usaArr; uds+=usaAlm+usaArr;
     });
     const solo=capIndiv(i,modo);
-    const faltantes=kits.filter(x=>x.falta>0).sort((a,b)=>b.falta-a.falta);
+    const faltantes=kits.filter(x=>x.falta>0).sort(porCodigo);
     res.push({e, i, pos:pos+1, pide, solo:solo.kits, soloListas:solo.completas,
               puede:min, arma, falta:Math.max(0,pide-arma), frenos, uds, listas, total, faltantes});
   });
@@ -6720,7 +6727,7 @@ function capPaso(id,d){ const P=capPedidos(); P[id]=Math.max(0,Math.min(99,(P[id
 function renderCap(){
   const modo=CAP.modo, S=capStock(), P=capPedidos();
   const fuente = modo==='alm' ? 'solo con ALM01' : 'con ALM01 + lo que se puede traer de Arriola';
-  const ind=ENGINES.map((e,i)=>({e,i,c:capIndiv(i,modo)})).sort((a,b)=>b.c.kits-a.c.kits||a.e.label.localeCompare(b.e.label,'es'));
+  const ind=ENGINES.map((e,i)=>({e,i,c:capIndiv(i,modo)})).sort((a,b)=>a.e.label.localeCompare(b.e.label,'es',{numeric:true}));
   const armables=ind.filter(x=>x.c.kits>0).length;
   const sim=capSimular();
   const pedidosTot=sim.res.reduce((a,x)=>a+x.pide,0);
@@ -7262,10 +7269,7 @@ function whyDatos(){
     t.need+=x.total; t.almUsado+=usaAlm; t.trasl+=x.deArr; t.comprar+=x.comprar;
     t.exceso+=sobra; t.almFisico+=x.alm; if(x.nMot>1) t.compartidas++;
   });
-  g.buy.sort((a,b)=>b.compra-a.compra);
-  g.move.sort((a,b)=>b.trasl-a.trasl);
-  g.ok.sort((a,b)=>b.usaAlm-a.usaAlm);
-  g.info.sort((a,b)=>b.sobra-a.sobra);
+  g.buy.sort(porCodigo); g.move.sort(porCodigo); g.ok.sort(porCodigo); g.info.sort(porCodigo);
   return {g,t,piezas:rows.length, total:todas.length, cuenta};
 }
 function whyLeaf(x,tipo,varios){

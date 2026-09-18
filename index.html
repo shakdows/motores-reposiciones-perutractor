@@ -796,6 +796,17 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .cv-t{padding:6px 11px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink2);white-space:nowrap}
 .cv-t.on{background:var(--card);color:var(--brand);box-shadow:var(--sh-sm)}
 .cb-wrap{overflow:auto;flex:1;padding:0 18px 18px}
+/* la demanda combinada pasó de ventana flotante a pestaña propia */
+#viewComb .cb-box{width:auto;max-width:none;max-height:none;border-radius:var(--r);
+ box-shadow:0 1px 2px rgba(16,24,40,.04);animation:none;margin-bottom:20px}
+#viewComb .cb-head{padding:12px 18px 0;border:0;background:none}
+#viewComb .cb-head p{margin:0;font-size:12px;color:var(--ink2);line-height:1.55}
+/* la tabla es ancha: se desplaza dentro del panel, con la cabecera fija */
+#viewComb .cb-wrap{max-height:calc(100vh - 330px);min-height:320px;overflow:auto}
+@media(max-width:860px){
+ #viewComb .cb-box{width:auto;height:auto;max-height:none;border-radius:var(--r);border:1px solid var(--line)}
+ #viewComb .cb-wrap{max-height:calc(100vh - 220px)}
+}
 .cb-t{width:100%;border-collapse:separate;border-spacing:0;font-size:12px}
 .cb-t th{position:sticky;top:0;background:var(--dark);color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.3px;padding:9px 8px;text-align:left;z-index:2;white-space:nowrap;font-weight:700}
 .cb-t th.mot{background:#3c4665} .cb-t th.buy{background:#5a3fe0} .cb-t.res th.al2{background:#2f6bff}
@@ -1776,6 +1787,69 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
   </div>
 </section>
 
+<section id="viewComb" class="hidden">
+  <div class="xhead">
+    <div class="xhead-l">
+      <h1>Demanda combinada</h1>
+      <p>Una misma pieza la usan varios motores, pero tu stock es uno solo: aquí se suman para no comprarlas dos veces</p>
+    </div>
+  </div>
+  <div class="cb-box">
+    <div class="cb-head">
+      <div style="flex:1"><p>Si armas un motor, esa pieza ya no está para el otro — por eso <b>NECESITA TOTAL</b> suma lo de todos, y <b>COMPRAR</b> es lo que falta para que alcance para <b>todos</b>.</p></div>
+    </div>
+    <div class="cb-pick" id="cbPick"></div>
+    <div class="cb-kpis" id="cbKpis"></div>
+    <div class="cb-cap" id="cbCap"></div>
+    <div class="cb-bar">
+      <div class="cb-view">
+        <span class="cv-t on" id="cvT1" onclick="cbView('resumen')">🛒 Resumen de compra</span>
+        <span class="cv-t" id="cvT2" onclick="cbView('detalle')">📋 Detalle completo</span>
+      </div>
+      <input class="cb-find" id="cbFind" placeholder="Buscar código o descripción…" oninput="renderComb()">
+      <label class="cb-chk"><input type="checkbox" id="cbBuy" checked onchange="renderComb()"> Solo lo que falta comprar</label>
+      <label class="cb-chk kit"><input type="checkbox" id="cbKit" onchange="onKitToggle()"> 🧾 Cotizar kit completo (ignorar stock)</label>
+      <select class="cb-sel" id="cbMarca" onchange="renderComb()" title="Filtrar por marca">
+        <option value="">Marca: todas</option>
+      </select>
+      <select class="cb-sel" id="cbOem" onchange="renderComb()" title="Filtrar por tipo de precio">
+        <option value="">Precio: todos</option>
+        <option value="NET">Solo NET</option>
+        <option value="OEM">Solo OEM</option>
+      </select>
+      <select class="cb-sel" id="cbComer" onchange="onComerFilter()" title="Filtrar por comerciable">
+        <option value="">Comerciable: todos</option>
+        <option value="SI">Solo comerciables (SI)</option>
+        <option value="NO">Solo NO comerciables</option>
+        <option value="DUDA">Solo DUDA</option>
+        <option value="__none">Sin dato aún</option>
+      </select>
+      <select class="cb-sel" id="cbSort" onchange="renderComb()" title="Ordenar la tabla">
+        <option value="">Orden: mayor impacto en compra</option>
+        <option value="cod-asc">Código: A → Z</option>
+        <option value="cod-desc">Código: Z → A</option>
+        <option value="desc-asc">Descripción: A → Z</option>
+        <option value="desc-desc">Descripción: Z → A</option>
+        <option value="necesita-desc">Necesita: mayor a menor</option>
+        <option value="necesita-asc">Necesita: menor a mayor</option>
+        <option value="tienes-desc">Tienes: mayor a menor</option>
+        <option value="tienes-asc">Tienes: menor a mayor</option>
+        <option value="comprar-desc">Cantidad a comprar: mayor a menor</option>
+        <option value="comprar-asc">Cantidad a comprar: menor a mayor</option>
+        <option value="precio-desc">Precio: mayor a menor</option>
+        <option value="precio-asc">Precio: menor a mayor</option>
+        <option value="total-desc">Total US$: mayor a menor</option>
+        <option value="total-asc">Total US$: menor a mayor</option>
+      </select>
+      <span style="flex:1"></span>
+      <button class="ot-btn add" onclick="openCbAdd()">➕ Agregar código</button>
+      <button class="ot-btn gh" onclick="exportComb()">⬇ Excel</button>
+      <button class="ot-btn gh" onclick="pdfComb()">⬇ PDF</button>
+    </div>
+    <div class="cb-wrap"><table class="cb-t" id="cbTable"></table></div>
+  </div>
+</section>
+
 <!-- ═══════════ TRANSFERENCIAS ═══════════ -->
 <section id="viewTrans" class="hidden">
   <div class="xhead">
@@ -1895,9 +1969,8 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
     <div class="reco-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg></div>
     <div class="reco-tx">
       <b>Consolida las compras</b>
-      <span>Algunas piezas se utilizan en varios motores. Revisa la demanda combinada para evitar compras duplicadas.</span>
+      <span>Algunas piezas se utilizan en varios motores. En <b>Demanda combinada</b>, en el menú de la izquierda, las verás juntas para no comprarlas dos veces.</span>
     </div>
-    <button class="reco-btn" onclick="openComb()">Revisar demanda combinada</button>
   </div>
 
   <div class="toolbar" id="toolbar">
@@ -2093,64 +2166,7 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 </div>
 <button id="toTop" title="Ir arriba" aria-label="Ir arriba"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m18 15-6-6-6 6"/></svg></button>
 
-<div class="cb-ov" id="cbOv" onclick="if(event.target===this)closeComb()">
-  <div class="cb-box">
-    <div class="cb-head">
-      <div style="flex:1"><h4>Demanda combinada — stock compartido</h4>
-        <p>Una misma pieza la usan varios motores, pero tu stock es <b>uno solo</b>. Si armas un motor, esa pieza ya no está para el otro — por eso <b>NECESITA TOTAL</b> suma lo de todos, y <b>COMPRAR</b> es lo que falta para que alcance para <b>todos</b>.</p></div>
-      <button class="pl-x" onclick="closeComb()">✕</button>
-    </div>
-    <div class="cb-pick" id="cbPick"></div>
-    <div class="cb-kpis" id="cbKpis"></div>
-    <div class="cb-cap" id="cbCap"></div>
-    <div class="cb-bar">
-      <div class="cb-view">
-        <span class="cv-t on" id="cvT1" onclick="cbView('resumen')">🛒 Resumen de compra</span>
-        <span class="cv-t" id="cvT2" onclick="cbView('detalle')">📋 Detalle completo</span>
-      </div>
-      <input class="cb-find" id="cbFind" placeholder="Buscar código o descripción…" oninput="renderComb()">
-      <label class="cb-chk"><input type="checkbox" id="cbBuy" checked onchange="renderComb()"> Solo lo que falta comprar</label>
-      <label class="cb-chk kit"><input type="checkbox" id="cbKit" onchange="onKitToggle()"> 🧾 Cotizar kit completo (ignorar stock)</label>
-      <select class="cb-sel" id="cbMarca" onchange="renderComb()" title="Filtrar por marca">
-        <option value="">Marca: todas</option>
-      </select>
-      <select class="cb-sel" id="cbOem" onchange="renderComb()" title="Filtrar por tipo de precio">
-        <option value="">Precio: todos</option>
-        <option value="NET">Solo NET</option>
-        <option value="OEM">Solo OEM</option>
-      </select>
-      <select class="cb-sel" id="cbComer" onchange="onComerFilter()" title="Filtrar por comerciable">
-        <option value="">Comerciable: todos</option>
-        <option value="SI">Solo comerciables (SI)</option>
-        <option value="NO">Solo NO comerciables</option>
-        <option value="DUDA">Solo DUDA</option>
-        <option value="__none">Sin dato aún</option>
-      </select>
-      <select class="cb-sel" id="cbSort" onchange="renderComb()" title="Ordenar la tabla">
-        <option value="">Orden: por defecto</option>
-        <option value="cod-asc">Código: A → Z</option>
-        <option value="cod-desc">Código: Z → A</option>
-        <option value="desc-asc">Descripción: A → Z</option>
-        <option value="desc-desc">Descripción: Z → A</option>
-        <option value="necesita-desc">Necesita: mayor a menor</option>
-        <option value="necesita-asc">Necesita: menor a mayor</option>
-        <option value="tienes-desc">Tienes: mayor a menor</option>
-        <option value="tienes-asc">Tienes: menor a mayor</option>
-        <option value="comprar-desc">Cantidad a comprar: mayor a menor</option>
-        <option value="comprar-asc">Cantidad a comprar: menor a mayor</option>
-        <option value="precio-desc">Precio: mayor a menor</option>
-        <option value="precio-asc">Precio: menor a mayor</option>
-        <option value="total-desc">Total US$: mayor a menor</option>
-        <option value="total-asc">Total US$: menor a mayor</option>
-      </select>
-      <span style="flex:1"></span>
-      <button class="ot-btn add" onclick="openCbAdd()">➕ Agregar código</button>
-      <button class="ot-btn gh" onclick="exportComb()">⬇ Excel</button>
-      <button class="ot-btn gh" onclick="pdfComb()">⬇ PDF</button>
-    </div>
-    <div class="cb-wrap"><table class="cb-t" id="cbTable"></table></div>
-  </div>
-</div>
+
 
 <div class="cbadd-ov" id="cbAddOv" onclick="if(event.target===this)closeCbAdd()">
   <div class="cbadd-box">
@@ -4312,9 +4328,73 @@ let CB_SEL = {};   // engineId -> kits (0 = no incluido)
 let CB_VIEW = 'resumen';
 let CB_QTY={};    // cod -> cantidad a comprar fijada a mano en el General
 let CB_EXCL={};   // cod -> excluido del General
-function cbSetQty(cod,val){ const v=parseInt(val); if(isNaN(v)||v<0)delete CB_QTY[cod]; else CB_QTY[cod]=v; renderComb(); }
-function cbResetQty(cod){ delete CB_QTY[cod]; renderComb(); }
-function cbToggleExcl(cod){ if(CB_EXCL[cod])delete CB_EXCL[cod]; else CB_EXCL[cod]=true; renderComb(); }
+/* Cambiar una cantidad no puede repintar la tabla entera: se perdía el foco,
+   saltaba el scroll y la fila que estabas editando se movía de sitio. Se
+   actualiza solo esa fila y los totales. */
+function cbSetQty(cod,val){
+  const v=parseInt(val);
+  if(isNaN(v)||v<0) delete CB_QTY[cod]; else CB_QTY[cod]=v;
+  if(!cbPintarFila(cod)) renderComb();
+}
+function cbResetQty(cod){
+  delete CB_QTY[cod];
+  if(!cbPintarFila(cod)) renderComb();
+  const inp=document.querySelector(`#cbTable tr[data-cod="${cod}"] .cbq`); if(inp) inp.focus();
+}
+function cbPintarFila(cod){
+  const tr=document.querySelector(`#cbTable tr[data-cod="${CSS.escape? CSS.escape(cod):cod}"]`);
+  if(!tr) return false;
+  const D=cbDatos(), x=D.rows.find(r=>r.cod===cod);
+  if(!x) return false;
+  const q=cbQtyOf(x), excl=!!CB_EXCL[cod];
+  const editada = CB_QTY[cod]!==undefined && CB_QTY[cod]!==x.comprar;
+  const buy=tr.querySelector('td.buy2');
+  if(buy){
+    buy.className='buy2 '+(q?'':'z');
+    const inp=buy.querySelector('.cbq');
+    if(inp){
+      inp.classList.toggle('edited',editada);
+      if(document.activeElement!==inp) inp.value=q;      // no pisar lo que se está escribiendo
+    }
+    const hint=buy.querySelector('.qhint');
+    if(editada && !hint){
+      const i=document.createElement('i'); i.className='qhint';
+      i.onclick=()=>cbResetQty(cod); i.textContent='↺ '+x.comprar; buy.appendChild(i);
+    }else if(editada && hint){ hint.textContent='↺ '+x.comprar; }
+    else if(hint){ hint.remove(); }
+  }
+  const sub=tr.querySelector('td.sub');
+  if(sub){
+    const btn=sub.querySelector('.exbtn');
+    sub.textContent = excl ? '' : (x.precio? money(q*x.precio) : '—');
+    if(excl){ const i=document.createElement('i'); i.className='exq'; i.textContent='excluido'; sub.appendChild(i); }
+    if(btn) sub.appendChild(btn);
+  }
+  cbKpis(D); cbPintarTotales(D);
+  return true;
+}
+function cbPintarTotales(D){
+  const tf=document.querySelector('#cbTable tfoot tr'); if(!tf) return;
+  const KIT=$('#cbKit')&&$('#cbKit').checked, rows=D.rows, all=D.all;
+  const nInc = KIT ? rows.length : D.inc.length;
+  const totU = KIT ? rows.reduce((a,x)=>a+x.total,0) : D.inc.reduce((a,x)=>a+cbQtyOf(x),0);
+  const totC = KIT ? rows.reduce((a,x)=>a+x.total*x.precio,0) : D.inc.reduce((a,x)=>a+cbQtyOf(x)*x.precio,0);
+  const td=tf.querySelectorAll('td');
+  if(td[0]) td[0].textContent = `${nInc} código(s)${KIT?' · KIT COMPLETO':''}${nInc!==all.length?` de ${all.length}`:''}`;
+  if(td[1]) td[1].textContent = fmt(totU);
+  if(td[3]) td[3].textContent = money(totC);
+}
+function cbToggleExcl(cod){
+  if(CB_EXCL[cod]) delete CB_EXCL[cod]; else CB_EXCL[cod]=true;
+  const tr=document.querySelector(`#cbTable tr[data-cod="${CSS.escape? CSS.escape(cod):cod}"]`);
+  if(!tr){ renderComb(); return; }
+  const excl=!!CB_EXCL[cod];
+  tr.classList.toggle('cb-excl',excl);
+  const inp=tr.querySelector('.cbq'); if(inp) inp.disabled=excl;
+  const btn=tr.querySelector('.exbtn');
+  if(btn){ btn.textContent = excl? '＋':'✕'; btn.title = excl? 'Volver a incluir':'Quitar de la compra'; }
+  cbPintarFila(cod);
+}
 function cbQtyOf(x){ return CB_QTY[x.cod]!==undefined ? CB_QTY[x.cod] : x.comprar; }
 function onComerFilter(){ renderComb(); }
 function onKitToggle(){
@@ -4433,15 +4513,17 @@ function cbView(v){
   $('#cvT2').classList.toggle('on', v==='detalle');
   renderComb();
 }
-function openComb(){
+/* Ya no es una ventana: es la pestaña "Demanda combinada". openComb() se
+   conserva porque hay varias entradas que lo llaman. */
+function cbInit(){
   if(!Object.keys(CB_SEL).length){
     // por defecto: TODOS menos el Consolidado (se solapa con los 4 submotores)
     ENGINES.forEach(e=>{ CB_SEL[e.id] = (e.id==='CONS') ? 0 : 1; });
   }
   llenarMarcas();
-  $('#cbOv').classList.add('on');
-  renderPick(); renderComb();
+  renderPick();
 }
+function openComb(){ cbInit(); goView('comb'); }
 // llena el dropdown de marca con las que existen en los datos
 function llenarMarcas(){
   const sel=$('#cbMarca'); if(!sel) return;
@@ -4451,7 +4533,7 @@ function llenarMarcas(){
     marcas.map(m=>`<option value="${m}">Solo ${m}</option>`).join('');
   if(marcas.includes(actual)) sel.value=actual;   // conservar selección si sigue válida
 }
-function closeComb(){ $('#cbOv').classList.remove('on'); }
+function closeComb(){ goView('list'); }
 function cbToggle(id){ CB_SEL[id] = CB_SEL[id] ? 0 : 1; renderPick(); renderComb(); }
 function cbKits(id,v){ CB_SEL[id] = Math.max(0, parseInt(v)||0); renderComb(); }
 function renderPick(){
@@ -4578,7 +4660,10 @@ function cbOrdenar(rows){
   const KIT = $('#cbKit') && $('#cbKit').checked;
   const sort = $('#cbSort') ? $('#cbSort').value : '';
   if(!sort) return rows;
-  const qty = x => KIT ? x.total : cbQtyOf(x);
+  // Ojo: siempre la cantidad CALCULADA, nunca la que el usuario escribe en la
+  // casilla. Si ordenáramos por lo tecleado, subir una cantidad movería la fila
+  // de sitio mientras la estás editando.
+  const qty = x => KIT ? x.total : x.comprar;
   const tot = x => qty(x) * (x.precio||0);
   const tie = x => (x.alm||0)+(x.arr||0);
   const cmp={
@@ -4640,8 +4725,8 @@ function cbVacio(cols, all){
      <span style="display:inline-block;margin-top:7px;color:var(--ink2)">Filtros: ${f.join(' · ')}</span>`,
     '<button class="xbtn primary" onclick="cbLimpiarFiltros()">Quitar filtros</button>');
 }
-function renderComb(){
-  const D=cbDatos(), sel=D.sel, all=D.all, rows=D.rows, inc=D.inc;
+function cbKpis(D){
+  const sel=D.sel, all=D.all, rows=D.rows, inc=D.inc;
   // KPIs: describen EXACTAMENTE las filas de la tabla, ni una más
   const rep   = rows.filter(x=>x.nMot>1).length;
   const buyI  = inc.filter(x=>cbQtyOf(x)>0).length;
@@ -4658,22 +4743,26 @@ function renderComb(){
   ].map(([c,l,v])=>`<div class="cbk ${c}"><div class="l">${l}</div><div class="v">${v}</div></div>`).join('');
   // y si algo queda fuera, se dice: antes los números de arriba no cuadraban
   // con la lista de abajo y no había forma de saber por qué
-  const cap=$('#cbCap');
-  if(cap){
-    const f=cbFiltrosActivos(), excl=rows.length-inc.length;
-    const oculta=all.length-rows.length;
-    cap.innerHTML = (oculta>0 || excl>0)
-      ? `<span><b>${fmt(inc.length)}</b> de <b>${fmt(all.length)}</b> códigos${
-          oculta>0? ` · ${fmt(oculta)} ocultos por los filtros`:''}${
-          excl>0? ` · ${fmt(excl)} quitados a mano`:''}. Los totales de arriba y el Excel son solo de estos ${fmt(inc.length)}.</span>
-         ${f.length? `<span class="cb-fl">${f.join(' · ')}</span>
-           <button class="xbtn" onclick="cbLimpiarFiltros()">Quitar filtros</button>`:''}`
-      : `<span>${fmt(all.length)} códigos · los totales de arriba, la tabla y el Excel son los mismos.</span>`;
-    // "Solo lo que falta comprar" viene marcado de fábrica: eso se explica,
-    // pero no se pinta como advertencia. Lo demás sí.
-    const soloPorDefecto = f.length===1 && f[0]==='Solo lo que falta comprar';
-    cap.classList.toggle('warn', excl>0 || (oculta>0 && !soloPorDefecto));
-  }
+  const cap=$('#cbCap'); if(!cap) return;
+  const f=cbFiltrosActivos(), excl=rows.length-inc.length, oculta=all.length-rows.length;
+  cap.innerHTML = (oculta>0 || excl>0)
+    ? `<span><b>${fmt(inc.length)}</b> de <b>${fmt(all.length)}</b> códigos${
+        oculta>0? ` · ${fmt(oculta)} ocultos por los filtros`:''}${
+        excl>0? ` · ${fmt(excl)} quitados a mano`:''}. Los totales de arriba y el Excel son solo de estos ${fmt(inc.length)}.</span>
+       ${f.length? `<span class="cb-fl">${f.join(' · ')}</span>
+         <button class="xbtn" onclick="cbLimpiarFiltros()">Quitar filtros</button>`:''}`
+    : `<span>${fmt(all.length)} códigos · los totales de arriba, la tabla y el Excel son los mismos.</span>`;
+  // "Solo lo que falta comprar" viene marcado de fábrica: eso se explica,
+  // pero no se pinta como advertencia. Lo demás sí.
+  const soloPorDefecto = f.length===1 && f[0]==='Solo lo que falta comprar';
+  cap.classList.toggle('warn', excl>0 || (oculta>0 && !soloPorDefecto));
+}
+function renderComb(){
+  if(!Object.keys(CB_SEL).length) cbInit();      // se puede entrar directo por la barra lateral
+  const D=cbDatos(), sel=D.sel, all=D.all, rows=D.rows, inc=D.inc;
+  const wrap=document.querySelector('.cb-wrap'), scroll=wrap? wrap.scrollTop:0;
+  if(wrap) requestAnimationFrame(()=>{ wrap.scrollTop=scroll; });   // no saltar al principio
+  cbKpis(D);
   // ══ TABLA ══
   if(CB_VIEW==='resumen'){
     const KIT = $('#cbKit') && $('#cbKit').checked;   // cotizar kit completo (ignora stock)
@@ -4708,7 +4797,7 @@ function renderComb(){
       const q = cbQtyOf(x);
       const editada = CB_QTY[x.cod]!==undefined && CB_QTY[x.cod]!==x.comprar;
       const excl = !!CB_EXCL[x.cod];
-      return `<tr class="${x.nMot>1?'rep':''}${excl?' cb-excl':''}">
+      return `<tr class="${x.nMot>1?'rep':''}${excl?' cb-excl':''}" data-cod="${x.cod}">
         <td class="cod">${x.cod}<span class="mk ${x.marca}">${x.marca}</span>${x.oem?`<span class="mk ${x.oem}">${x.oem}</span>`:''}${x.comer?`<span class="mk cm-${x.comer.replace(' ','')}">${x.comer}</span>`:''}${x.nMot>1?`<span class="rep-b">×${x.nMot}</span>`:''}</td>
         <td class="dsc">${x.desc||'—'}</td>
         <td class="mots">${reparto}</td>
@@ -5420,7 +5509,7 @@ function openReal(){
   // ───────── Escape cierra cualquier ventana ─────────
   document.addEventListener('keydown',e=>{
     if(e.key!=='Escape') return;
-    [['#cbAddOv'],['#cmpOv'],['#cbOv'],['#plOv'],['#otOv',()=>{ try{refreshEngine();}catch(_){} }]].forEach(([sel,after])=>{
+    [['#cbAddOv'],['#cmpOv'],['#plOv'],['#otOv',()=>{ try{refreshEngine();}catch(_){} }]].forEach(([sel,after])=>{
       const el=$(sel); if(el && el.classList.contains('on')){ el.classList.remove('on'); if(after) after(); }
     });
     dd.classList.remove('on');
@@ -5531,9 +5620,8 @@ const MK=(function(){
 
 /* ═════════ NAVEGACIÓN ═════════ */
 let VIEW_ACT='tower', SEL_MOTOR=null;
-const VIEWS={tower:'#viewTower',list:'#viewList',trans:'#viewTrans',why:'#viewWhy',cap:'#viewCap',orders:'#viewOrders',reports:'#viewReports',detail:'#viewDetail'};
+const VIEWS={tower:'#viewTower',list:'#viewList',comb:'#viewComb',trans:'#viewTrans',why:'#viewWhy',cap:'#viewCap',orders:'#viewOrders',reports:'#viewReports',detail:'#viewDetail'};
 function goView(v){
-  if(v==='comb'){ openComb(); return; }
   if(!VIEWS[v]) v='tower';
   VIEW_ACT=v;
   Object.keys(VIEWS).forEach(k=>{ const el=$(VIEWS[k]); if(el) el.classList.toggle('hidden',k!==v); });
@@ -6680,6 +6768,7 @@ function renderAll(){
   else if(VIEW_ACT==='list')    renderHome();
   else if(VIEW_ACT==='trans')   renderTrans();
   else if(VIEW_ACT==='why')     renderWhy();
+  else if(VIEW_ACT==='comb')    renderComb();
   else if(VIEW_ACT==='cap')     renderCap();
   else if(VIEW_ACT==='orders')  renderOrders();
   else if(VIEW_ACT==='reports') renderReports();

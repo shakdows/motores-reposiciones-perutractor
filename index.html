@@ -1889,6 +1889,7 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
     <div class="tb-dd" id="tbDd">
       <button onclick="exportCompraTotal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Compra total (11 motores) · Excel</button>
       <button onclick="syncSheets();_toast('Releyendo Google Sheets…')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>Volver a leer Google Sheets</button>
+      <button onclick="exportDatos()" title="Descarga los datos vigentes para poder actualizar la copia que lleva la página"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>Descargar datos actuales</button>
       <div class="sep"></div>
       <button id="ddReset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>Restablecer ajustes guardados<small>precios, cantidades, kits…</small></button>
       <button id="ddLogout" class="danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Cerrar sesión</button>
@@ -2540,6 +2541,49 @@ const MASTER = {"engines": [{"id": "C9", "label": "Motor C9", "grupo": "C9", "co
 {"id": "3066", "label": "Motor 3066", "grupo": "3066", "coti": "00044", "icon": "3066", "kpi": {"items": 50, "comprar_items": 47, "comprar_uds": 532, "trasl_items": 0, "trasl_uds": 0, "exceso_items": 0, "exceso_uds": 0, "suf_items": 3, "kits_principal": 0, "min_con": 0, "min_sin": 50, "min_falta_items": 0, "min_falta_uds": 0}, "items": [["0947134", "PIN,PISTON", 18, 0, 0, 0, 0, 18, "", 0, 0, "", null, 0, "Pistón/Anillos", 0, 0, 0], ["0947154", "BOLT", 12, 0, 0, 0, 0, 12, "", 0, 0, "", null, 0, "Otros", 0, 0, 0], ["0947516", "NUT", 0, 0, 0, 0, 0, 0, "", 0, 0, "", null, 0, "Otros", 0, 0, 0], ["1252950", "GEAR AS", 1, 0, 0, 0, 0, 1, "", 0, 0, "", null, 0, "Distribución", 0, 0, 0], ["1252951", "GEAR", 1, 0, 0, 0, 0, 1, "", 0, 0, "", null, 0, "Distribución", 0, 0, 0], ["1252989", "PUMP A", 1, 0, 0, 0, 0, 1, "", 0, 0, "", null, 0, "Bombas", 0, 0, 0], ["1252991", "WATER PUMP", 1, 0, 0, 0, 0, 1, "", 0, 0, "", null, 0, "Enfriamiento", 0, 0, 0], ["1253005", "CRANKSHAFT", 0, 0, 0, 0, 0, 0, "", 0, 0, "", null, 0, "Cigüeñal", 0, 0, 0], ["1786543", "RING SET-S", 18, 0, 0, 0, 0, 18, "", 0, 0, "", null, 0, "Pistón/Anillos", 0, 0, 0], ["1786633", "PUMP AS", 2, 0, 0, 0, 0, 2, "", 0, 0, "", null, 0, "Bombas", 0, 0, 0], ["1838171", "HEAD AS-CY(518051) MOTOR 3066", 1, 0, 0, 0, 0, 1, "", 0, 0, "", null, 0, "Culata", 0, 0, 0], ["1838172", "GUIDE VALVE (517729)", 36, 0, 0, 0, 0, 36, "", 0, 0, "", null, 0, "Válvulas", 0, 0, 0], ["1838173", "GUIDE VALVE (517635)", 36, 0, 0, 0, 0, 36, "", 0, 0, "", null, 0, "Válvulas", 0, 0, 0], ["2128477", "VALVE", 18, 0, 0, 0, 0, 18, "", 0, 0, "", null, 0, "Válvulas", 0, 0, 0], ["2977750", "PISTON", 6, 0, 0, 0, 0, 6, "", 0, 0, "", null, 0, "Pistón/Anillos", 0, 0, 0], ["2977752", "PISTON (517537)", 7, 0, 0, 0, 0, 7, "", 0, 0, "", null, 0, "Pistón/Anillos", 0, 0, 0], ["0517523", "SLEEVE 320BL", 18, 0, 0, 0, 0, 18, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517528", "BUSHING", 7, 0, 0, 0, 0, 7, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517529", "BEARING", 3, 0, 0, 0, 0, 3, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517538", "RING STD (0878758-0998418) 320BL", 18, 0, 0, 0, 0, 18, "", 0, 0, "", null, 0, "Pistón/Anillos", 0, 0, 0], ["0517539", "BUSHING", 12, 0, 0, 0, 0, 12, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517542", "BUSHING", 3, 0, 0, 0, 0, 3, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517558", "GEAR A", 1, 0, 0, 0, 0, 1, "", 0, 0, "", null, 0, "Distribución", 0, 0, 0], ["0517588", "METAL DE BANCADA", 14, 0, 0, 0, 0, 14, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517589", "CARTRIDGE", 1, 0, 0, 0, 0, 1, "", 0, 0, "", null, 0, "Turbo", 0, 0, 0], ["0517624", "SEAL VALVE(0953418,0953417)", 36, 0, 0, 0, 0, 36, "", 0, 0, "", null, 0, "Válvulas", 0, 0, 0], ["0517625", "RETAINER", 24, 0, 0, 0, 0, 24, "", 0, 0, "", null, 0, "Sellos/Juntas", 0, 0, 0], ["0517637", "METAL DE BIELA STD 320BL", 18, 0, 0, 0, 0, 18, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517654", "PLATE 320BL", 6, 0, 0, 0, 0, 6, "", 0, 0, "", null, 0, "Distribución", 0, 0, 0], ["0517667", "RING", 24, 0, 0, 0, 0, 24, "", 0, 0, "", null, 0, "Pistón/Anillos", 0, 0, 0], ["0517686", "GEAR A", 1, 0, 0, 0, 0, 1, "", 0, 0, "", null, 0, "Distribución", 0, 0, 0], ["0517713", "TIP A NOZZ", 6, 0, 0, 0, 0, 6, "", 0, 0, "", null, 0, "Inyección", 0, 0, 0], ["0517719", "LOCK", 0, 0, 0, 0, 0, 0, "", 0, 0, "", null, 0, "Sellos/Juntas", 0, 0, 0], ["0517723", "ROD", 24, 0, 0, 0, 0, 24, "", 0, 0, "", null, 0, "Válvulas", 0, 0, 0], ["0517738", "VALVE ADMISION", 18, 0, 0, 0, 0, 18, "", 0, 0, "", null, 0, "Válvulas", 0, 0, 0], ["0517739", "VALVE EXCAPE", 18, 0, 0, 0, 0, 18, "", 0, 0, "", null, 0, "Válvulas", 0, 0, 0], ["0517740", "SPRING 320BL", 24, 0, 0, 0, 0, 24, "", 0, 0, "", null, 0, "Válvulas", 0, 0, 0], ["0517784", "BEARING MAIN 320BL", 14, 0, 0, 0, 0, 14, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517785", "BEARING SE 0.020IN=0.50MM", 14, 0, 0, 0, 0, 14, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517787", "PLATE", 6, 0, 0, 0, 0, 6, "", 0, 0, "", null, 0, "Distribución", 0, 0, 0], ["0517788", "PLATE", 6, 0, 0, 0, 0, 6, "", 0, 0, "", null, 0, "Distribución", 0, 0, 0], ["0517794", "BEARING 0.25", 12, 0, 0, 0, 0, 12, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517795", "BEARING", 12, 0, 0, 0, 0, 12, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0517952", "TURBO GP", 1, 0, 0, 0, 0, 1, "", 0, 0, "", null, 0, "Turbo", 0, 0, 0], ["0518009", "BUSHING", 3, 0, 0, 0, 0, 3, "", 0, 0, "", null, 0, "Biela/Metales", 0, 0, 0], ["0518010", "REGULATOR", 2, 0, 0, 0, 0, 2, "", 0, 0, "", null, 0, "Otros", 0, 0, 0], ["0518011", "INSERT (517737)", 12, 0, 0, 0, 0, 12, "", 0, 0, "", null, 0, "Válvulas", 0, 0, 0], ["0518012", "INSERT (517736)", 12, 0, 0, 0, 0, 12, "", 0, 0, "", null, 0, "Válvulas", 0, 0, 0], ["0518068", "CAMSHAFT", 1, 0, 0, 0, 0, 1, "", 0, 0, "", null, 0, "Otros", 0, 0, 0], ["CTP3066", "OVERHAUL GASKET KIT 3066", 3, 0, 0, 0, 0, 3, "", 0, 0, "", null, 0, "Sellos/Juntas", 0, 0, 0]]}], "fields": ["cod", "desc", "need", "stockPrin", "repos", "arriolaOld", "trasl", "comprar", "estado", "kitsPrin", "stockMin", "comerciable", "comprarFlag", "transito", "familia", "enStock", "arequipa", "huachipa"]};
 const ENGINES = MASTER.engines;
 
+/* ── CACHÉ DE DATOS ──────────────────────────────────────────────
+   Los datos embebidos son una foto del día que se generó el archivo. Si
+   Google no se puede leer, la página se quedaba con esa foto vieja aunque
+   ayer mismo hubiera sincronizado bien. Ahora cada lectura correcta se
+   guarda en el navegador y ESA es la que se usa como respaldo. */
+const LS_DATOS='pt_datos_v2';
+function _cacheGuardar(){
+  try{
+    const payload={v:2, at:Date.now(), edit:SYNC_STATE.edit||null,
+      engines:ENGINES.map(e=>({id:e.id,label:e.label,grupo:e.grupo,coti:e.coti,
+        icon:e.icon,nuevo:!!e.nuevo,items:e.items}))};
+    localStorage.setItem(LS_DATOS, JSON.stringify(payload));
+    return true;
+  }catch(err){
+    // si no cabe (cuota del navegador), se sigue con los datos embebidos
+    try{ localStorage.removeItem(LS_DATOS); }catch(_){}
+    console.warn('No se pudo guardar la caché de datos:', err && err.name);
+    return false;
+  }
+}
+let CACHE_INFO=null;   // {at, edit, motores, items} si se arrancó desde la caché
+function _cacheCargar(){
+  let d=null;
+  try{ d=JSON.parse(localStorage.getItem(LS_DATOS)||'null'); }catch(_){ return false; }
+  if(!d || d.v!==2 || !Array.isArray(d.engines) || !d.engines.length) return false;
+  const porId={}; ENGINES.forEach(e=>{ porId[e.id]=e; });
+  let items=0;
+  d.engines.forEach(g=>{
+    if(!Array.isArray(g.items) || !g.items.length) return;
+    items+=g.items.length;
+    const e=porId[g.id];
+    if(e){ e.items=g.items; if(g.nuevo){ e.label=g.label; e.grupo=g.grupo; e.coti=g.coti; } }
+    else ENGINES.push({id:g.id,label:g.label,grupo:g.grupo,coti:g.coti,icon:g.icon,nuevo:true,
+      kpi:{items:0,comprar_items:0,comprar_uds:0,trasl_items:0,trasl_uds:0,exceso_items:0,
+           exceso_uds:0,suf_items:0,kits_principal:0,min_con:0,min_sin:0,min_falta_items:0,min_falta_uds:0},
+      items:g.items});
+  });
+  CACHE_INFO={at:d.at, edit:d.edit, motores:d.engines.length, items};
+  try{ recalcKPIs(); }catch(_){}
+  return true;
+}
+try{ _cacheCargar(); }catch(_){}
+
 // ═══════════════════════════════════════════════════════════════
 //  SINCRONIZACIÓN EN VIVO CON GOOGLE SHEETS (publicados como CSV)
 //  Cada motor puede tener su link. Si carga, actualiza los datos;
@@ -2784,6 +2828,10 @@ async function syncSheets(){
     }
   }));
   SYNC_STATE.done=true; SYNC_STATE.at=Date.now();
+  if(ids.some(id=>SYNC_STATE.results[id] && SYNC_STATE.results[id].ok)){
+    try{ recalcKPIs(); }catch(e){}
+    if(_cacheGuardar()) CACHE_INFO=null;     // ya no venimos de la caché
+  }
   // recalcular KPIs de cada motor tocado y re-pintar
   try{ recalcKPIs(); }catch(e){}
   try{ (typeof renderAll==='function') ? renderAll() : renderHome(); }catch(e){}
@@ -6168,8 +6216,14 @@ function renderSap(){
   if(!SYNC_STATE.done){ dot.className='sap-dot warn'; txt.innerHTML='Leyendo…'; return; }
   if(!oks){
     dot.className='sap-dot bad';
-    txt.innerHTML='Sin conexión · datos guardados<br><b>Clic para reintentar</b>';
-    if(btn) btn.title='No se pudo leer Google Sheets · clic para reintentar';
+    if(CACHE_INFO){
+      const f=new Date(CACHE_INFO.at).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+      txt.innerHTML=`Sin conexión · tu última lectura<br><b>${f}</b>`;
+      if(btn) btn.title=`No se pudo leer Google Sheets. Se están usando los datos que guardaste el ${f} (${CACHE_INFO.motores} motores, ${fmt(CACHE_INFO.items)} piezas) · clic para reintentar`;
+    }else{
+      txt.innerHTML='Sin conexión · datos del archivo<br><b>Clic para reintentar</b>';
+      if(btn) btn.title='No se pudo leer Google Sheets y no hay lecturas guardadas en este navegador: se usan los datos embebidos en la página · clic para reintentar';
+    }
     return;
   }
   const dias=sheetDias(), fecha=sheetFecha();
@@ -6881,6 +6935,21 @@ function renderCap(){
       </div>
     </div>`;
   const c=$('#cntCap'); if(c){ c.textContent = armables? String(armables):''; c.style.display=armables?'':'none'; }
+}
+/* Descarga los datos vigentes en el formato del bloque MASTER del archivo.
+   Sirve para refrescar la foto embebida sin tener que leer Google Sheets
+   desde fuera: se abre el JSON y se pega en index.html. */
+function exportDatos(){
+  const payload={engines:ENGINES.map(e=>({id:e.id,label:e.label,grupo:e.grupo,coti:e.coti,
+    icon:e.icon,kpi:e.kpi,items:e.items}))};
+  const items=ENGINES.reduce((a,e)=>a+e.items.length,0);
+  const txt=JSON.stringify(payload);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([txt],{type:'application/json'}));
+  a.download=`MASTER_${ENGINES.length}motores_${fmt(items).replace(/\D/g,'')}piezas_${_hoy()}.json`;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1000);
+  _toast(`${ENGINES.length} motores y ${fmt(items)} piezas descargados`);
 }
 function exportCap(){
   const modo=CAP.modo, sim=capSimular();

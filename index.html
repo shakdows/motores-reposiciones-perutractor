@@ -1735,7 +1735,6 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
         <span class="cv-t" id="cvT2" onclick="cbView('detalle')">📋 Detalle completo</span>
       </div>
       <input class="cb-find" id="cbFind" placeholder="Buscar código o descripción…" oninput="renderComb()">
-      <label class="cb-chk"><input type="checkbox" id="cbRep" checked onchange="renderComb()"> Solo piezas repetidas</label>
       <label class="cb-chk"><input type="checkbox" id="cbBuy" checked onchange="renderComb()"> Solo lo que falta comprar</label>
       <label class="cb-chk kit"><input type="checkbox" id="cbKit" onchange="onKitToggle()"> 🧾 Cotizar kit completo (ignorar stock)</label>
       <select class="cb-sel" id="cbMarca" onchange="renderComb()" title="Filtrar por marca">
@@ -3739,20 +3738,13 @@ function cbSetQty(cod,val){ const v=parseInt(val); if(isNaN(v)||v<0)delete CB_QT
 function cbResetQty(cod){ delete CB_QTY[cod]; renderComb(); }
 function cbToggleExcl(cod){ if(CB_EXCL[cod])delete CB_EXCL[cod]; else CB_EXCL[cod]=true; renderComb(); }
 function cbQtyOf(x){ return CB_QTY[x.cod]!==undefined ? CB_QTY[x.cod] : x.comprar; }
-function onComerFilter(){
-  const val=document.getElementById('cbComer').value;
-  // al elegir un filtro de comerciable, quitar "solo repetidas" que escondería casi todo
-  if(val){ document.getElementById('cbRep').checked=false; }
-  renderComb();
-}
+function onComerFilter(){ renderComb(); }
 function onKitToggle(){
   const kit=document.getElementById('cbKit').checked;
   const buy=document.getElementById('cbBuy');
-  const rep=document.getElementById('cbRep');
-  // en modo kit completo: traes TODO el kit, así que no aplica "solo lo que falta comprar"
-  // y con un solo motor tampoco tiene sentido "solo repetidas"
-  buy.disabled=kit; rep.disabled=kit;
-  if(kit){ buy.checked=false; rep.checked=false; }
+  // en modo kit completo se cotiza TODO el kit, así que no aplica "solo lo que falta comprar"
+  buy.disabled=kit;
+  if(kit) buy.checked=false;
   renderComb();
 }
 
@@ -3836,8 +3828,6 @@ function applyCbAdd(){
   const rows=combRows();
   const algunoSinCompra = picked.some(cod=>{ const x=rows.find(r=>r.cod===cod); return x && x.comprar===0; });
   if(algunoSinCompra && $('#cbBuy').checked) $('#cbBuy').checked=false;
-  const algunoNoRep = picked.some(cod=>{ const x=rows.find(r=>r.cod===cod); return x && x.nMot<=1; });
-  if(algunoNoRep && $('#cbRep').checked) $('#cbRep').checked=false;
   closeCbAdd();
   renderComb();
   _toast(picked.length+' código(s) en la compra');
@@ -3995,7 +3985,6 @@ function combRows(seleccion){
 function combFilteredRows(){
   let rows = combRows();
   const q = ($('#cbFind').value||'').toLowerCase().trim();
-  if($('#cbRep').checked) rows = rows.filter(x=>x.nMot>1);
   if($('#cbBuy').checked) rows = rows.filter(x=>x.comprar>0);
   const fMarca=$('#cbMarca').value, fOem=$('#cbOem').value, fComer=$('#cbComer').value;
   if(fMarca) rows = rows.filter(x=>x.marca===fMarca);
@@ -4004,12 +3993,43 @@ function combFilteredRows(){
   if(q) rows = rows.filter(x=> x.cod.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q));
   return rows;
 }
+// ── Cuando la tabla sale vacía hay que decir POR QUÉ: los KPIs se calculan
+//    sobre todo lo seleccionado y contradecían a una tabla vacía sin explicación.
+function cbFiltrosActivos(){
+  const f=[];
+  if($('#cbBuy').checked) f.push('Solo lo que falta comprar');
+  const q=($('#cbFind').value||'').trim(); if(q) f.push('Búsqueda «'+q+'»');
+  if($('#cbMarca').value) f.push('Marca '+$('#cbMarca').value);
+  if($('#cbOem').value)   f.push('Precio '+$('#cbOem').value);
+  const c=$('#cbComer').value;
+  if(c) f.push('Comerciable '+(c==='__none'?'sin dato':c));
+  return f;
+}
+function cbLimpiarFiltros(){
+  $('#cbFind').value=''; $('#cbMarca').value=''; $('#cbOem').value=''; $('#cbComer').value='';
+  $('#cbBuy').checked=true;
+  renderComb();
+}
+function cbVacio(cols, all){
+  const sel=ENGINES.filter(e=>CB_SEL[e.id]>0);
+  const caja=(t,p,btn)=>`<tr><td colspan="${cols}"><div class="empty-st">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+      <h4>${t}</h4><p>${p}</p>${btn||''}</div></td></tr>`;
+  if(!sel.length)  return caja('No hay motores seleccionados','Marca al menos un motor arriba para ver su demanda combinada.');
+  if(!all.length)  return caja('Los motores elegidos no tienen ítems','Revisa la selección de motores o vuelve a sincronizar con SAP.',
+                     '<button class="xbtn" onclick="syncSheets()">Volver a leer datos</button>');
+  const f=cbFiltrosActivos();
+  if(!f.length)    return caja('Sin resultados','No hay códigos que mostrar con la vista actual.');
+  return caja('Ningún código pasa los filtros',
+    `Los motores elegidos tienen <b>${all.length}</b> código(s), pero los filtros activos los ocultan todos.<br>
+     <span style="display:inline-block;margin-top:7px;color:var(--ink2)">Filtros: ${f.join(' · ')}</span>`,
+    '<button class="xbtn primary" onclick="cbLimpiarFiltros()">Quitar filtros</button>');
+}
 function renderComb(){
   const sel = ENGINES.filter(e=>CB_SEL[e.id]>0);
   let rows = combRows();
   const all = rows;
   const q = ($('#cbFind').value||'').toLowerCase().trim();
-  if($('#cbRep').checked) rows = rows.filter(x=>x.nMot>1);
   if($('#cbBuy').checked) rows = rows.filter(x=>x.comprar>0);
   const fMarca=$('#cbMarca').value, fOem=$('#cbOem').value, fComer=$('#cbComer').value;
   if(fMarca) rows = rows.filter(x=>x.marca===fMarca);
@@ -4121,8 +4141,7 @@ function renderComb(){
       <td style="text-align:right">${money(totC)}</td>
     </tr></tfoot>`;
     $('#cbTable').className='cb-t res';
-    $('#cbTable').innerHTML = th + '<tbody>' + (rows.length? tb :
-      '<tr><td colspan="6" style="padding:40px;text-align:center;color:var(--ink3)">Sin resultados.</td></tr>') + '</tbody>' + tf;
+    $('#cbTable').innerHTML = th + '<tbody>' + (rows.length? tb : cbVacio(9,all)) + '</tbody>' + tf;
     return;
   }
   // ── vista DETALLE ──
@@ -4158,13 +4177,11 @@ function renderComb(){
     <td style="text-align:center">${fmt(rows.reduce((a,x)=>a+x.comprar,0))}</td>
     <td></td><td style="text-align:center">${money(totC)}</td>
   </tr></tfoot>`;
-  $('#cbTable').innerHTML = th + '<tbody>' + (rows.length? tb :
-    `<tr><td colspan="${13+sel.length}" style="padding:40px;text-align:center;color:var(--ink3)">Sin resultados.</td></tr>`) + '</tbody>' + tf;
+  $('#cbTable').innerHTML = th + '<tbody>' + (rows.length? tb : cbVacio(13+sel.length,all)) + '</tbody>' + tf;
 }
 function combHeaderRows(){
   const sel = ENGINES.filter(e=>CB_SEL[e.id]>0);
   let rows = combRows();
-  if($('#cbRep').checked) rows = rows.filter(x=>x.nMot>1);
   if($('#cbBuy').checked) rows = rows.filter(x=>x.comprar>0);
   const fMarca=$('#cbMarca').value, fOem=$('#cbOem').value, fComer=$('#cbComer').value;
   if(fMarca) rows = rows.filter(x=>x.marca===fMarca);

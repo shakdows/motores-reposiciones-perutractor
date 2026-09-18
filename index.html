@@ -1462,7 +1462,12 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
  .tw-k .ic{width:32px;height:32px}
  .tw-k .v{font-size:21px}
  .tw-search{min-width:0;width:100%}
+ .tw-tools{flex-wrap:wrap}
+ .tw-tools .tw-search{flex:1 0 100%}
  #viewTower .tw-tools .xbtn{flex:0 0 auto}
+ #twComer{flex:1;min-width:0;overflow-x:auto}
+ #twComer .cb-seg-l{display:none}
+ #twComer button{flex:1;min-height:44px}
  .tw-crumb{padding-top:10px}
 }
 
@@ -1919,6 +1924,12 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
       <input id="twQ" type="search" placeholder="Buscar motores, códigos o descripciones…" autocomplete="off"
         aria-label="Buscar motores, códigos o descripciones" oninput="twBuscar(this.value)">
     </label>
+    <span class="cb-seg" id="twComer" role="group" aria-label="Filtrar todas las piezas por comerciable">
+      <span class="cb-seg-l">Comerciable</span>
+      <button data-v="" class="on" onclick="flowComer('')">Todos</button>
+      <button data-v="SI" onclick="flowComer('SI')">Sí</button>
+      <button data-v="NO" onclick="flowComer('NO')">No</button>
+    </span>
     <button class="xbtn" id="twFiltBtn" aria-expanded="false" aria-controls="twFilt" onclick="twFiltros()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 5h18M6 12h12M10 19h4"/></svg>
       Filtros<span class="n" id="twFiltN" hidden>0</span>
@@ -2547,11 +2558,11 @@ const SHEET_LINKS = {
   '3304PC': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=1437783870&single=true&output=csv',
   '3116C7': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=603049490&single=true&output=csv',
   '3066': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=2106672365&single=true&output=csv',
-  // Hojas nuevas: el motor se crea solo al leerlas, con el nombre que venga en
-  // el título de la hoja. Si el nombre no sale bien, basta con cambiar la clave.
-  'G825623473': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=825623473&single=true&output=csv',
-  'G1381391062': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=1381391062&single=true&output=csv',
-  'G515127042': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=515127042&single=true&output=csv',
+  // Hojas nuevas (pestañas MOTOR 3204-3208 / 330-333 / 339-342 SAP). El motor
+  // se crea al leerlas; el nombre sale de la pestaña y esta clave es el respaldo.
+  '3204-3208': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=825623473&single=true&output=csv',
+  '330-333':   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=1381391062&single=true&output=csv',
+  '339-342':   'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=515127042&single=true&output=csv',
 };
 
 // ── parser CSV robusto (respeta comillas y comas internas) ──
@@ -2675,7 +2686,7 @@ function _nuevoMotor(engId, rows, M){
   const titulo=pestania || _tituloHoja(rows, M.hi);
   // del título se saca un nombre corto: "COT 00543 - MOTOR 3208" → "3208"
   let nombre = titulo ? titulo.replace(/cot[.\s]*(?:izaci[óo]n)?[.\s:#-]*[0-9]{3,8}/ig,'')
-                               .replace(/motor|kit|repuestos?|lista|de\s*$/ig,'')
+                               .replace(/\bsap\b|motor|kit|repuestos?|lista|de\s*$/ig,'')
                                .replace(/[-–—|]/g,' ').replace(/\s+/g,' ').trim() : '';
   if(!nombre || nombre.length<2) nombre = /^G\d+$/.test(engId) ? 'nuevo '+(ENGINES.length+1) : engId;
   const eng={ id:engId, label:'Motor '+nombre, grupo:nombre, coti:_cotiHoja(rows,M.hi)||'—',
@@ -2971,7 +2982,7 @@ function mcardHTML(e,i){
    (los actuales y los que lleguen por Google Sheets). El reparto se hace
    CÓDIGO POR CÓDIGO y luego se suma: el sobrante de una pieza nunca cubre
    la falta de otra. Reutiliza calc(), que ya aplica exactamente esta regla. */
-const FLOW={abierto:new Set(), fuente:{}, todas:{}, solo:false, orden:{}, busq:{}, comer:{}};
+const FLOW={abierto:new Set(), fuente:{}, todas:{}, solo:false, orden:{}, busq:{}, comer:''};
 /* arriolaOf() depende de OTROS, que se inicializa más abajo en el archivo:
    hasta el primer renderAll() el diagrama no se puede calcular todavía. */
 var FLOW_OK=false;
@@ -3011,13 +3022,22 @@ function flowRows(i){
             comer:comerNorm(r[11])};
   }));
 }
+/* Un solo filtro de comerciable para toda la pantalla: afecta al diagrama, a
+   los totales del motor, a los KPI de arriba y a la tabla de piezas. Antes
+   había uno por tarjeta y tocaba ir motor por motor. */
 function flowData(i){
-  return flMemo('fld@'+i, ()=>{
-    const rows=flowRows(i), t={nec:0,alm:0,arr:0,buy:0};
+  return flMemo('fld@'+i+'@'+FLOW.comer, ()=>{
+    const todas=flowRows(i);
+    const rows=FLOW.comer ? todas.filter(x=>x.comer===FLOW.comer) : todas;
+    const t={nec:0,alm:0,arr:0,buy:0};
     rows.forEach(x=>{ t.nec+=x.nec; t.alm+=x.deAlm; t.arr+=x.deArr; t.buy+=x.compra; });
     const cuenta={alm:rows.filter(x=>x.deAlm>0).length, arr:rows.filter(x=>x.deArr>0).length,
                   buy:rows.filter(x=>x.compra>0).length};
-    return {rows, t, cuenta, piezas:rows.length,
+    // conteos de comerciable sobre TODAS las piezas, para que los botones no
+    // se queden a cero en cuanto filtras
+    const cm={SI:todas.filter(x=>x.comer==='SI').length, NO:todas.filter(x=>x.comer==='NO').length};
+    cm.sin=todas.length-cm.SI-cm.NO;
+    return {rows, t, cuenta, piezas:rows.length, piezasTodas:todas.length, cm,
             cob: t.nec>0 ? (t.alm+t.arr)/t.nec : 1};
   });
 }
@@ -3061,13 +3081,10 @@ function EngineSummaryNode(e, d, idx, activa){
 /* ── PartsDetailTable ── */
 function PartsDetailTable(idx){
   const d=flowData(idx), f=FLOW.fuente[idx]||'', q=(FLOW.busq[idx]||'').trim().toLowerCase();
-  const fc=FLOW.comer[idx]||'';
+  const fc=FLOW.comer;
   const filtra=x=> f==='alm'? x.deAlm>0 : f==='arr'? x.deArr>0 : f==='buy'? x.compra>0 : true;
   let todas=d.rows.filter(filtra);
-  // los conteos de comerciable se sacan ANTES de aplicar su propio filtro
-  const nSI=todas.filter(x=>x.comer==='SI').length, nNO=todas.filter(x=>x.comer==='NO').length;
-  const sinDato=todas.length-nSI-nNO;
-  if(fc) todas=todas.filter(x=>x.comer===fc);
+  const nSI=d.cm.SI, nNO=d.cm.NO, sinDato=d.cm.sin;
   if(q) todas=todas.filter(x=>x.cod.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q));
   // orden por columna; por defecto lo más urgente arriba
   const o=FLOW.orden[idx];
@@ -3085,13 +3102,13 @@ function PartsDetailTable(idx){
   const tab=(k,l,n)=>`<button type="button" class="fl-tab ${k||''}${f===k?' on':''}" ${n===0&&k?'disabled':''}
       onclick="flowFuente(${idx},'${k}')" aria-pressed="${f===k}">${l}<span class="n">${fmt(n)}</span></button>`;
   const cm=(v,l,n)=>`<button type="button" class="${fc===v?'on':''}" ${n===0&&v?'disabled':''}
-      onclick="flowComer(${idx},'${v}')" aria-pressed="${fc===v}">${l}<span class="wh-n">${fmt(n)}</span></button>`;
+      onclick="flowComer('${v}')" aria-pressed="${fc===v}">${l}<span class="wh-n">${fmt(n)}</span></button>`;
   const cab=`<div class="fl-tabs" role="group" aria-label="Filtrar piezas por origen">
       ${tab('','Todos',d.piezas)}${tab('alm','ALM01',d.cuenta.alm)}${tab('arr','Arriola',d.cuenta.arr)}${tab('buy','Comprar',d.cuenta.buy)}
       <span class="cb-seg" role="group" aria-label="Filtrar por comerciable"
         title="${sinDato? sinDato+' pieza(s) sin un Sí/No cargado en la hoja de SAP: solo salen en «Todos»':'Todas las piezas tienen el dato cargado'}">
         <span class="cb-seg-l">Comerciable</span>
-        ${cm('','Todos',nSI+nNO+sinDato)}${cm('SI','Sí',nSI)}${cm('NO','No',nNO)}
+        ${cm('','Todos',d.piezasTodas)}${cm('SI','Sí',nSI)}${cm('NO','No',nNO)}
       </span>
       <label class="fl-find">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
@@ -3140,15 +3157,19 @@ function flowBuscar(idx,v){
   flowPintar(idx);
   const el=$('#flc-'+idx+' .fl-find input'); if(el){ el.focus(); el.setSelectionRange(v.length,v.length); }
 }
-function flowComer(idx,v){
-  FLOW.comer[idx] = (FLOW.comer[idx]===v) ? '' : v;   // volver a pulsar lo quita
-  FLOW.todas[idx]=false;
-  flowPintar(idx);
+/* Cambiarlo repinta TODA la vista: diagrama, totales, KPI y tabla de cada
+   motor, no solo la tarjeta desde la que se pulsó. */
+function flowComer(v){
+  FLOW.comer = (FLOW.comer===v) ? '' : v;
+  FLOW.todas={};
+  if(VIEW_ACT==='tower') renderTowerPlan(); else renderGrid();
 }
-function flowLimpiar(idx){ FLOW.busq[idx]=''; FLOW.fuente[idx]=''; FLOW.comer[idx]=''; FLOW.todas[idx]=false; flowPintar(idx); }
+function flowLimpiar(idx){ FLOW.busq[idx]=''; FLOW.fuente[idx]=''; FLOW.todas[idx]=false; flowPintar(idx); }
 /* ── EngineStockFlow: la tarjeta completa ── */
 function EngineStockFlow(e, idx){
-  const d=flowData(idx), st=engStatus(e), abierta=FLOW.abierto.has(e.id), f=FLOW.fuente[idx]||'';
+  const d=flowData(idx), abierta=FLOW.abierto.has(e.id), f=FLOW.fuente[idx]||'';
+  // con el filtro puesto, el estado describe lo que se ve, no todo el kit
+  const st = FLOW.comer ? (d.t.buy>0?'buy':d.t.arr>0?'move':'done') : engStatus(e);
   const pct=Math.round(d.cob*100);
   const may=d.rows.filter(x=>x.sobra>0).sort((a,b)=>b.sobra-a.sobra)[0];
   const cuerpo = !abierta ? '' : `<div class="fl-body" id="flb-${idx}">
@@ -3169,7 +3190,7 @@ function EngineStockFlow(e, idx){
       </div>
       <div class="fl-key">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
-        <div>Suma de <b>${d.piezas} piezas distintas</b>: el reparto se calcula código por código, el sobrante de uno no cubre la falta de otro.${
+        <div>Suma de <b>${d.piezas} piezas distintas</b>${FLOW.comer? ` (comerciable ${FLOW.comer==='SI'?'sí':'no'}, de ${d.piezasTodas} del kit)`:''}: el reparto se calcula código por código, el sobrante de uno no cubre la falta de otro.${
           may? ` Por ejemplo, de <b>${_esc(may.cod)}</b> te sobran ${fmt(may.sobra)} que no sirven para ninguna otra pieza.`:''}</div>
       </div>
     </div>
@@ -3184,7 +3205,7 @@ function EngineStockFlow(e, idx){
         <svg class="fl-cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
         <span class="fl-av"><img src="img/motor.png" alt="" loading="lazy" decoding="async"></span>
         <span class="fl-tt"><h3>${_esc(nom)}</h3>
-          <span class="sub">${fmt(d.t.nec)} unidades · ${d.piezas} piezas</span></span>
+          <span class="sub">${fmt(d.t.nec)} unidades · ${d.piezas}${FLOW.comer?` de ${d.piezasTodas}`:''} piezas</span></span>
         <span class="mc-badge ${st}">${ST_LABEL[st]}</span>
         <span class="fl-cov"><span class="pc"><b>${pct}%</b> cubierto</span>${StockProgressBar(d.t)}</span>
       </button>
@@ -6185,6 +6206,8 @@ function twFilas(){
       if(TW.estado==='buy'  && r.d.t.buy<=0) return false;
       if(TW.estado==='move' && !(r.d.t.arr>0 && r.d.t.buy<=0)) return false;
       if(TW.estado==='done' && r.d.t.buy>0) return false;
+      // con el filtro puesto, un motor sin piezas de ese tipo no aporta nada
+      if(FLOW.comer && r.d.piezas===0) return false;
       return twCoincide(r.e,r.i,q);
     });
   const cmp={
@@ -6218,7 +6241,7 @@ function twFiltros(){
   btn.setAttribute('aria-expanded',String(abrir));
 }
 function twLimpiar(){
-  TW.q=''; TW.estado=''; TW.sort='buy';
+  TW.q=''; TW.estado=''; TW.sort='buy'; FLOW.comer='';
   $('#twQ').value=''; $('#twEstado').value=''; $('#twSort').value='buy';
   renderTowerPlan();
 }
@@ -6228,7 +6251,9 @@ function renderTowerPlan(){
   const host=$('#twAcc');
   if(!L.length){
     host.innerHTML=`<div class="state-box"><div class="ic">${ic(I.search)}</div>
-      <h3>Sin resultados</h3><p>Ningún motor coincide con la búsqueda o los filtros.</p>
+      <h3>Sin resultados</h3><p>${FLOW.comer
+        ? `Ningún motor tiene piezas marcadas como comerciable ${FLOW.comer==='SI'?'sí':'no'} en la hoja de SAP.`
+        : 'Ningún motor coincide con la búsqueda o los filtros.'}</p>
       <button class="xbtn primary" onclick="twLimpiar()">Quitar filtros</button></div>`;
   }else{
     // una sola tarjeta abierta: si la que estaba abierta ya no se ve, abre la primera
@@ -6237,9 +6262,19 @@ function renderTowerPlan(){
     FLOW.abierto=new Set(ab.length? [ab[0]] : [vis[0]]);
     host.innerHTML=L.map(r=>EngineStockFlow(r.e,r.i)).join('');
   }
-  const n=[TW.estado].filter(Boolean).length+(TW.q.trim()?1:0);
+  const n=[TW.estado].filter(Boolean).length+(TW.q.trim()?1:0)+(FLOW.comer?1:0);
   const chip=$('#twFiltN'); chip.textContent=n; chip.hidden=!n;
-  $('#twRes').textContent=`${L.length} de ${ENGINES.length} motores`;
+  const tog=$('#twComer');
+  if(tog) tog.querySelectorAll('button').forEach(b=>{
+    const on=b.dataset.v===FLOW.comer;
+    b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on));
+  });
+  const piezas=L.reduce((a,r)=>a+r.d.piezas,0);
+  const sinNada = FLOW.comer ? ENGINES.length-L.length : 0;
+  $('#twRes').textContent = FLOW.comer
+    ? `${L.length} motor${L.length===1?'':'es'} con piezas comerciable ${FLOW.comer==='SI'?'sí':'no'} · ${fmt(piezas)} piezas`
+      + (sinNada? ` · ${sinNada} sin ninguna`:'')
+    : `${L.length} de ${ENGINES.length} motores`;
 }
 function renderTower(){
   FLOW.solo=true;                 // en esta vista el acordeón deja una sola abierta

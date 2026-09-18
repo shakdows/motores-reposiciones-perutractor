@@ -1161,6 +1161,80 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .imp p{font-size:12px;color:var(--ink2);margin-top:3px;line-height:1.45}
 @media(max-width:860px){.impact{grid-template-columns:1fr}}
 
+/* ─────────── DESGLOSE DEL KIT (árbol del porqué) ─────────── */
+.wh-pick{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 14px}
+.wh-chip{padding:7px 13px;border-radius:20px;border:1px solid var(--line);background:var(--card);
+ font-size:12.5px;font-weight:600;color:var(--ink2);transition:.15s;white-space:nowrap}
+.wh-chip:hover{border-color:var(--brand);color:var(--brand)}
+.wh-chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.wh-chip:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.wh-key{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:var(--r);
+ background:var(--amber-bg);border:1px solid var(--amber-line);margin:0 0 14px}
+.wh-key svg{width:19px;height:19px;color:var(--amber);flex:0 0 auto;margin-top:1px}
+.wh-key>div>b{display:block;font-size:13.5px;color:var(--ink);margin-bottom:3px}
+.wh-key p b{color:var(--ink);font-weight:700}
+.wh-key p{font-size:12.5px;color:var(--ink2);line-height:1.55}
+.wh-key code{font-family:var(--mono);font-size:11.5px;background:var(--card);border:1px solid var(--amber-line);
+ padding:1px 5px;border-radius:4px;color:var(--ink)}
+/* ecuación */
+.wh-eq{display:flex;align-items:stretch;gap:0;flex-wrap:wrap;border:1px solid var(--line);border-radius:var(--r);
+ overflow:hidden;background:var(--card);margin:0 0 14px}
+.wh-eq .t{padding:13px 18px;min-width:132px;flex:1 1 auto;border-left:1px solid var(--line2);position:relative}
+.wh-eq .t:first-child{border-left:none;background:var(--card2)}
+.wh-eq .t .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2);font-weight:700}
+.wh-eq .t .v{font-size:23px;font-weight:700;letter-spacing:-.025em;margin-top:3px;font-variant-numeric:tabular-nums}
+.wh-eq .t .s{font-size:11px;color:var(--ink2);margin-top:2px}
+.wh-eq .op{display:grid;place-items:center;padding:0 9px;font-size:17px;font-weight:700;color:var(--ink3);background:var(--card2)}
+.wh-eq .t.alm .v{color:var(--teal)} .wh-eq .t.arr .v{color:var(--amber)} .wh-eq .t.buy .v{color:var(--red)}
+@media(max-width:760px){.wh-eq{flex-direction:column}.wh-eq .op{padding:4px;background:var(--card)}.wh-eq .t{border-left:none;border-top:1px solid var(--line2)}}
+/* árbol */
+.tree{padding:4px 0 8px}
+.tr-root{display:flex;align-items:center;gap:10px;padding:10px 16px;font-size:13.5px;font-weight:700;color:var(--ink)}
+.tr-root .dot{width:9px;height:9px;border-radius:50%;background:var(--navy);flex:0 0 auto}
+.tr-b{position:relative;margin-left:20px;padding-left:24px}
+.tr-b::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--line)}
+.tr-b:last-child::before{bottom:auto;height:22px}
+.tr-h{position:relative;display:flex;align-items:center;gap:10px;width:100%;padding:10px 14px 10px 0;
+ background:none;border:none;text-align:left;font:inherit;color:inherit}
+.tr-h::before{content:"";position:absolute;left:-24px;top:22px;width:18px;height:1px;background:var(--line)}
+.tr-h:hover .tr-t{color:var(--brand)}
+.tr-h:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:6px}
+.tr-ic{width:28px;height:28px;border-radius:var(--r-sm);display:grid;place-items:center;flex:0 0 auto}
+.tr-ic svg{width:15px;height:15px}
+.tr-t{font-size:13px;font-weight:600;color:var(--ink)}
+.tr-t small{display:block;font-weight:400;color:var(--ink2);font-size:11.5px;margin-top:1px}
+.tr-n{margin-left:auto;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tr-cv{width:15px;height:15px;color:var(--ink3);transition:transform .2s;flex:0 0 auto}
+.tr-b.open .tr-cv{transform:rotate(90deg)}
+.tr-body{display:none;padding:0 0 10px}
+.tr-b.open .tr-body{display:block}
+.tr-leaf{position:relative;display:flex;align-items:center;gap:12px;padding:8px 14px 8px 0;font-size:12.5px;flex-wrap:wrap}
+.tr-leaf::before{content:"";position:absolute;left:-24px;top:19px;width:18px;height:1px;background:var(--line2)}
+.tr-leaf .cod{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--ink);min-width:104px}
+.tr-leaf .des{flex:1 1 150px;min-width:0;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tr-leaf .mat{font-family:var(--mono);font-size:11.5px;color:var(--ink2);white-space:nowrap;
+ background:var(--card2);border:1px solid var(--line2);border-radius:6px;padding:3px 8px}
+.tr-leaf .mat b{color:var(--ink);font-weight:700}
+.tr-leaf .mat .r{font-weight:700}
+.tr-b.buy .tr-ic{background:var(--red-bg);color:var(--red)}   .tr-b.buy .tr-n{color:var(--red)}
+.tr-b.buy .tr-leaf .mat .r{color:var(--red)}
+.tr-b.move .tr-ic{background:var(--amber-bg);color:var(--amber)} .tr-b.move .tr-n{color:var(--amber)}
+.tr-b.move .tr-leaf .mat .r{color:var(--amber)}
+.tr-b.ok .tr-ic{background:var(--teal-bg);color:var(--teal)}   .tr-b.ok .tr-n{color:var(--teal)}
+.tr-b.ok .tr-leaf .mat .r{color:var(--teal)}
+.tr-b.info .tr-ic{background:var(--blue-bg);color:var(--blue)} .tr-b.info .tr-n{color:var(--blue)}
+.tr-b.info .tr-leaf .mat .r{color:var(--blue)}
+.tr-more{padding:8px 0 4px;font-size:12px}
+@media(max-width:640px){
+ .tr-b{margin-left:10px;padding-left:16px}
+ .tr-h::before{left:-16px;width:12px}
+ .tr-leaf::before{left:-16px;width:12px}
+ .tr-leaf{gap:6px}
+ .tr-leaf .cod{min-width:0;flex:1 1 100%}
+ .tr-leaf .des{flex:1 1 100%}
+}
+.wh-note{font-size:11.5px;color:var(--ink2);margin-top:7px;line-height:1.5}
+
 /* ─────────── PLAN DE COMPRA / PRESENTACIÓN ─────────── */
 .pp-ov,.ex-ov{position:fixed;inset:0;background:rgba(7,21,47,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);
  display:none;align-items:center;justify-content:center;padding:3vh 16px;z-index:990}
@@ -1337,6 +1411,9 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
     <button class="sb-item" data-view="trans">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>
       <span class="lbl">Transferencias</span><span class="cnt" id="cntTrans"></span></button>
+    <button class="sb-item" data-view="why">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+      <span class="lbl">Desglose del kit</span></button>
     <div class="sb-sec">Compras</div>
     <button class="sb-item" data-view="orders">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
@@ -1458,6 +1535,24 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
     <div class="pnl-h"><div><h3>Traslados sugeridos</h3><p id="trSub"></p></div></div>
     <div class="ptbl-wrap" id="trWrap"></div>
   </div>
+</section>
+
+<!-- ═══════════ DESGLOSE DEL KIT ═══════════ -->
+<section id="viewWhy" class="hidden">
+  <div class="xhead">
+    <div class="xhead-l">
+      <h1>Desglose del kit</h1>
+      <p>Pieza por pieza: por qué se compra, por qué se traslada y qué ya está cubierto</p>
+    </div>
+    <div class="xhead-a">
+      <button class="xbtn" onclick="exportWhy()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Exportar Excel
+      </button>
+    </div>
+  </div>
+  <div class="wh-pick" id="whPick" role="tablist" aria-label="Elegir motor"></div>
+  <div id="whBody"></div>
 </section>
 
 <!-- ═══════════ ÓRDENES DE COMPRA ═══════════ -->
@@ -4953,7 +5048,7 @@ const MK=(function(){
 
 /* ═════════ NAVEGACIÓN ═════════ */
 let VIEW_ACT='tower', SEL_MOTOR=null;
-const VIEWS={tower:'#viewTower',list:'#viewList',trans:'#viewTrans',orders:'#viewOrders',reports:'#viewReports',detail:'#viewDetail'};
+const VIEWS={tower:'#viewTower',list:'#viewList',trans:'#viewTrans',why:'#viewWhy',orders:'#viewOrders',reports:'#viewReports',detail:'#viewDetail'};
 function goView(v){
   if(v==='comb'){ openComb(); return; }
   if(!VIEWS[v]) v='tower';
@@ -5163,6 +5258,8 @@ function renderRec(){
     </div>
     <div class="rec-t">Origen del stock recomendado</div>
     ${allocSVG(m)}
+    <p class="wh-note">Suma de <b>${m.items} piezas distintas</b>: el sobrante de un código no cubre la falta de otro.
+      <button class="lnk" onclick="WHY_MOT=${SEL_MOTOR};goView('why')">Ver por qué, pieza por pieza →</button></p>
     <div class="alloc-l">
       <span><i style="background:var(--teal)"></i>ALM01 ${fmt(m.almUsado)}</span>
       <span><i style="background:var(--amber)"></i>Arriola ${fmt(m.trasl)}</span>
@@ -5545,6 +5642,143 @@ function fullExec(){
   }catch(e){ _toast('Tu navegador no permite pantalla completa aquí.'); }
 }
 
+/* ═════════ DESGLOSE DEL KIT — el árbol del porqué ═════════
+   Responde a la pregunta "si tengo stock, ¿por qué compro?".
+   La clave: los totales son la suma de piezas DISTINTAS. El sobrante
+   de un código no cubre la falta de otro, así que se puede tener
+   mucho stock y aun así faltar piezas. */
+let WHY_MOT=null;
+const WHY_ABIERTO={buy:true,move:true,ok:false,info:false};
+function whyDatos(i){
+  const e=ENGINES[i], N=1;
+  const g={ok:[],move:[],buy:[],info:[]};
+  e.items.forEach(r=>{
+    const c=calc(r,N);
+    const base={cod:r[0], desc:r[1]||'—', fam:r[14]||'Otros', nec:c.need, alm:c.alm, arr:c.arr,
+                compra:c.comprar, trasl:c.trasl, sobra:c.exceso, usaAlm:Math.min(c.alm,c.need)};
+    if(c.comprar>0)                  g.buy.push(base);
+    if(c.trasl>0)                    g.move.push(base);   // puede coincidir con compra
+    if(c.comprar===0 && c.trasl===0) g.ok.push(base);
+    if(c.exceso>0)                   g.info.push(base);
+  });
+  g.buy.sort((a,b)=>b.compra-a.compra);
+  g.move.sort((a,b)=>b.trasl-a.trasl);
+  g.ok.sort((a,b)=>b.usaAlm-a.usaAlm);
+  g.info.sort((a,b)=>b.sobra-a.sobra);
+  return g;
+}
+function renderWhy(){
+  if(WHY_MOT===null || !ENGINES[WHY_MOT]) WHY_MOT = (SEL_MOTOR!==null? SEL_MOTOR : prioridad()[0].i);
+  // selector de motor
+  $('#whPick').innerHTML=MK.all(1).map(m=>
+    `<button class="wh-chip ${m.i===WHY_MOT?'on':''}" role="tab" aria-selected="${m.i===WHY_MOT}"
+       onclick="WHY_MOT=${m.i};renderWhy()">${m.label}</button>`).join('');
+
+  const m=MK.motor(WHY_MOT,1), g=whyDatos(WHY_MOT), e=ENGINES[WHY_MOT];
+  const almFisico=e.items.reduce((a,r)=>a+(r[3]||0),0);
+  const maxSobra=g.info[0];
+
+  const eq=`<div class="wh-eq">
+    <div class="t"><div class="l">El kit pide</div><div class="v">${fmt(m.need)}</div><div class="s">unidades en ${m.items} piezas distintas</div></div>
+    <div class="op">=</div>
+    <div class="t alm"><div class="l">Ya tienes en ALM01</div><div class="v">${fmt(m.almUsado)}</div><div class="s">${g.ok.length} piezas cubiertas</div></div>
+    <div class="op">+</div>
+    <div class="t arr"><div class="l">Traes de Arriola</div><div class="v">${fmt(m.trasl)}</div><div class="s">${g.move.length} ${g.move.length===1?'pieza':'piezas'}</div></div>
+    <div class="op">+</div>
+    <div class="t buy"><div class="l">Tienes que comprar</div><div class="v">${fmt(m.comprar)}</div><div class="s">${g.buy.length} ${g.buy.length===1?'pieza':'piezas'}</div></div>
+  </div>`;
+
+  const aviso=`<div class="wh-key">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div><b>Por qué compras aunque tengas stock</b>
+    <p>Cada código es una <b>pieza diferente</b>: el sobrante de una no sirve para otra.
+    En ALM01 hay <b>${fmt(almFisico)}</b> unidades de este kit, pero repartidas en ${m.items} códigos.
+    ${maxSobra? `Por ejemplo, de <code>${maxSobra.cod}</code> tienes ${fmt(maxSobra.alm)} y el kit solo pide ${fmt(maxSobra.nec)}: te sobran ${fmt(maxSobra.sobra)} que no cubren ninguna otra pieza.` : ''}
+    Por eso se puede tener stock de sobra y a la vez faltar ${fmt(m.comprar)} unidades.</p></div>
+  </div>`;
+
+  const leaf=(x,tipo)=>{
+    let mat;
+    if(tipo==='buy')       mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> − Arriola <b>${fmt(x.trasl)}</b> = comprar <span class="r">${fmt(x.compra)}</span>`;
+    else if(tipo==='move') mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> → trasladar <span class="r">${fmt(x.trasl)}</span> de Arriola${x.compra?` y comprar ${fmt(x.compra)}`:''}`;
+    else if(tipo==='ok')   mat=`necesita <b>${fmt(x.nec)}</b> · ALM01 <b>${fmt(x.alm)}</b> = <span class="r">cubierto</span>`;
+    else                   mat=`ALM01 <b>${fmt(x.alm)}</b> − necesita <b>${fmt(x.nec)}</b> = sobran <span class="r">${fmt(x.sobra)}</span>`;
+    return `<div class="tr-leaf"><span class="cod">${x.cod}</span>
+      <span class="des" title="${_esc(x.desc)}">${_esc(x.desc)}</span>
+      <span class="mat">${mat}</span></div>`;
+  };
+  const rama=(id,cls,icono,titulo,sub,lista,tipo,total)=>{
+    if(!lista.length) return '';
+    const vis=lista.slice(0,12), resto=lista.length-vis.length;
+    return `<div class="tr-b ${cls} ${WHY_ABIERTO[id]?'open':''}" id="trb-${id}">
+      <button class="tr-h" aria-expanded="${!!WHY_ABIERTO[id]}" aria-controls="trbody-${id}" onclick="whyToggle('${id}')">
+        <span class="tr-ic">${icono}</span>
+        <span class="tr-t">${titulo}<small>${sub}</small></span>
+        <span class="tr-n">${total}</span>
+        <svg class="tr-cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+      </button>
+      <div class="tr-body" id="trbody-${id}">${vis.map(x=>leaf(x,tipo)).join('')}
+        ${resto>0?`<div class="tr-leaf tr-more"><button class="lnk" onclick="whyTodo('${id}')">Ver las ${lista.length} piezas →</button></div>`:''}
+      </div></div>`;
+  };
+  const arbol=`<div class="pnl"><div class="tree">
+    <div class="tr-root"><span class="dot"></span>Kit ${m.label} · ${fmt(m.need)} unidades en ${m.items} piezas</div>
+    ${rama('buy','buy',ic(I.cart),'Hay que comprar','No hay suficiente ni en ALM01 ni en Arriola',
+      g.buy,'buy',`${g.buy.length} ${g.buy.length===1?'pieza':'piezas'} · ${fmt(m.comprar)} uds.`)}
+    ${rama('move','move',ic(I.swap),'Se puede traer de Arriola','Ya es tuyo: muévelo antes de comprar',
+      g.move,'move',`${g.move.length} ${g.move.length===1?'pieza':'piezas'} · ${fmt(m.trasl)} uds.`)}
+    ${rama('ok','ok',ic(I.check),'Ya cubierto con ALM01','No requiere ninguna acción',
+      g.ok,'ok',`${g.ok.length} ${g.ok.length===1?'pieza':'piezas'} · ${fmt(m.almUsado)} uds.`)}
+    ${rama('info','info',ic(I.layers),'Te sobra, pero no sirve para este kit','Stock por encima de lo que pide el kit, en otros códigos',
+      g.info,'info',`${g.info.length} ${g.info.length===1?'pieza':'piezas'} · ${fmt(m.exceso)} uds.`)}
+  </div>
+  <div class="pnl-f"><span class="wh-note">Las cantidades son para <b>1 kit</b>.
+    En el detalle del motor puedes cambiar cuántos kits quieres reponer.</span>
+    <span style="flex:1"></span>
+    <button class="xbtn" onclick="openEngine(${WHY_MOT})">Ver detalle del motor</button></div></div>`;
+
+  $('#whBody').innerHTML = eq + aviso + arbol;
+}
+function whyToggle(id){
+  WHY_ABIERTO[id]=!WHY_ABIERTO[id];
+  const b=$('#trb-'+id); if(!b) return;
+  b.classList.toggle('open',WHY_ABIERTO[id]);
+  b.querySelector('.tr-h').setAttribute('aria-expanded',String(!!WHY_ABIERTO[id]));
+}
+let WHY_TODO={};
+function whyTodo(id){ WHY_TODO[id]=true; renderWhyTodo(id); }
+function renderWhyTodo(id){
+  const g=whyDatos(WHY_MOT), lista=g[id]||[];
+  const body=$('#trbody-'+id); if(!body) return;
+  const tipo=id;
+  const leafs=lista.map(x=>{
+    let mat;
+    if(tipo==='buy')       mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> − Arriola <b>${fmt(x.trasl)}</b> = comprar <span class="r">${fmt(x.compra)}</span>`;
+    else if(tipo==='move') mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> → trasladar <span class="r">${fmt(x.trasl)}</span> de Arriola${x.compra?` y comprar ${fmt(x.compra)}`:''}`;
+    else if(tipo==='ok')   mat=`necesita <b>${fmt(x.nec)}</b> · ALM01 <b>${fmt(x.alm)}</b> = <span class="r">cubierto</span>`;
+    else                   mat=`ALM01 <b>${fmt(x.alm)}</b> − necesita <b>${fmt(x.nec)}</b> = sobran <span class="r">${fmt(x.sobra)}</span>`;
+    return `<div class="tr-leaf"><span class="cod">${x.cod}</span>
+      <span class="des" title="${_esc(x.desc)}">${_esc(x.desc)}</span>
+      <span class="mat">${mat}</span></div>`;
+  }).join('');
+  body.innerHTML=leafs;
+}
+function exportWhy(){
+  const m=MK.motor(WHY_MOT,1), g=whyDatos(WHY_MOT);
+  const filas=[];
+  const push=(grupo,x,accion,valor)=>filas.push([m.label,grupo,x.cod,x.desc,x.fam,x.nec,x.alm,x.arr,accion,valor,
+    `necesita ${x.nec} − ALM01 ${x.alm} − Arriola ${x.arr}`]);
+  g.buy.forEach(x=>push('Hay que comprar',x,'COMPRAR',x.compra));
+  g.move.forEach(x=>push('Trasladar de Arriola',x,'TRASLADAR',x.trasl));
+  g.ok.forEach(x=>push('Ya cubierto con ALM01',x,'CUBIERTO',0));
+  g.info.forEach(x=>push('Sobrante (no sirve para este kit)',x,'SOBRA',x.sobra));
+  if(!filas.length){ _toast('Este motor no tiene piezas que desglosar.'); return; }
+  _descargar(['Motor','Grupo','Código SAP','Descripción','Categoría','Necesita','Stock ALM01','En Arriola','Acción','Cantidad','Cómo se calcula'],
+    filas,'Desglose',`Desglose_${m.label.replace(/[^\w]/g,'_')}_${_hoy()}.xls`,
+    `DESGLOSE DEL KIT ${m.label.toUpperCase()} — POR QUÉ SE COMPRA CADA PIEZA`,
+    `Peru Tractor S.R.L. · ${m.items} piezas · pide ${fmt(m.need)} uds · ALM01 ${fmt(m.almUsado)} · Arriola ${fmt(m.trasl)} · comprar ${fmt(m.comprar)} · Generado ${_hoy()}`);
+}
+
 /* ═════════ REPINTADO GLOBAL ═════════ */
 function renderAll(){
   MK.bump();
@@ -5559,6 +5793,7 @@ function renderAll(){
   if(VIEW_ACT==='tower')        renderTower();
   else if(VIEW_ACT==='list')    renderHome();
   else if(VIEW_ACT==='trans')   renderTrans();
+  else if(VIEW_ACT==='why')     renderWhy();
   else if(VIEW_ACT==='orders')  renderOrders();
   else if(VIEW_ACT==='reports') renderReports();
 }

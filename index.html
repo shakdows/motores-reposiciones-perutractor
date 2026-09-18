@@ -1015,7 +1015,12 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .xbtn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
 .xbtn.primary:hover{background:#1A52E0;border-color:#1A52E0}
 .xbtn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-@media(max-width:640px){.xhead{padding:14px 0 12px}.xhead h1{font-size:18px}.xhead-a{display:none}}
+@media(max-width:640px){.xhead{padding:14px 0 12px}.xhead h1{font-size:18px}
+ /* en móvil la barra flotante repite las acciones del Control Tower y de
+    Órdenes, así que ahí se esconde la cabecera; donde no las repite
+    (exportar Excel) tiene que seguir alcanzable. */
+ #viewTower .xhead-a,#viewOrders .xhead-a{display:none}
+ .xhead-a{width:100%}.xhead-a .xbtn{flex:1;justify-content:center}}
 
 /* ─────────── BANNER EJECUTIVO ─────────── */
 .obanner{background:linear-gradient(105deg,var(--navy) 0%,var(--navy-2) 100%);border-radius:var(--r);
@@ -1484,6 +1489,68 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 }
 @media(prefers-reduced-motion:reduce){ .fl-src,.fl-node,.fl-cv,.fl-bar i{transition:none} .fl-src:hover{transform:none} }
 
+/* ═════════ KITS QUE PUEDO ARMAR ═════════ */
+.cap-seg{display:inline-flex;gap:2px;padding:3px;border-radius:9px;background:var(--card3);margin-bottom:13px}
+.cap-seg button{padding:6px 13px;border:0;border-radius:7px;background:none;font-family:var(--font);font-size:12px;
+ font-weight:600;color:var(--ink2);cursor:pointer}
+.cap-seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.08)}
+.cap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:11px}
+.cap-c{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:13px 14px}
+.cap-c.si{border-color:var(--teal-line)}
+.cap-c-h{display:flex;align-items:center;gap:9px;margin-bottom:9px}
+.cap-c-h .av{width:30px;height:30px;border-radius:8px;background:var(--navy);color:#fff;display:flex;
+ align-items:center;justify-content:center;font-size:10px;font-weight:800;flex:0 0 auto}
+.cap-c-h h4{font-size:13.5px;font-weight:700;margin:0;letter-spacing:-.01em}
+.cap-c-h small{display:block;font-size:11px;color:var(--ink2);font-weight:400;margin-top:1px}
+.cap-n{display:flex;align-items:baseline;gap:7px;margin-bottom:3px}
+.cap-n b{font-size:30px;font-weight:800;letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums}
+.cap-n.si b{color:var(--teal)} .cap-n.no b{color:var(--ink3)}
+.cap-n span{font-size:12px;color:var(--ink2);font-weight:600}
+.cap-sub{font-size:11.5px;color:var(--ink2);line-height:1.5}
+.cap-sub code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;background:var(--card3);
+ padding:1px 5px;border-radius:4px;color:var(--ink)}
+.cap-fr{margin-top:9px;padding-top:9px;border-top:1px solid var(--line2);font-size:11.5px;color:var(--ink2);line-height:1.55}
+.cap-fr b{color:var(--red)}
+.cap-pz{display:flex;align-items:center;gap:7px;margin-top:8px;font-size:11px;color:var(--ink2)}
+.cap-pz .bar{flex:1;height:5px;border-radius:3px;background:var(--line2);overflow:hidden}
+.cap-pz .bar i{display:block;height:100%;background:var(--teal)}
+/* simulador de reparto */
+.cap-sim{display:grid;grid-template-columns:minmax(250px,320px) 1fr;gap:16px;align-items:start}
+.cap-pick{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow:auto;padding-right:3px}
+.cap-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--line);border-radius:var(--r-sm);
+ background:var(--card);transition:border-color .15s,background .15s}
+.cap-row.on{border-color:var(--brand);background:var(--brand-bg)}
+.cap-row .pr{width:19px;text-align:center;font-size:10.5px;font-weight:800;color:var(--ink3);flex:0 0 auto;
+ font-variant-numeric:tabular-nums}
+.cap-row .lb{display:flex;align-items:center;gap:7px;flex:1;min-width:0;cursor:pointer}
+.cap-row .lb input{width:15px;height:15px;accent-color:var(--brand);cursor:pointer;flex:0 0 auto}
+.cap-row .lb .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cap-row.on .lb .nm{color:var(--brand)}
+.cap-mv{display:flex;flex-direction:column;gap:1px;flex:0 0 auto}
+.cap-mv button{width:18px;height:11px;border:0;background:none;color:var(--ink3);cursor:pointer;line-height:1;
+ font-size:9px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:3px}
+.cap-mv button:hover:not(:disabled){background:var(--card3);color:var(--ink)}
+.cap-mv button:disabled{opacity:.3;cursor:default}
+.cap-res{min-width:0}
+.cap-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.cap-tbl th{text-align:left;padding:8px 10px;font-size:10.5px;font-weight:800;letter-spacing:.35px;text-transform:uppercase;
+ color:var(--ink2);border-bottom:1px solid var(--line);background:var(--card2);white-space:nowrap}
+.cap-tbl td{padding:8px 10px;border-bottom:1px solid var(--line2);vertical-align:top}
+.cap-tbl tr:last-child td{border-bottom:0}
+.cap-tbl .num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cap-tbl .mot{font-weight:700;white-space:nowrap}
+.cap-tbl .ok{color:var(--teal);font-weight:700}
+.cap-tbl .ko{color:var(--red);font-weight:700}
+.cap-tbl .por{color:var(--ink2);white-space:normal;line-height:1.5;font-size:11.5px}
+.cap-tbl .por code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;background:var(--card3);
+ padding:1px 5px;border-radius:4px;color:var(--ink)}
+.cap-tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line2);
+ border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;margin-bottom:12px}
+.cap-tot .c{background:var(--card);padding:10px 13px}
+.cap-tot .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2);font-weight:700}
+.cap-tot .v{font-size:19px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+@media(max-width:900px){ .cap-sim{grid-template-columns:1fr} .cap-pick{max-height:none} }
+
 /* barra de acción fija en móvil */
 .mfab{display:none}
 @media(max-width:640px){
@@ -1588,6 +1655,9 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
     <button class="sb-item" data-view="why">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
       <span class="lbl">Desglose del kit</span></button>
+    <button class="sb-item" data-view="cap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v6"/><path d="M4.9 4.9 9 9"/><path d="M19.1 4.9 15 9"/><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M9 13h6"/></svg>
+      <span class="lbl">Kits que puedo armar</span><span class="cnt" id="cntCap"></span></button>
     <div class="sb-sec">Compras</div>
     <button class="sb-item" data-view="orders">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
@@ -1727,6 +1797,23 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
   </div>
   <div class="wh-pick" id="whPick" role="tablist" aria-label="Elegir motor"></div>
   <div id="whBody"></div>
+</section>
+
+<!-- ═══════════ KITS QUE PUEDO ARMAR ═══════════ -->
+<section id="viewCap" class="hidden">
+  <div class="xhead">
+    <div class="xhead-l">
+      <h1>Kits que puedo armar</h1>
+      <p>Cuántos kits completos salen con el stock que ya tienes, y qué pasa cuando varios motores se pelean las mismas piezas</p>
+    </div>
+    <div class="xhead-a">
+      <button class="xbtn" onclick="exportCap()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Exportar Excel
+      </button>
+    </div>
+  </div>
+  <div id="capBody"></div>
 </section>
 
 <!-- ═══════════ ÓRDENES DE COMPRA ═══════════ -->
@@ -5422,7 +5509,7 @@ const MK=(function(){
 
 /* ═════════ NAVEGACIÓN ═════════ */
 let VIEW_ACT='tower', SEL_MOTOR=null;
-const VIEWS={tower:'#viewTower',list:'#viewList',trans:'#viewTrans',why:'#viewWhy',orders:'#viewOrders',reports:'#viewReports',detail:'#viewDetail'};
+const VIEWS={tower:'#viewTower',list:'#viewList',trans:'#viewTrans',why:'#viewWhy',cap:'#viewCap',orders:'#viewOrders',reports:'#viewReports',detail:'#viewDetail'};
 function goView(v){
   if(v==='comb'){ openComb(); return; }
   if(!VIEWS[v]) v='tower';
@@ -5768,6 +5855,246 @@ function exportTrans(){
   _descargar(header,body,'Traslados',`Traslados_internos_${_hoy()}.xls`,
     'TRASLADOS INTERNOS SUGERIDOS — ARRIOLA → ALM01',
     `Peru Tractor S.R.L. · ${t.length} piezas · ${fmt(MK.global(1).trasl)} unidades · Generado ${_hoy()}`);
+}
+
+/* ═════════ KITS QUE PUEDO ARMAR ═════════
+   Dos preguntas distintas, y por eso van separadas:
+   1) si dedicas TODO el stock a un motor, ¿cuántos kits salen?
+   2) si quieres varios motores a la vez, el stock es compartido y el primero
+      que consume deja al siguiente sin piezas. Eso lo resuelve el simulador.
+   No cambia ningún cálculo de reposición: solo lee el stock real. */
+const CAP={modo:'both', reparto:'kits', orden:null, pedidos:null};
+/* Stock por código, una sola vez: el mismo código es la misma pieza física
+   aunque aparezca en varios motores. */
+function capStock(){
+  return flMemo('capStock', ()=>{
+    const m={};
+    ENGINES.forEach(e=>e.items.forEach(r=>{
+      const cur=m[r[0]];
+      if(!cur || (r[15]||0)>(cur.r[15]||0)) m[r[0]]={r};
+    }));
+    Object.values(m).forEach(o=>{ o.alm=o.r[3]||0; o.arr=arriolaOf(o.r); o.desc=o.r[1]||'—'; });
+    return m;
+  });
+}
+function capDisp(s,modo){ if(!s) return 0; return modo==='alm' ? s.alm : s.alm+s.arr; }
+/* Capacidad de un motor con todo el stock disponible para él solo. */
+function capIndiv(i,modo){
+  return flMemo('capI'+modo+'@'+i, ()=>{
+    const S=capStock(), e=ENGINES[i];
+    let min=Infinity, completas=0, total=0; const kits=[];
+    e.items.forEach(r=>{
+      const nec=r[2]||0; if(nec<=0) return;
+      total++;
+      const s=S[r[0]], d=capDisp(s,modo);
+      if(d>=nec) completas++;
+      const k=Math.floor(d/nec);
+      kits.push({cod:r[0], desc:r[1]||'—', nec, disp:d, k});
+      if(k<min) min=k;
+    });
+    if(min===Infinity) min=0;
+    const frenos=kits.filter(x=>x.k===min).sort((a,b)=>(b.nec-b.disp)-(a.nec-a.disp));
+    return {kits:min, frenos, completas, total};
+  });
+}
+/* Reparto real: se sirve por orden de prioridad y cada motor consume el stock.
+   Dos formas de consumir, porque en el almacén pasan las dos:
+   · 'kits'     → solo se descuenta lo que llega a formar un kit completo.
+   · 'reservar' → el motor aparta todas las piezas que necesita, aunque el kit
+                  quede a medias; al siguiente le toca lo que sobró. */
+function capSimular(){
+  const S=capStock(), modo=CAP.modo, resv=CAP.reparto==='reservar';
+  const pool={}; Object.keys(S).forEach(c=>{ pool[c]={alm:S[c].alm, arr:S[c].arr}; });
+  const disp=c=>{ const p=pool[c]; return !p?0:(modo==='alm'? p.alm : p.alm+p.arr); };
+  const res=[];
+  capOrden().forEach((id,pos)=>{
+    const i=ENGINES.findIndex(e=>e.id===id); if(i<0) return;
+    const e=ENGINES[i], pide=capPedidos()[id]||0;
+    let min=Infinity, listas=0, total=0; const kits=[];
+    e.items.forEach(r=>{
+      const nec=r[2]||0; if(nec<=0) return;
+      total++;
+      const d=disp(r[0]);
+      if(d>=nec) listas++;
+      const k=Math.floor(d/nec);
+      kits.push({cod:r[0], desc:r[1]||'—', nec, disp:d, k});
+      if(k<min) min=k;
+    });
+    if(min===Infinity) min=0;
+    const arma=Math.min(pide,min);
+    const frenos=kits.filter(x=>x.k===min).sort((a,b)=>(b.nec-b.disp)-(a.nec-a.disp));
+    const consume = resv ? pide : arma;
+    let uds=0;
+    if(consume>0) e.items.forEach(r=>{
+      const want=(r[2]||0)*consume; if(want<=0) return;
+      const p=pool[r[0]]; if(!p) return;
+      const usaAlm=Math.min(p.alm,want); p.alm-=usaAlm;
+      const usaArr=(modo==='alm')? 0 : Math.min(p.arr, want-usaAlm);
+      p.arr-=usaArr; uds+=usaAlm+usaArr;
+    });
+    const solo=capIndiv(i,modo);
+    res.push({e, i, pos:pos+1, pide, solo:solo.kits, soloListas:solo.completas,
+              puede:min, arma, falta:Math.max(0,pide-arma), frenos, uds, listas, total});
+  });
+  return {res, pool};
+}
+function capOrden(){
+  if(!CAP.orden) CAP.orden=ENGINES.map(e=>e.id);
+  const ids=ENGINES.map(e=>e.id);
+  CAP.orden=CAP.orden.filter(id=>ids.includes(id)).concat(ids.filter(id=>!CAP.orden.includes(id)));
+  return CAP.orden;
+}
+function capPedidos(){
+  if(!CAP.pedidos) CAP.pedidos={};
+  ENGINES.forEach(e=>{ if(CAP.pedidos[e.id]===undefined) CAP.pedidos[e.id]=1; });
+  return CAP.pedidos;
+}
+function capModo(m){ CAP.modo=m; renderCap(); }
+function capReparto(m){ CAP.reparto=m; renderCap(); }
+function capTog(id){ const P=capPedidos(); P[id]= (P[id]||0)>0 ? 0 : 1; renderCap(); }
+function capSet(id,v){ capPedidos()[id]=Math.max(0,Math.min(99,Math.round(+v)||0)); renderCap(); }
+function capPaso(id,d){ const P=capPedidos(); P[id]=Math.max(0,Math.min(99,(P[id]||0)+d)); renderCap(); }
+function capMover(id,d){
+  const o=capOrden(), i=o.indexOf(id), j=i+d;
+  if(i<0||j<0||j>=o.length) return;
+  o.splice(j,0,o.splice(i,1)[0]);
+  renderCap();
+}
+function renderCap(){
+  const modo=CAP.modo, S=capStock(), P=capPedidos();
+  const fuente = modo==='alm' ? 'solo con ALM01' : 'con ALM01 + lo que se puede traer de Arriola';
+  const ind=ENGINES.map((e,i)=>({e,i,c:capIndiv(i,modo)})).sort((a,b)=>b.c.kits-a.c.kits||a.e.label.localeCompare(b.e.label,'es'));
+  const armables=ind.filter(x=>x.c.kits>0).length;
+  const sim=capSimular();
+  const pedidosTot=sim.res.reduce((a,x)=>a+x.pide,0);
+  const armaTot=sim.res.reduce((a,x)=>a+x.arma,0);
+  const sinServir=sim.res.filter(x=>x.falta>0);
+
+  const tarjeta=({e,i,c})=>{
+    const si=c.kits>0, pct=c.total? Math.round(c.completas/c.total*100):0;
+    const fr=c.frenos.slice(0,2);
+    return `<div class="cap-c ${si?'si':''}">
+      <div class="cap-c-h"><span class="av">${_esc(e.icon)}</span>
+        <div><h4>${_esc(e.label.replace('Motor ','Kit '))}</h4>
+          <small>${c.total} piezas distintas</small></div></div>
+      <div class="cap-n ${si?'si':'no'}"><b>${fmt(c.kits)}</b><span>kit${c.kits===1?'':'s'} completo${c.kits===1?'':'s'}</span></div>
+      <div class="cap-sub">${si
+        ? `Con el stock actual ${fuente} puedes armarlo ${c.kits} ${c.kits===1?'vez':'veces'} de principio a fin.`
+        : `Todavía no sale un kit completo ${fuente}.`}</div>
+      <div class="cap-pz"><span>${c.completas} de ${c.total} piezas con stock para 1 kit</span>
+        <span class="bar"><i style="width:${pct}%"></i></span><span>${pct}%</span></div>
+      ${fr.length? `<div class="cap-fr">Lo frena ${fr.map(x=>`<code>${_esc(x.cod)}</code> (hay ${fmt(x.disp)}, el kit pide ${fmt(x.nec)})`).join(' y ')}${
+        c.frenos.length>fr.length? ` y ${c.frenos.length-fr.length} pieza(s) más`:''}.</div>`:''}
+    </div>`;
+  };
+
+  const lista=capOrden().map((id,pos)=>{
+    const e=ENGINES.find(x=>x.id===id); if(!e) return '';
+    const q=P[id]||0, nom=e.label.replace('Motor ','');
+    return `<div class="cap-row ${q?'on':''}">
+      <span class="pr">${pos+1}</span>
+      <span class="cap-mv">
+        <button onclick="capMover('${id}',-1)" ${pos===0?'disabled':''} aria-label="Subir la prioridad de ${_esc(nom)}">▲</button>
+        <button onclick="capMover('${id}',1)" ${pos===capOrden().length-1?'disabled':''} aria-label="Bajar la prioridad de ${_esc(nom)}">▼</button>
+      </span>
+      <label class="lb"><input type="checkbox" ${q?'checked':''} onchange="capTog('${id}')"
+          aria-label="Incluir ${_esc(nom)} en el reparto">
+        <span class="nm" title="${_esc(e.label)}">${_esc(nom)}</span></label>
+      <span class="pp-pk-q">
+        <button class="stp" onclick="capPaso('${id}',-1)" ${q<=0?'disabled':''} aria-label="Un kit menos de ${_esc(nom)}">−</button>
+        <input class="num" type="number" min="0" max="99" value="${q}" onchange="capSet('${id}',this.value)"
+          aria-label="Kits de ${_esc(nom)} que quieres armar">
+        <button class="stp" onclick="capPaso('${id}',1)" aria-label="Un kit más de ${_esc(nom)}">+</button>
+      </span></div>`;
+  }).join('');
+
+  const filas=sim.res.filter(x=>x.pide>0).map(x=>{
+    const ok=x.falta===0 && x.pide>0;
+    const perdio=x.solo-x.puede, perdioPz=x.soloListas-x.listas;
+    let nota;
+    if(ok)              nota=`Sale completo. Consume ${fmt(x.uds)} unidades del stock compartido.`;
+    else if(x.puede>0)  nota=`Solo alcanza para ${fmt(x.arma)} de los ${fmt(x.pide)} que pides.`;
+    else                nota=`No llega a completar ni un kit.`;
+    if(!ok && x.frenos.length)
+      nota+=` Se queda sin ${x.frenos.slice(0,2).map(f=>`<code>${_esc(f.cod)}</code> (quedan ${fmt(f.disp)}, el kit pide ${fmt(f.nec)})`).join(' ni ')}.`;
+    if(perdio>0)   nota+=` Por su cuenta habría armado ${fmt(x.solo)}: los motores de arriba ya se llevaron esas piezas.`;
+    else if(perdioPz>0) nota+=` Los motores de arriba le quitaron <b>${fmt(perdioPz)}</b> pieza(s) que sí tenía cubiertas.`;
+    return `<tr>
+      <td class="mot">${x.pos}. ${_esc(x.e.label.replace('Motor ','Kit '))}</td>
+      <td class="num">${fmt(x.pide)}</td>
+      <td class="num">${fmt(x.solo)}</td>
+      <td class="num ${ok?'ok':'ko'}">${fmt(x.arma)}</td>
+      <td class="num ${perdioPz>0?'ko':''}">${fmt(x.listas)}/${fmt(x.total)}${perdioPz>0?` <small style="color:var(--ink3)">(solo: ${fmt(x.soloListas)})</small>`:''}</td>
+      <td class="por">${nota}</td>
+    </tr>`;
+  }).join('');
+
+  $('#capBody').innerHTML=`
+    <div class="cap-seg" role="group" aria-label="Stock que se considera">
+      <button class="${modo==='both'?'on':''}" onclick="capModo('both')">ALM01 + Arriola</button>
+      <button class="${modo==='alm'?'on':''}" onclick="capModo('alm')">Solo ALM01</button>
+    </div>
+    <div class="pnl" style="margin-bottom:14px">
+      <div class="pnl-h"><div><h3>Si dedicas todo el stock a un solo motor</h3>
+        <p>Cuántos kits completos salen de cada motor ${fuente}, sin contar a los demás. ${armables} de ${ENGINES.length} motores dan al menos un kit.</p></div></div>
+      <div style="padding:13px 15px 15px"><div class="cap-grid">${ind.map(tarjeta).join('')}</div></div>
+    </div>
+    <div class="pnl">
+      <div class="pnl-h"><div><h3>Pero el stock es compartido</h3>
+        <p>Elige cuántos kits quieres de cada motor y en qué orden se sirven. El primero consume las piezas; al siguiente le toca lo que quedó.</p></div>
+        <span class="sp" style="flex:1"></span>
+        <div class="cap-seg" style="margin:0" role="group" aria-label="Forma de repartir el stock">
+          <button class="${CAP.reparto==='kits'?'on':''}" onclick="capReparto('kits')"
+            title="Solo se descuenta el stock que llega a formar un kit completo">Solo kits completos</button>
+          <button class="${CAP.reparto==='reservar'?'on':''}" onclick="capReparto('reservar')"
+            title="Cada motor aparta todas las piezas que necesita, aunque el kit quede a medias">Reservar piezas</button>
+        </div></div>
+      <div style="padding:13px 15px 15px">
+        <div class="cap-tot">
+          <div class="c"><div class="l">Kits pedidos</div><div class="v">${fmt(pedidosTot)}</div></div>
+          <div class="c"><div class="l">Se pueden armar</div><div class="v" style="color:var(--teal)">${fmt(armaTot)}</div></div>
+          <div class="c"><div class="l">Se quedan sin piezas</div><div class="v" style="color:${pedidosTot-armaTot?'var(--red)':'var(--ink3)'}">${fmt(pedidosTot-armaTot)}</div></div>
+          <div class="c"><div class="l">Motores sin completar</div><div class="v">${fmt(sinServir.length)}</div></div>
+        </div>
+        <div class="cap-sim">
+          <div>
+            <div class="fl-sec-t">Prioridad y cantidad</div>
+            <div class="cap-pick">${lista}</div>
+          </div>
+          <div class="cap-res">
+            <div class="fl-sec-t">Resultado del reparto</div>
+            ${filas? `<div class="ptbl-wrap" style="border:1px solid var(--line);border-radius:var(--r-sm);overflow:auto">
+              <table class="cap-tbl" aria-label="Resultado del reparto de stock">
+                <thead><tr><th>Motor</th><th class="num">Pides</th><th class="num">Solo</th><th class="num">Armas</th>
+                  <th class="num">Piezas listas</th><th>Qué pasa</th></tr></thead>
+                <tbody>${filas}</tbody></table></div>
+              <div class="fl-more" style="margin-top:9px"><span><b>Solo</b> = los kits que armaría ese motor si tuviera todo el stock para él.
+                <b>Piezas listas</b> = cuántas de sus piezas siguen teniendo stock para un kit cuando le toca su turno.
+                Cambia el orden con ▲▼ para ver a quién le conviene ir primero.</span></div>`
+            : `<div class="empty-st"><div class="ic">${ic(I.layers)}</div><h4>Elige cuántos kits quieres</h4>
+                <p>Marca los motores de la izquierda e indica cuántos kits de cada uno para ver cómo se reparte el stock.</p></div>`}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  const c=$('#cntCap'); if(c){ c.textContent = armables? String(armables):''; c.style.display=armables?'':'none'; }
+}
+function exportCap(){
+  const modo=CAP.modo, sim=capSimular();
+  const fuente = modo==='alm' ? 'Solo ALM01' : 'ALM01 + Arriola';
+  const filas=ENGINES.map((e,i)=>{
+    const c=capIndiv(i,modo), s=sim.res.find(x=>x.e.id===e.id)||{pos:'',pide:0,arma:0,falta:0};
+    const f=c.frenos[0];
+    return [e.label, e.grupo, c.total, c.completas, c.kits,
+            f? f.cod:'', f? f.desc:'', f? f.disp:'', f? f.nec:'',
+            s.pos, s.pide, s.arma, s.falta];
+  });
+  _descargar(['Motor','Familia','Piezas del kit','Piezas con stock para 1 kit','Kits si usa todo el stock',
+    'Pieza que lo frena','Descripción','Disponible','Pide el kit',
+    'Prioridad en el reparto','Kits pedidos','Kits que se arman','Kits sin piezas'],
+    filas,'Capacidad',`Kits_que_puedo_armar_${_hoy()}.xls`,
+    'KITS QUE PUEDO ARMAR CON EL STOCK ACTUAL',
+    `Peru Tractor S.R.L. · Stock considerado: ${fuente} · El reparto se calcula pieza por pieza · Generado ${_hoy()}`);
 }
 
 /* ═════════ PLAN DE COMPRA ═════════
@@ -6331,6 +6658,7 @@ function renderAll(){
   else if(VIEW_ACT==='list')    renderHome();
   else if(VIEW_ACT==='trans')   renderTrans();
   else if(VIEW_ACT==='why')     renderWhy();
+  else if(VIEW_ACT==='cap')     renderCap();
   else if(VIEW_ACT==='orders')  renderOrders();
   else if(VIEW_ACT==='reports') renderReports();
 }

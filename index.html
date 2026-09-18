@@ -1352,12 +1352,145 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .empty-st h4{font-size:14px;margin-bottom:4px}
 .empty-st p{font-size:12.5px;color:var(--ink2);max-width:380px;margin:0 auto 13px;line-height:1.5}
 
+/* ═════════ ORIGEN DEL STOCK RECOMENDADO ═════════
+   Una tarjeta desplegable por motor: de dónde sale cada unidad del kit.
+   Verde ALM01 · naranja Arriola · rojo compra · azul marino el motor. */
+.flow-host{display:flex;flex-direction:column;gap:11px}
+.fl-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+ box-shadow:0 1px 2px rgba(16,24,40,.04);transition:border-color .18s,box-shadow .18s}
+.fl-card:hover{border-color:var(--line);box-shadow:0 2px 8px rgba(16,24,40,.06)}
+.fl-card.open{box-shadow:0 4px 16px -6px rgba(16,24,40,.12)}
+.fl-head{display:flex;align-items:center;gap:11px;padding:10px 14px 10px 0}
+.fl-exp{display:flex;align-items:center;gap:13px;flex:1;min-width:0;padding:4px 0 4px 15px;background:none;border:0;
+ text-align:left;cursor:pointer;font-family:var(--font);color:var(--ink)}
+.fl-card:hover .fl-head{background:var(--card2)}
+.fl-exp:focus-visible{outline:2px solid var(--brand);outline-offset:-2px;border-radius:var(--r-sm)}
+.fl-cv{width:16px;height:16px;flex:0 0 auto;color:var(--ink3);transition:transform .18s}
+.fl-card.open .fl-cv{transform:rotate(90deg)}
+.fl-av{width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+ background:var(--navy);color:#fff;font-size:11px;font-weight:800;letter-spacing:-.02em}
+.fl-tt{min-width:0;flex:0 0 auto}
+.fl-tt h3{font-size:15px;font-weight:700;letter-spacing:-.01em;margin:0;white-space:nowrap}
+.fl-tt .sub{font-size:11.5px;color:var(--ink2);margin-top:2px;font-variant-numeric:tabular-nums}
+.fl-cov{flex:1;min-width:110px;display:flex;flex-direction:column;gap:5px;align-items:flex-start}
+.fl-cov .pc{font-size:12px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.fl-cov .pc b{color:var(--ink)}
+.fl-act{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+/* barra de abastecimiento */
+.fl-bar{display:flex;width:100%;height:7px;border-radius:4px;overflow:hidden;background:var(--line2)}
+.fl-bar i{display:block;height:100%;transition:width .2s ease}
+.fl-bar .b-alm{background:var(--teal)} .fl-bar .b-arr{background:var(--amber)} .fl-bar .b-buy{background:var(--red)}
+/* diagrama arriba, tabla completa debajo: así caben las 9 columnas sin recortes */
+.fl-body{border-top:1px solid var(--line2);padding:14px 15px 15px}
+.fl-diag-wrap{max-width:660px}
+.fl-right{margin-top:16px}
+.fl-sec-t{font-size:10.5px;font-weight:800;letter-spacing:.55px;text-transform:uppercase;color:var(--ink2);margin-bottom:10px}
+/* diagrama: fuentes → conexiones → motor */
+.fl-diag{display:grid;grid-template-columns:1fr 58px minmax(150px,1.05fr);gap:0;align-items:stretch}
+.fl-srcs{display:grid;grid-template-rows:1fr 1fr 1fr;gap:10px}
+.fl-src{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:var(--r-sm);
+ border:1.5px solid var(--line);background:var(--card);cursor:pointer;font-family:var(--font);
+ text-align:left;color:var(--ink);transition:border-color .18s,background .18s,transform .18s,box-shadow .18s}
+.fl-src:hover{transform:translateX(2px)}
+.fl-src:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.fl-src .ic{width:26px;height:26px;border-radius:7px;flex:0 0 auto;display:flex;align-items:center;justify-content:center}
+.fl-src .ic svg{width:15px;height:15px;stroke-width:2}
+.fl-src .tx{min-width:0;display:flex;flex-direction:column}
+.fl-src .nm{display:block;font-size:11.5px;font-weight:700;letter-spacing:.1px}
+.fl-src .qt{display:block;font-size:17px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.15}
+.fl-src .pz{display:block;font-size:10.5px;color:var(--ink2)}
+.fl-src.alm{border-color:var(--teal-line)} .fl-src.alm .ic{background:var(--teal-bg);color:var(--teal)} .fl-src.alm .nm,.fl-src.alm .qt{color:var(--teal)}
+.fl-src.arr{border-color:var(--amber-line)} .fl-src.arr .ic{background:var(--amber-bg);color:var(--amber)} .fl-src.arr .nm,.fl-src.arr .qt{color:var(--amber)}
+.fl-src.buy{border-color:var(--red-line)} .fl-src.buy .ic{background:var(--red-bg);color:var(--red)} .fl-src.buy .nm,.fl-src.buy .qt{color:var(--red)}
+.fl-src.alm.on{background:var(--teal-bg);box-shadow:0 0 0 3px var(--teal-bg)}
+.fl-src.arr.on{background:var(--amber-bg);box-shadow:0 0 0 3px var(--amber-bg)}
+.fl-src.buy.on{background:var(--red-bg);box-shadow:0 0 0 3px var(--red-bg)}
+.fl-src.cero{opacity:.5}
+.fl-src.cero .qt,.fl-src.cero .nm{color:var(--ink3)}
+/* conexiones: tres rectas + una vertical discreta que las une */
+.fl-wires{display:grid;grid-template-rows:1fr 1fr 1fr;gap:10px;position:relative}
+.fl-wires .w{position:relative}
+.fl-wires .w::before{content:'';position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:currentColor;opacity:.8}
+.fl-wires .w.alm{color:var(--teal)} .fl-wires .w.arr{color:var(--amber)} .fl-wires .w.buy{color:var(--red)}
+.fl-wires .w.cero::before{background:var(--line);opacity:1}
+.fl-wires .spine{position:absolute;left:52%;top:16.6%;bottom:16.6%;width:2px;background:var(--line);margin-left:-1px}
+/* nodo del motor */
+.fl-node{background:var(--navy);color:#fff;border-radius:var(--r);padding:14px 15px;display:flex;
+ flex-direction:column;justify-content:center;gap:4px;cursor:pointer;border:1.5px solid transparent;
+ font-family:var(--font);text-align:left;transition:border-color .18s,box-shadow .18s}
+.fl-node:hover{box-shadow:0 6px 18px -8px rgba(7,21,47,.55)}
+.fl-node.on{border-color:var(--yellow)}
+.fl-node:focus-visible{outline:2px solid var(--yellow);outline-offset:2px}
+.fl-node .nm{display:block;font-size:13px;font-weight:700;color:#fff;letter-spacing:-.01em}
+.fl-node .qt{display:block;font-size:23px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+.fl-node .pz{display:block;font-size:11px;color:rgba(255,255,255,.62)}
+.fl-node .cb{display:block;font-size:11.5px;color:rgba(255,255,255,.82);font-variant-numeric:tabular-nums;margin-top:3px}
+.fl-node .fl-bar{background:rgba(255,255,255,.16);margin-top:5px}
+/* nota clave */
+.fl-key{display:flex;gap:9px;align-items:flex-start;margin-top:11px;padding:9px 11px;border-radius:var(--r-sm);
+ background:var(--brand-bg);border:1px solid var(--brand-line);font-size:11.5px;color:var(--ink2);line-height:1.5}
+.fl-key svg{width:15px;height:15px;color:var(--brand);flex:0 0 auto;margin-top:1px}
+/* tabla de detalle */
+.fl-right{min-width:0;display:flex;flex-direction:column;gap:10px}
+.fl-tbl{min-width:760px}
+.fl-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.fl-tab{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:18px;border:1px solid var(--line);
+ background:var(--card);font-family:var(--font);font-size:11.5px;font-weight:600;color:var(--ink2);cursor:pointer;
+ transition:background .18s,border-color .18s,color .18s}
+.fl-tab .n{font-size:10.5px;font-weight:800;padding:0 5px;border-radius:9px;background:var(--card3);color:var(--ink2);
+ font-variant-numeric:tabular-nums}
+.fl-tab:hover{border-color:var(--ink3);color:var(--ink)}
+.fl-tab.on{background:var(--navy);border-color:var(--navy);color:#fff}
+.fl-tab.on .n{background:rgba(255,255,255,.2);color:#fff}
+.fl-tab.alm.on{background:var(--teal);border-color:var(--teal)}
+.fl-tab.arr.on{background:var(--amber);border-color:var(--amber)}
+.fl-tab.buy.on{background:var(--red);border-color:var(--red)}
+.fl-tab:disabled{opacity:.45;cursor:default}
+.fl-tw{border:1px solid var(--line);border-radius:var(--r-sm);overflow:auto;max-height:330px}
+.fl-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.fl-tbl th{position:sticky;top:0;z-index:1;background:var(--card2);text-align:left;padding:8px 10px;
+ font-size:10.5px;font-weight:800;letter-spacing:.35px;text-transform:uppercase;color:var(--ink2);
+ border-bottom:1px solid var(--line);white-space:nowrap}
+.fl-tbl td{padding:7px 10px;border-bottom:1px solid var(--line2);white-space:nowrap}
+.fl-tbl tr:last-child td{border-bottom:0}
+.fl-tbl tbody tr:hover td{background:var(--card2)}
+.fl-tbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.fl-tbl .cod{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:600}
+.fl-tbl .ds{max-width:210px;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
+.fl-tbl .v-alm{color:var(--teal);font-weight:700} .fl-tbl .v-arr{color:var(--amber);font-weight:700}
+.fl-tbl .v-buy{color:var(--red);font-weight:700}
+.fl-tbl .z{color:var(--ink3);font-weight:400}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:12px;font-size:10.5px;font-weight:700;
+ border:1px solid transparent;white-space:nowrap}
+.chip::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.ok{background:var(--teal-bg);border-color:var(--teal-line);color:var(--teal)}
+.chip.move{background:var(--amber-bg);border-color:var(--amber-line);color:var(--amber)}
+.chip.buy{background:var(--red-bg);border-color:var(--red-line);color:var(--red)}
+.chip.mix{background:var(--blue-bg);border-color:var(--blue-line);color:var(--blue)}
+.fl-more{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--ink2)}
+.fl-more .lnk{background:none;border:0;color:var(--brand);font-family:var(--font);font-size:11.5px;font-weight:700;
+ cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+@media(max-width:860px){
+ .fl-head{flex-wrap:wrap;gap:9px;padding:11px 13px}
+ .fl-exp{flex:1 0 100%;flex-wrap:wrap;padding-left:0}
+ .fl-cov{flex:1 0 100%;order:5}
+ .fl-act{margin-left:auto}
+ .fl-act .xbtn{width:100%;justify-content:center}
+ .fl-diag{grid-template-columns:1fr}          /* móvil: se apilan, sin líneas */
+ .fl-wires{display:none}
+ .fl-srcs{grid-template-rows:none;margin-bottom:10px}
+ .fl-node{margin-top:0}
+ .fl-tw{max-height:none}
+}
+@media(prefers-reduced-motion:reduce){ .fl-src,.fl-node,.fl-cv,.fl-bar i{transition:none} .fl-src:hover{transform:none} }
+
 /* barra de acción fija en móvil */
 .mfab{display:none}
 @media(max-width:640px){
  .mfab{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:380;gap:9px;padding:10px 14px;
   background:color-mix(in srgb,var(--card) 92%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line)}
  .mfab .xbtn{flex:1;justify-content:center}
+ .mfab.off{display:none}
  #toTop{bottom:74px}
 }
 </style>
@@ -1697,7 +1830,8 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
       </select>
       <button class="fsel" id="fClear" type="button">Limpiar filtros</button>
       <div class="seg" id="fView" role="group" aria-label="Forma de ver los motores">
-        <button class="on" data-view="grid" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Cuadrícula</button>
+        <button class="on" data-view="flow" aria-pressed="true" title="Ver de dónde sale cada unidad del kit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="6" height="5" rx="1.2"/><rect x="2" y="15" width="6" height="5" rx="1.2"/><rect x="15" y="9" width="7" height="6" rx="1.2"/><path d="M8 6.5h3.5V12H15M8 17.5h3.5V12"/></svg>Origen</button>
+        <button data-view="grid" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Cuadrícula</button>
         <button data-view="table" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 5h18M3 12h18M3 19h18"/></svg>Tabla</button>
       </div>
     </div>
@@ -2294,7 +2428,7 @@ function gradFor(g){
 //  HOME — indicadores, filtros, tarjetas y tabla de motores
 //  Solo presentación: los cálculos siguen saliendo de e.kpi.
 // ═══════════════════════════════════════════════════════════════
-const HOME={q:'',estado:'',fam:'',alm:'',sort:'buy',view:'grid'};
+const HOME={q:'',estado:'',fam:'',alm:'',sort:'buy',view:'flow'};
 
 // Estado dominante de un motor. El orden importa: primero lo que bloquea.
 function engStatus(e){
@@ -2408,6 +2542,201 @@ function mcardHTML(e,i){
   </button>`;
 }
 
+/* ═════════ ORIGEN DEL STOCK RECOMENDADO ═════════
+   Un solo componente que se alimenta de los datos del motor, igual para todos
+   (los actuales y los que lleguen por Google Sheets). El reparto se hace
+   CÓDIGO POR CÓDIGO y luego se suma: el sobrante de una pieza nunca cubre
+   la falta de otra. Reutiliza calc(), que ya aplica exactamente esta regla. */
+const FLOW={abierto:new Set(), fuente:{}, todas:{}};
+/* arriolaOf() depende de OTROS, que se inicializa más abajo en el archivo:
+   hasta el primer renderAll() el diagrama no se puede calcular todavía. */
+var FLOW_OK=false;
+const FL_TOPE=9;                      // filas visibles antes de "ver todas"
+/* Este módulo se declara antes que el juego de iconos, así que lleva los suyos. */
+function flSrcMeta(k){
+  const S=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+  return {
+    alm:{nm:'ALM01', cls:'alm', tip:'Se cubre con tu propio stock en ALM01',
+         svg:S('<path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/>')},
+    arr:{nm:'Arriola', cls:'arr', tip:'Ya es tuyo: hay que trasladarlo desde Arriola',
+         svg:S('<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>')},
+    buy:{nm:'Compra', cls:'buy', tip:'No está ni en ALM01 ni en Arriola: hay que comprarlo',
+         svg:S('<path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>')},
+  }[k];
+}
+/* Caché propia: el módulo corre antes de que exista MK, y se invalida con él. */
+let _flCache=null;
+function flowBump(){ _flCache=null; }
+function flMemo(k,fn){
+  if(!_flCache) _flCache=new Map();
+  if(_flCache.has(k)) return _flCache.get(k);
+  const v=fn(); _flCache.set(k,v); return v;
+}
+/* Reparto por pieza. Es la única fuente de los totales del diagrama. */
+function flowRows(i){
+  return flMemo('fl@'+i, ()=> (ENGINES[i]?ENGINES[i].items:[]).map(r=>{
+    const nec=r[2]||0, alm=r[3]||0, arr=arriolaOf(r);
+    const deAlm  = Math.min(nec, alm);                 // asignado de ALM01
+    const resto  = nec - deAlm;                        // faltante después de ALM01
+    const deArr  = Math.min(resto, arr);               // asignado de Arriola
+    const compra = Math.max(0, nec - deAlm - deArr);   // lo que queda por comprar
+    const usados = (deAlm>0?1:0)+(deArr>0?1:0)+(compra>0?1:0);
+    const est = usados>1 ? 'mix' : compra>0 ? 'buy' : deArr>0 ? 'move' : 'ok';
+    return {cod:r[0], desc:r[1]||'—', fam:r[14]||'Otros', nec, alm, arr,
+            deAlm, deArr, compra, est, sobra:Math.max(0,alm-nec)};
+  }));
+}
+function flowData(i){
+  return flMemo('fld@'+i, ()=>{
+    const rows=flowRows(i), t={nec:0,alm:0,arr:0,buy:0};
+    rows.forEach(x=>{ t.nec+=x.nec; t.alm+=x.deAlm; t.arr+=x.deArr; t.buy+=x.compra; });
+    const cuenta={alm:rows.filter(x=>x.deAlm>0).length, arr:rows.filter(x=>x.deArr>0).length,
+                  buy:rows.filter(x=>x.compra>0).length};
+    return {rows, t, cuenta, piezas:rows.length,
+            cob: t.nec>0 ? (t.alm+t.arr)/t.nec : 1};
+  });
+}
+/* ── StockProgressBar ── */
+function StockProgressBar(t, dark){
+  const p=v=>t.nec>0? (v/t.nec*100):0;
+  return `<div class="fl-bar" role="img" aria-label="Abastecimiento: ${fmt(t.alm)} de ALM01, ${fmt(t.arr)} de Arriola, ${fmt(t.buy)} por comprar">
+    ${t.alm?`<i class="b-alm" style="width:${p(t.alm)}%"></i>`:''}
+    ${t.arr?`<i class="b-arr" style="width:${p(t.arr)}%"></i>`:''}
+    ${t.buy?`<i class="b-buy" style="width:${p(t.buy)}%"></i>`:''}
+  </div>`;
+}
+/* ── StatusChip ── */
+const FL_CHIP={ok:['ok','Cubierto por ALM01'],move:['move','Trasladar de Arriola'],
+                buy:['buy','Comprar'],mix:['mix','Combinado']};
+function StatusChip(est){ const [c,l]=FL_CHIP[est]||FL_CHIP.ok; return `<span class="chip ${c}">${l}</span>`; }
+/* ── StockSourceCard ── */
+function StockSourceCard(k, uds, piezas, activa, idx){
+  const f=flSrcMeta(k), cero=uds===0;
+  return `<button type="button" class="fl-src ${f.cls}${activa?' on':''}${cero?' cero':''}"
+      onclick="flowFuente(${idx},'${k}')" aria-pressed="${!!activa}"
+      title="${f.tip}${cero?' — no aplica en este kit':''}">
+    <span class="ic">${f.svg}</span>
+    <span class="tx"><span class="nm">${f.nm}</span>
+      <span class="qt">${fmt(uds)} uds.</span>
+      <span class="pz">${piezas} pieza${piezas===1?'':'s'}</span></span>
+  </button>`;
+}
+/* ── EngineSummaryNode ── */
+function EngineSummaryNode(e, d, idx, activa){
+  const pct=Math.round(d.cob*100);
+  return `<button type="button" class="fl-node${activa?' on':''}" onclick="flowFuente(${idx},'')"
+      aria-pressed="${!!activa}" title="Ver todas las piezas del kit">
+    <span class="nm">${_esc(e.label.replace('Motor ','Kit '))}</span>
+    <span class="qt">${fmt(d.t.nec)} uds.</span>
+    <span class="pz">${d.piezas} pieza${d.piezas===1?'':'s'} distintas</span>
+    <span class="cb">${pct}% cubierto con stock</span>
+    ${StockProgressBar(d.t,true)}
+  </button>`;
+}
+/* ── PartsDetailTable ── */
+function PartsDetailTable(idx){
+  const d=flowData(idx), f=FLOW.fuente[idx]||'';
+  const filtra=x=> f==='alm'? x.deAlm>0 : f==='arr'? x.deArr>0 : f==='buy'? x.compra>0 : true;
+  const orden={alm:(a,b)=>b.deAlm-a.deAlm, arr:(a,b)=>b.deArr-a.deArr, buy:(a,b)=>b.compra-a.compra};
+  const todas=d.rows.filter(filtra).sort(orden[f]||((a,b)=>b.compra-a.compra||b.deArr-a.deArr||b.nec-a.nec));
+  const ver=FLOW.todas[idx] ? todas : todas.slice(0,FL_TOPE);
+  const tab=(k,l,n)=>`<button type="button" class="fl-tab ${k||''}${f===k?' on':''}" ${n===0&&k?'disabled':''}
+      onclick="flowFuente(${idx},'${k}')" aria-pressed="${f===k}">${l}<span class="n">${fmt(n)}</span></button>`;
+  const tabs=`<div class="fl-tabs" role="group" aria-label="Filtrar piezas por origen">
+    ${tab('','Todos',d.piezas)}${tab('alm','ALM01',d.cuenta.alm)}${tab('arr','Arriola',d.cuenta.arr)}${tab('buy','Comprar',d.cuenta.buy)}</div>`;
+  if(!todas.length) return tabs+`<div class="fl-more">Ninguna pieza de este kit entra en esa categoría.</div>`;
+  const cel=(v,cls)=>`<td class="num ${v?cls:'z'}">${fmt(v)}</td>`;
+  return tabs+`<div class="fl-tw"><table class="fl-tbl" aria-label="Detalle pieza por pieza">
+    <thead><tr><th>Código</th><th>Descripción</th><th class="num">Necesita</th>
+      <th class="num">Stock ALM01</th><th class="num">Stock Arriola</th>
+      <th class="num">De ALM01</th><th class="num">De Arriola</th><th class="num">Comprar</th><th>Estado</th></tr></thead>
+    <tbody>${ver.map(x=>`<tr>
+      <td class="cod">${_esc(x.cod)}</td>
+      <td class="ds" title="${_esc(x.desc)}">${_esc(x.desc)}</td>
+      <td class="num">${fmt(x.nec)}</td>
+      <td class="num${x.alm?'':' z'}">${fmt(x.alm)}</td>
+      <td class="num${x.arr?'':' z'}">${fmt(x.arr)}</td>
+      ${cel(x.deAlm,'v-alm')}${cel(x.deArr,'v-arr')}${cel(x.compra,'v-buy')}
+      <td>${StatusChip(x.est)}</td></tr>`).join('')}</tbody></table></div>
+    ${todas.length>ver.length
+      ? `<div class="fl-more"><span>Mostrando ${ver.length} de ${todas.length} piezas</span>
+           <button class="lnk" onclick="flowTodas(${idx})">Ver las ${todas.length} →</button></div>`
+      : `<div class="fl-more"><span>${todas.length} pieza${todas.length===1?'':'s'}${f?' de '+flSrcMeta(f).nm:''}</span></div>`}`;
+}
+/* ── EngineStockFlow: la tarjeta completa ── */
+function EngineStockFlow(e, idx){
+  const d=flowData(idx), st=engStatus(e), abierta=FLOW.abierto.has(e.id), f=FLOW.fuente[idx]||'';
+  const pct=Math.round(d.cob*100);
+  const may=d.rows.filter(x=>x.sobra>0).sort((a,b)=>b.sobra-a.sobra)[0];
+  const cuerpo = !abierta ? '' : `<div class="fl-body" id="flb-${idx}">
+    <div class="fl-diag-wrap">
+      <div class="fl-sec-t">Origen del stock recomendado</div>
+      <div class="fl-diag">
+        <div class="fl-srcs">
+          ${StockSourceCard('alm',d.t.alm,d.cuenta.alm,f==='alm',idx)}
+          ${StockSourceCard('arr',d.t.arr,d.cuenta.arr,f==='arr',idx)}
+          ${StockSourceCard('buy',d.t.buy,d.cuenta.buy,f==='buy',idx)}
+        </div>
+        <div class="fl-wires" aria-hidden="true"><span class="spine"></span>
+          <span class="w alm${d.t.alm?'':' cero'}"></span>
+          <span class="w arr${d.t.arr?'':' cero'}"></span>
+          <span class="w buy${d.t.buy?'':' cero'}"></span>
+        </div>
+        ${EngineSummaryNode(e,d,idx,!f)}
+      </div>
+      <div class="fl-key">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+        <div>Suma de <b>${d.piezas} piezas distintas</b>: el reparto se calcula código por código, el sobrante de uno no cubre la falta de otro.${
+          may? ` Por ejemplo, de <b>${_esc(may.cod)}</b> te sobran ${fmt(may.sobra)} que no sirven para ninguna otra pieza.`:''}</div>
+      </div>
+    </div>
+    <div class="fl-right">${PartsDetailTable(idx)}</div>
+  </div>`;
+  const nom=e.label.replace('Motor ','Kit ');
+  return `<article class="fl-card${abierta?' open':''}" id="flc-${idx}">
+    <div class="fl-head">
+      <button type="button" class="fl-exp" aria-expanded="${abierta}" ${abierta?`aria-controls="flb-${idx}"`:''}
+          onclick="flowToggle('${e.id}')"
+          aria-label="${_esc(nom)}, ${fmt(d.t.nec)} unidades en ${d.piezas} piezas, ${ST_LABEL[st]}, ${pct}% cubierto. ${abierta?'Contraer':'Desplegar'} el origen del stock.">
+        <svg class="fl-cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
+        <span class="fl-av">${_esc(e.icon)}</span>
+        <span class="fl-tt"><h3>${_esc(nom)}</h3>
+          <span class="sub">${fmt(d.t.nec)} unidades · ${d.piezas} piezas</span></span>
+        <span class="mc-badge ${st}">${ST_LABEL[st]}</span>
+        <span class="fl-cov"><span class="pc"><b>${pct}%</b> cubierto</span>${StockProgressBar(d.t)}</span>
+      </button>
+      <span class="fl-act"><button class="xbtn" onclick="openEngine(${idx})"
+        aria-label="Ver el detalle completo de ${_esc(nom)}">Ver detalle</button></span>
+    </div>
+    ${cuerpo}
+  </article>`;
+}
+function flowHTML(rows){
+  // la primera tarjeta arranca desplegada: la pantalla debe explicarse sola
+  if(!FLOW.abierto.size && rows.length) FLOW.abierto.add(rows[0].e.id);
+  return rows.map(({e,i})=>EngineStockFlow(e,i)).join('');
+}
+/* Repinta solo la tarjeta tocada: con 12 motores abiertos el repintado total se nota. */
+function flowPintar(idx){
+  const vieja=$('#flc-'+idx); if(!vieja){ renderGrid(); return; }
+  const tmp=document.createElement('div');
+  tmp.innerHTML=EngineStockFlow(ENGINES[idx],idx);
+  vieja.replaceWith(tmp.firstElementChild);
+}
+function flowToggle(id){
+  const idx=ENGINES.findIndex(e=>e.id===id); if(idx<0) return;
+  if(FLOW.abierto.has(id)) FLOW.abierto.delete(id); else FLOW.abierto.add(id);
+  flowPintar(idx);
+  const h=$('#flc-'+idx+' .fl-head'); if(h) h.focus();
+}
+function flowFuente(idx,k){
+  const act=FLOW.fuente[idx]||'';
+  FLOW.fuente[idx] = (act===k) ? '' : k;    // volver a pulsar quita el filtro
+  FLOW.todas[idx]=false;
+  flowPintar(idx);
+}
+function flowTodas(idx){ FLOW.todas[idx]=true; flowPintar(idx); }
+
 // ── TABLA ──
 function mtableHTML(rows){
   const arrow=c=>HOME.sort===c?'<i class="sarr">▼</i>':'<i class="sarr dim">⇅</i>';
@@ -2446,8 +2775,8 @@ function renderGrid(){
   host.removeAttribute('aria-busy');
   const total=ENGINES.length, att=ENGINES.filter(needsAttention).length;
   const filtrado = !!(HOME.q.trim()||HOME.estado||HOME.fam);
-  host.className = HOME.view==='table' ? 'mtable-host' : 'mgrid';
-  host.setAttribute('role', HOME.view==='table' ? 'presentation' : 'list');
+  host.className = HOME.view==='table' ? 'mtable-host' : HOME.view==='flow' ? 'flow-host' : 'mgrid';
+  host.setAttribute('role', HOME.view==='grid' ? 'list' : 'presentation');
   if(!rows.length){
     host.className='';
     host.innerHTML=`<div class="state-box">
@@ -2457,7 +2786,10 @@ function renderGrid(){
       <button class="btn" onclick="clearHomeFilters()">Quitar filtros</button>
     </div>`;
   }else{
-    host.innerHTML = HOME.view==='table' ? mtableHTML(rows) : rows.map(({e,i})=>mcardHTML(e,i)).join('');
+    host.innerHTML = HOME.view==='table' ? mtableHTML(rows)
+      : (HOME.view==='flow' && FLOW_OK) ? flowHTML(rows)
+      : rows.map(({e,i})=>mcardHTML(e,i)).join('');
+    if(HOME.view==='flow' && !FLOW_OK) host.className='mgrid';
   }
   // encabezado honesto: solo se llama "requieren atención" cuando eso es lo que se está listando
   const soloAtencion = HOME.estado==='buy' || HOME.estado==='move';
@@ -4878,7 +5210,7 @@ function openReal(){
     if(s.mode==='kit'||s.mode==='min') setMode(s.mode);
     if(s.home){
       HOME.estado=s.home.estado||''; HOME.fam=s.home.fam||''; HOME.alm=s.home.alm||'';
-      HOME.sort=s.home.sort||'buy';  HOME.view=s.home.view==='table'?'table':'grid';
+      HOME.sort=s.home.sort||'buy';  HOME.view=['table','grid','flow'].includes(s.home.view)? s.home.view : 'flow';
       $('#fEstado').value=HOME.estado; $('#fSort').value=HOME.sort; $('#fAlm').value=HOME.alm;
       [...$('#fView').querySelectorAll('button')].forEach(b=>{
         const on=b.dataset.view===HOME.view; b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on));
@@ -5102,6 +5434,9 @@ function goView(v){
     if(on) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
   });
   cerrarDrawer();
+  // la barra flotante móvil repite las acciones de cabecera: se oculta donde
+  // la propia vista ya las ofrece (reportes las lista fila por fila)
+  const fab=$('#mfab'); if(fab) fab.classList.toggle('off', v==='reports');
   window.scrollTo({top:0,behavior:'auto'});
   renderAll();
   syncURL();
@@ -5117,7 +5452,7 @@ function syncURL(){
       if(HOME.fam) p.set('fam',HOME.fam);
       if(HOME.alm) p.set('alm',HOME.alm);
       if(HOME.sort && HOME.sort!=='buy') p.set('sort',HOME.sort);
-      if(HOME.view!=='grid') p.set('modo',HOME.view);
+      if(HOME.view!=='flow') p.set('modo',HOME.view);
     }
     history.replaceState(null,'','?'+p.toString());
   }catch(e){}
@@ -5130,7 +5465,7 @@ function readURL(){
     if(p.get('fam'))    HOME.fam=p.get('fam');
     if(p.get('alm'))    HOME.alm=p.get('alm');
     if(p.get('sort'))   HOME.sort=p.get('sort');
-    if(p.get('modo'))   HOME.view=p.get('modo');
+    if(['table','grid','flow'].includes(p.get('modo'))) HOME.view=p.get('modo');
     return p.get('view')||'tower';
   }catch(e){ return 'tower'; }
 }
@@ -5625,8 +5960,7 @@ function renderOrders(){
   if(!L.length){
     $('#ordBody').innerHTML=`<div class="empty-st"><div class="ic">${ic(I.cart)}</div>
       <h4>Todavía no hay planes guardados</h4>
-      <p>Cuando confirmes un plan de compra aparecerá aquí con su resumen, para que compras lo tramite en SAP.</p>
-      <button class="xbtn primary" onclick="openPlanCompra()">Crear plan de compra</button></div>`;
+      <p>Usa <b>Crear plan de compra</b> y, cuando lo confirmes, aparecerá aquí con su resumen para que compras lo tramite en SAP.</p></div>`;
     return;
   }
   $('#ordBody').innerHTML=`<table class="ptbl" aria-label="Planes de compra guardados">
@@ -5984,7 +6318,7 @@ function exportWhy(){
 
 /* ═════════ REPINTADO GLOBAL ═════════ */
 function renderAll(){
-  MK.bump();
+  FLOW_OK=true; MK.bump(); flowBump();
   renderSap();
   try{
     const g=MK.global(1);

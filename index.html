@@ -1170,6 +1170,15 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .wh-chip.alt{background:var(--card2);color:var(--ink2);font-weight:700}
 .wh-chip.alt:hover{background:var(--card3);color:var(--ink)}
 .wh-sep{width:1px;align-self:stretch;background:var(--line);margin:0 4px}
+.wh-f{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin:0 0 14px}
+.wh-f-l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2)}
+.wh-f .seg button i{font-style:normal;font-size:10.5px;font-weight:700;background:var(--card3);color:var(--ink2);
+ padding:1px 6px;border-radius:20px;margin-left:5px}
+.wh-f .seg button.on i{background:var(--brand-bg);color:var(--brand)}
+.wh-f .seg button[disabled]{opacity:.42;cursor:not-allowed}
+.wh-f-n{font-size:12px;color:var(--ink2)}
+.wh-f-n b{color:var(--ink);font-weight:700}
+.tr-leaf .cod .mk{margin-left:5px;vertical-align:middle}
 .wh-key.info{background:var(--blue-bg);border-color:var(--blue-line)}
 .wh-key.info svg{color:var(--blue)}
 .tr-leaf .cod .rep-b{margin-left:5px}
@@ -5656,6 +5665,7 @@ function fullExec(){
    2) Con varios motores el stock es UNO SOLO. Se usa combRows(), el
       mismo cálculo de la demanda combinada, para no contarlo dos veces. */
 let WHY_SEL=null;                                   // Set de índices de motor
+let WHY_COMER='';                                   // '' | SI | NO | DUDA | __none
 const WHY_ABIERTO={buy:true,move:true,ok:false,info:false};
 let WHY_TODO={};
 
@@ -5666,13 +5676,18 @@ function whySelMap(){
 }
 function whyDatos(){
   // demanda consolidada de los motores elegidos contra un único stock
-  const rows=combRows(whySelMap());
+  const todas=combRows(whySelMap());
+  // conteo por valor ANTES de filtrar: así el selector muestra qué hay de verdad
+  const cuenta={}; todas.forEach(x=>{ const k=x.comer||'__none'; cuenta[k]=(cuenta[k]||0)+1; });
+  const rows = WHY_COMER
+    ? todas.filter(x=> WHY_COMER==='__none' ? !x.comer : x.comer===WHY_COMER)
+    : todas;
   const g={ok:[],move:[],buy:[],info:[]};
   const t={need:0,almUsado:0,trasl:0,comprar:0,exceso:0,almFisico:0,compartidas:0};
   rows.forEach(x=>{
     const usaAlm=Math.min(x.alm,x.total), sobra=Math.max(0,x.alm-x.total);
     const base={cod:x.cod, desc:x.desc||'—', fam:x.fam||'Otros', nec:x.total, alm:x.alm, arr:x.arr,
-                compra:x.comprar, trasl:x.deArr, sobra, usaAlm, nMot:x.nMot, por:x.por};
+                compra:x.comprar, trasl:x.deArr, sobra, usaAlm, nMot:x.nMot, por:x.por, comer:x.comer||''};
     if(x.comprar>0)                    g.buy.push(base);
     if(x.deArr>0)                      g.move.push(base);
     if(x.comprar===0 && x.deArr===0)   g.ok.push(base);
@@ -5684,7 +5699,7 @@ function whyDatos(){
   g.move.sort((a,b)=>b.trasl-a.trasl);
   g.ok.sort((a,b)=>b.usaAlm-a.usaAlm);
   g.info.sort((a,b)=>b.sobra-a.sobra);
-  return {g,t,piezas:rows.length};
+  return {g,t,piezas:rows.length, total:todas.length, cuenta};
 }
 function whyLeaf(x,tipo,varios){
   let mat;
@@ -5692,9 +5707,10 @@ function whyLeaf(x,tipo,varios){
   else if(tipo==='move') mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> → trasladar <span class="r">${fmt(x.trasl)}</span> de Arriola${x.compra?` y comprar ${fmt(x.compra)}`:''}`;
   else if(tipo==='ok')   mat=`necesita <b>${fmt(x.nec)}</b> · ALM01 <b>${fmt(x.alm)}</b> = <span class="r">cubierto</span>`;
   else                   mat=`ALM01 <b>${fmt(x.alm)}</b> − necesita <b>${fmt(x.nec)}</b> = sobran <span class="r">${fmt(x.sobra)}</span>`;
+  const cm = x.comer ? `<span class="mk cm-${x.comer.replace(' ','')}" title="Comerciable: ${x.comer}">${x.comer}</span>` : '';
   const rep = (varios && x.nMot>1)
     ? `<span class="rep-b" title="${Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);return e.label.replace('Motor ','')+' '+x.por[id];}).join(' · ')}">×${x.nMot}</span>` : '';
-  return `<div class="tr-leaf"><span class="cod">${x.cod}${rep}</span>
+  return `<div class="tr-leaf"><span class="cod">${x.cod}${rep}${cm}</span>
     <span class="des" title="${_esc(x.desc)}">${_esc(x.desc)}</span>
     <span class="mat">${mat}</span></div>`;
 }
@@ -5722,8 +5738,40 @@ function renderWhy(){
     return;
   }
 
-  const {g,t,piezas}=whyDatos();
+  const {g,t,piezas,total,cuenta}=whyDatos();
   const nombres=sel.map(i=>ENGINES[i].label.replace('Motor ','')).join(' + ');
+
+  // ── filtro comerciable: con el conteo real, para que se vea qué hay ──
+  const ETI={SI:'Sí',NO:'No',DUDA:'En duda','1 VENTA':'1 venta',__none:'Sin dato'};
+  const ORD=['SI','NO','DUDA','1 VENTA'];
+  const valores=Object.keys(cuenta).filter(k=>k!=='__none')
+    .sort((a,b)=>{const ia=ORD.indexOf(a),ib=ORD.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);});
+  const opciones=[['','Todos',total]].concat(
+    valores.map(v=>[v, ETI[v]||v, cuenta[v]]),
+    cuenta.__none? [['__none',ETI.__none,cuenta.__none]] : []);
+  const conDato=total-(cuenta.__none||0);
+  const filtro=`<div class="wh-f">
+    <span class="wh-f-l">Comerciable</span>
+    <div class="seg">${opciones.map(([v,l,n])=>
+      `<button class="${WHY_COMER===v?'on':''}" ${n?'':'disabled'} aria-pressed="${WHY_COMER===v}"
+         onclick="whyComer('${v}')">${l} <i>${fmt(n)}</i></button>`).join('')}</div>
+    ${WHY_COMER? `<span class="wh-f-n">Mostrando <b>${fmt(piezas)}</b> de ${fmt(total)} piezas</span>`:''}
+  </div>
+  ${conDato===0? `<div class="wh-key">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div><b>Estos motores no tienen cargado el campo Comerciable</b>
+      <p>El dato viene de la columna <code>Comerciable?</code> de la hoja de SAP. Hoy solo el kit C9 la tiene completa;
+      al llenarla en el resto de hojas, este filtro empezará a funcionar en ellos.</p></div></div>`:''}`;
+
+  if(!piezas){
+    $('#whBody').innerHTML = filtro + `<div class="pnl"><div class="empty-st">
+      <div class="ic">${ic(I.box)}</div>
+      <h4>Ninguna pieza con ese valor</h4>
+      <p>Los motores elegidos tienen ${fmt(total)} piezas, pero ninguna tiene
+      <b>Comerciable = ${WHY_COMER==='__none'?'sin dato':(ETI[WHY_COMER]||WHY_COMER)}</b>.</p>
+      <button class="xbtn primary" onclick="whyComer('')">Ver todas</button></div></div>`;
+    return;
+  }
   const titulo = varios ? `${sel.length} kits · ${nombres}` : `Kit ${nombres}`;
   // si se planificara motor por motor, el stock compartido se contaría varias veces
   const porSeparado = sel.reduce((a,i)=>a+MK.motor(i,1).comprar,0);
@@ -5795,8 +5843,9 @@ function renderWhy(){
       ? `<button class="xbtn" onclick="whyAComb()">Abrir en demanda combinada</button>`
       : `<button class="xbtn" onclick="openEngine(${sel[0]})">Ver detalle del motor</button>`}</div></div>`;
 
-  $('#whBody').innerHTML = eq + aviso + compart + arbol;
+  $('#whBody').innerHTML = filtro + eq + aviso + compart + arbol;
 }
+function whyComer(v){ WHY_COMER=v; WHY_TODO={}; renderWhy(); }
 function whyPick(i){
   if(WHY_SEL.has(i)) WHY_SEL.delete(i); else WHY_SEL.add(i);
   WHY_TODO={}; renderWhy();
@@ -5818,23 +5867,23 @@ function whyToggle(id){
 function whyTodo(id){ WHY_TODO[id]=true; WHY_ABIERTO[id]=true; renderWhy(); }
 function exportWhy(){
   if(!WHY_SEL || !WHY_SEL.size){ _toast('Elige al menos un motor.'); return; }
-  const {g,t,piezas}=whyDatos();
+  const {g,t,piezas,total}=whyDatos();
   const sel=[...WHY_SEL].sort((a,b)=>a-b);
   const nombres=sel.map(i=>ENGINES[i].label.replace('Motor ','')).join(' + ');
   const filas=[];
   const rep=x=>Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · ');
-  const push=(grupo,x,accion,valor)=>filas.push([nombres,grupo,x.cod,x.desc,x.fam,x.nMot,rep(x),
+  const push=(grupo,x,accion,valor)=>filas.push([nombres,grupo,x.cod,x.desc,x.fam,x.comer||'sin dato',x.nMot,rep(x),
     x.nec,x.alm,x.arr,accion,valor,`necesita ${x.nec} − ALM01 ${x.alm} − Arriola ${x.trasl}`]);
   g.buy.forEach(x=>push('Hay que comprar',x,'COMPRAR',x.compra));
   g.move.forEach(x=>push('Traer de Arriola',x,'TRASLADAR',x.trasl));
   g.ok.forEach(x=>push('Ya cubierto con ALM01',x,'CUBIERTO',0));
   g.info.forEach(x=>push('Sobrante (no sirve para estos kits)',x,'SOBRA',x.sobra));
   if(!filas.length){ _toast('No hay piezas que desglosar.'); return; }
-  _descargar(['Motores','Grupo','Código SAP','Descripción','Categoría','En cuántos motores','Reparto por motor',
+  _descargar(['Motores','Grupo','Código SAP','Descripción','Categoría','Comerciable','En cuántos motores','Reparto por motor',
     'Demanda consolidada','Stock ALM01','En Arriola','Acción','Cantidad','Cómo se calcula'],
     filas,'Desglose',`Desglose_${sel.length}motores_${_hoy()}.xls`,
     `DESGLOSE — POR QUÉ SE COMPRA CADA PIEZA`,
-    `Peru Tractor S.R.L. · ${nombres} · ${piezas} piezas · piden ${fmt(t.need)} uds · ALM01 ${fmt(t.almUsado)} · Arriola ${fmt(t.trasl)} · comprar ${fmt(t.comprar)} · Generado ${_hoy()}`);
+    `Peru Tractor S.R.L. · ${nombres} · ${piezas}${WHY_COMER?' de '+total:''} piezas${WHY_COMER?' (comerciable: '+WHY_COMER+')':''} · piden ${fmt(t.need)} uds · ALM01 ${fmt(t.almUsado)} · Arriola ${fmt(t.trasl)} · comprar ${fmt(t.comprar)} · Generado ${_hoy()}`);
 }
 
 /* ═════════ REPINTADO GLOBAL ═════════ */

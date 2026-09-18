@@ -1385,10 +1385,10 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .fl-bar{display:flex;width:100%;height:7px;border-radius:4px;overflow:hidden;background:var(--line2)}
 .fl-bar i{display:block;height:100%;transition:width .2s ease}
 .fl-bar .b-alm{background:var(--teal)} .fl-bar .b-arr{background:var(--amber)} .fl-bar .b-buy{background:var(--red)}
-/* diagrama arriba, tabla completa debajo: así caben las 9 columnas sin recortes */
-.fl-body{border-top:1px solid var(--line2);padding:14px 15px 15px}
-.fl-diag-wrap{max-width:660px}
-.fl-right{margin-top:16px}
+/* diagrama a la izquierda, tabla de detalle a la derecha */
+.fl-body{border-top:1px solid var(--line2);padding:14px 15px 15px;display:grid;
+ grid-template-columns:minmax(290px,400px) minmax(330px,1fr);gap:18px;align-items:start}
+.fl-diag-wrap{min-width:0}
 .fl-sec-t{font-size:10.5px;font-weight:800;letter-spacing:.55px;text-transform:uppercase;color:var(--ink2);margin-bottom:10px}
 /* diagrama: fuentes → conexiones → motor */
 .fl-diag{display:grid;grid-template-columns:1fr 58px minmax(150px,1.05fr);gap:0;align-items:stretch}
@@ -1415,10 +1415,16 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 /* conexiones: tres rectas + una vertical discreta que las une */
 .fl-wires{display:grid;grid-template-rows:1fr 1fr 1fr;gap:10px;position:relative}
 .fl-wires .w{position:relative}
-.fl-wires .w::before{content:'';position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:currentColor;opacity:.8}
+/* tramo horizontal de cada origen hasta el nodo del motor */
+.fl-wires .w::before{content:'';position:absolute;left:-1px;right:-1px;top:50%;height:2px;margin-top:-1px;background:currentColor}
+/* y el codo que lo lleva a la altura del nodo, sin curvas */
+.fl-wires .w::after{content:'';position:absolute;left:calc(50% - 1px);width:2px;background:currentColor}
+.fl-wires .w.alm::after{top:50%;height:calc(100% + 10px)}
+.fl-wires .w.buy::after{bottom:50%;height:calc(100% + 10px)}
+.fl-wires .w.arr::after{display:none}
 .fl-wires .w.alm{color:var(--teal)} .fl-wires .w.arr{color:var(--amber)} .fl-wires .w.buy{color:var(--red)}
-.fl-wires .w.cero::before{background:var(--line);opacity:1}
-.fl-wires .spine{position:absolute;left:52%;top:16.6%;bottom:16.6%;width:2px;background:var(--line);margin-left:-1px}
+.fl-wires .w.cero{color:var(--line)}
+.fl-wires .spine{display:none}
 /* nodo del motor */
 .fl-node{background:var(--navy);color:#fff;border-radius:var(--r);padding:14px 15px;display:flex;
  flex-direction:column;justify-content:center;gap:4px;cursor:pointer;border:1.5px solid transparent;
@@ -1436,8 +1442,9 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
  background:var(--brand-bg);border:1px solid var(--brand-line);font-size:11.5px;color:var(--ink2);line-height:1.5}
 .fl-key svg{width:15px;height:15px;color:var(--brand);flex:0 0 auto;margin-top:1px}
 /* tabla de detalle */
-.fl-right{min-width:0;display:flex;flex-direction:column;gap:10px}
-.fl-tbl{min-width:760px}
+.fl-right{min-width:0;display:flex;flex-direction:column;gap:10px;container-type:inline-size}
+/* si el panel se estrecha, el stock bruto cede el sitio: lo esencial es el reparto */
+@container (max-width:800px){ .fl-tbl .st{display:none} }
 .fl-tabs{display:flex;gap:6px;flex-wrap:wrap}
 .fl-tab{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:18px;border:1px solid var(--line);
  background:var(--card);font-family:var(--font);font-size:11.5px;font-weight:600;color:var(--ink2);cursor:pointer;
@@ -1452,16 +1459,16 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .fl-tab.buy.on{background:var(--red);border-color:var(--red)}
 .fl-tab:disabled{opacity:.45;cursor:default}
 .fl-tw{border:1px solid var(--line);border-radius:var(--r-sm);overflow:auto;max-height:330px}
-.fl-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
-.fl-tbl th{position:sticky;top:0;z-index:1;background:var(--card2);text-align:left;padding:8px 10px;
+.fl-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
+.fl-tbl th{position:sticky;top:0;z-index:1;background:var(--card2);text-align:left;padding:8px 9px;
  font-size:10.5px;font-weight:800;letter-spacing:.35px;text-transform:uppercase;color:var(--ink2);
  border-bottom:1px solid var(--line);white-space:nowrap}
-.fl-tbl td{padding:7px 10px;border-bottom:1px solid var(--line2);white-space:nowrap}
+.fl-tbl td{padding:7px 9px;border-bottom:1px solid var(--line2);white-space:nowrap}
 .fl-tbl tr:last-child td{border-bottom:0}
 .fl-tbl tbody tr:hover td{background:var(--card2)}
 .fl-tbl .num{text-align:right;font-variant-numeric:tabular-nums}
 .fl-tbl .cod{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;font-weight:600}
-.fl-tbl .ds{max-width:210px;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
+.fl-tbl .ds{max-width:150px;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
 .fl-tbl .v-alm{color:var(--teal);font-weight:700} .fl-tbl .v-arr{color:var(--amber);font-weight:700}
 .fl-tbl .v-buy{color:var(--red);font-weight:700}
 .fl-tbl .z{color:var(--ink3);font-weight:400}
@@ -1475,6 +1482,7 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .fl-more{display:flex;align-items:center;gap:10px;font-size:11.5px;color:var(--ink2)}
 .fl-more .lnk{background:none;border:0;color:var(--brand);font-family:var(--font);font-size:11.5px;font-weight:700;
  cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px}
+@media(max-width:1120px){ .fl-body{grid-template-columns:1fr} }
 @media(max-width:860px){
  .fl-head{flex-wrap:wrap;gap:9px;padding:11px 13px}
  .fl-exp{flex:1 0 100%;flex-wrap:wrap;padding-left:0}
@@ -2732,18 +2740,21 @@ function PartsDetailTable(idx){
   const tabs=`<div class="fl-tabs" role="group" aria-label="Filtrar piezas por origen">
     ${tab('','Todos',d.piezas)}${tab('alm','ALM01',d.cuenta.alm)}${tab('arr','Arriola',d.cuenta.arr)}${tab('buy','Comprar',d.cuenta.buy)}</div>`;
   if(!todas.length) return tabs+`<div class="fl-more">Ninguna pieza de este kit entra en esa categoría.</div>`;
-  const cel=(v,cls)=>`<td class="num ${v?cls:'z'}">${fmt(v)}</td>`;
+  const cel=(v,cls,tip)=>`<td class="num ${v?cls:'z'}"${tip?` title="${tip}"`:''}>${fmt(v)}</td>`;
   return tabs+`<div class="fl-tw"><table class="fl-tbl" aria-label="Detalle pieza por pieza">
     <thead><tr><th>Código</th><th>Descripción</th><th class="num">Necesita</th>
-      <th class="num">Stock ALM01</th><th class="num">Stock Arriola</th>
-      <th class="num">De ALM01</th><th class="num">De Arriola</th><th class="num">Comprar</th><th>Estado</th></tr></thead>
+      <th class="num st" title="Stock disponible en ALM01">Stock ALM</th>
+      <th class="num st" title="Stock disponible en Arriola">Stock Arr</th>
+      <th class="num" title="Cantidad asignada desde ALM01">ALM01</th>
+      <th class="num" title="Cantidad asignada desde Arriola">Arriola</th>
+      <th class="num">Comprar</th><th>Estado</th></tr></thead>
     <tbody>${ver.map(x=>`<tr>
       <td class="cod">${_esc(x.cod)}</td>
       <td class="ds" title="${_esc(x.desc)}">${_esc(x.desc)}</td>
       <td class="num">${fmt(x.nec)}</td>
-      <td class="num${x.alm?'':' z'}">${fmt(x.alm)}</td>
-      <td class="num${x.arr?'':' z'}">${fmt(x.arr)}</td>
-      ${cel(x.deAlm,'v-alm')}${cel(x.deArr,'v-arr')}${cel(x.compra,'v-buy')}
+      <td class="num st${x.alm?'':' z'}">${fmt(x.alm)}</td>
+      <td class="num st${x.arr?'':' z'}">${fmt(x.arr)}</td>
+      ${cel(x.deAlm,'v-alm',`ALM01 tiene ${fmt(x.alm)}`)}${cel(x.deArr,'v-arr',`Arriola tiene ${fmt(x.arr)}`)}${cel(x.compra,'v-buy')}
       <td>${StatusChip(x.est)}</td></tr>`).join('')}</tbody></table></div>
     ${todas.length>ver.length
       ? `<div class="fl-more"><span>Mostrando ${ver.length} de ${todas.length} piezas</span>
@@ -2793,7 +2804,9 @@ function EngineStockFlow(e, idx){
         <span class="fl-cov"><span class="pc"><b>${pct}%</b> cubierto</span>${StockProgressBar(d.t)}</span>
       </button>
       <span class="fl-act"><button class="xbtn" onclick="openEngine(${idx})"
-        aria-label="Ver el detalle completo de ${_esc(nom)}">Ver detalle</button></span>
+        aria-label="Ver el detalle completo de ${_esc(nom)}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h8M8 17h5"/></svg>
+        Ver detalle</button></span>
     </div>
     ${cuerpo}
   </article>`;

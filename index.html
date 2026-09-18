@@ -1418,9 +1418,11 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .tw-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0 13px}
 .tw-k{display:flex;align-items:center;gap:12px;padding:14px 15px;background:var(--card);border:1px solid var(--line);
  border-left:3px solid var(--brand);border-radius:var(--r);box-shadow:0 1px 2px rgba(16,24,40,.04)}
-.tw-k .ic{width:40px;height:40px;border-radius:10px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+.tw-k .ic{width:42px;height:42px;border-radius:11px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
  background:var(--brand-bg);color:var(--brand)}
 .tw-k .ic svg{width:19px;height:19px;stroke-width:2}
+.tw-k .ic img{width:26px;height:26px;object-fit:contain;display:block}
+.tw-k.ok .ic{background:var(--teal-bg)} .tw-k.buy .ic{background:var(--red-bg)}
 .tw-k .tx{min-width:0;display:flex;flex-direction:column}
 .tw-k .l{display:block;font-size:12px;color:var(--ink2);font-weight:600}
 .tw-k .v{display:block;font-size:27px;font-weight:800;letter-spacing:-.035em;line-height:1.12;font-variant-numeric:tabular-nums}
@@ -1478,7 +1480,8 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .fl-cv{width:16px;height:16px;flex:0 0 auto;color:var(--ink3);transition:transform .18s}
 .fl-card.open .fl-cv{transform:rotate(90deg)}
 .fl-av{width:34px;height:34px;border-radius:9px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
- background:var(--navy);color:#fff;font-size:11px;font-weight:800;letter-spacing:-.02em}
+ background:var(--brand-bg);color:#fff;font-size:11px;font-weight:800;letter-spacing:-.02em}
+.fl-av img{width:23px;height:23px;object-fit:contain;display:block}
 .fl-tt{min-width:0;flex:0 0 auto}
 .fl-tt h3{font-size:15px;font-weight:700;letter-spacing:-.01em;margin:0;white-space:nowrap}
 .fl-tt .sub{font-size:11.5px;color:var(--ink2);margin-top:2px;font-variant-numeric:tabular-nums}
@@ -1812,7 +1815,7 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
   </nav>
   <div class="sb-foot">
     <button class="sap" id="sapBtn" title="Volver a leer los datos desde Google Sheets">
-      <span class="sap-t"><span class="sap-dot" id="sapDot"></span><span>SAP Business One</span></span>
+      <span class="sap-t"><span class="sap-dot" id="sapDot"></span><span>Google Sheet · SAP</span></span>
       <span class="sap-s" id="sapTxt"></span>
     </button>
     <div class="sb-user">
@@ -2508,6 +2511,11 @@ const SHEET_LINKS = {
   '3304PC': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=1437783870&single=true&output=csv',
   '3116C7': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=603049490&single=true&output=csv',
   '3066': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=2106672365&single=true&output=csv',
+  // Hojas nuevas: el motor se crea solo al leerlas, con el nombre que venga en
+  // el título de la hoja. Si el nombre no sale bien, basta con cambiar la clave.
+  'G825623473': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=825623473&single=true&output=csv',
+  'G1381391062': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=1381391062&single=true&output=csv',
+  'G515127042': 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSjlzzmKHi_M9Pfb8yDIoswhpyS62TZS54GanVtyjXMgoH_Zdfv3SaUqe9jW_TnhrlCEzhWZ_1Nxx16/pub?gid=515127042&single=true&output=csv',
 };
 
 // ── parser CSV robusto (respeta comillas y comas internas) ──
@@ -2578,10 +2586,51 @@ function _mapCols(rows){
   };
 }
 
+/* Nombre del motor a partir de lo que hay ENCIMA de la tabla en la hoja
+   (normalmente el título con la cotización). Si no hay nada usable, se
+   devuelve null y quien llama decide el respaldo. */
+function _tituloHoja(rows, hi){
+  let mejor='';
+  for(let i=0;i<hi && i<12;i++){
+    (rows[i]||[]).forEach(c=>{
+      const t=String(c||'').trim();
+      if(t.length>mejor.length && t.length<70 && /[a-zA-Z]/.test(t) && !/^#/.test(t)) mejor=t;
+    });
+  }
+  return mejor || null;
+}
+function _cotiHoja(rows, hi){
+  for(let i=0;i<hi && i<12;i++){
+    for(const c of (rows[i]||[])){
+      const m=String(c||'').match(/cot[.\s]*(?:izaci[óo]n)?[.\s:#-]*([0-9]{3,8})/i);
+      if(m) return m[1];
+    }
+  }
+  return null;
+}
+/* Crea un motor que todavía no existe en los datos embebidos. Lo usan las
+   hojas nuevas que se añaden a SHEET_LINKS: antes se descartaban con
+   "motor no encontrado" y el motor no aparecía nunca. */
+function _nuevoMotor(engId, rows, M){
+  const titulo=_tituloHoja(rows, M.hi);
+  // del título se saca un nombre corto: "COT 00543 - MOTOR 3208" → "3208"
+  let nombre = titulo ? titulo.replace(/cot[.\s]*(?:izaci[óo]n)?[.\s:#-]*[0-9]{3,8}/ig,'')
+                               .replace(/motor|kit|repuestos?|lista|de\s*$/ig,'')
+                               .replace(/[-–—|]/g,' ').replace(/\s+/g,' ').trim() : '';
+  if(!nombre || nombre.length<2) nombre = engId.replace(/^G\d+$/,'') || engId;
+  const eng={ id:engId, label:'Motor '+nombre, grupo:nombre, coti:_cotiHoja(rows,M.hi)||'—',
+    icon:nombre.slice(0,5), nuevo:true,
+    kpi:{items:0,comprar_items:0,comprar_uds:0,trasl_items:0,trasl_uds:0,exceso_items:0,
+         exceso_uds:0,suf_items:0,kits_principal:0,min_con:0,min_sin:0,min_falta_items:0,min_falta_uds:0},
+    items:[] };
+  ENGINES.push(eng);
+  return eng;
+}
 // Actualiza los items de un motor con los datos frescos del CSV
 function _applySheet(engId, rows){
-  const eng=ENGINES.find(e=>e.id===engId); if(!eng) return {ok:false,msg:'motor no encontrado'};
   const M=_mapCols(rows); if(!M||M.cod<0) return {ok:false,msg:'no encontré la tabla SAP en la hoja'};
+  let eng=ENGINES.find(e=>e.id===engId), creado=false;
+  if(!eng){ eng=_nuevoMotor(engId, rows, M); creado=true; }
   // construir mapa código→fila del CSV
   const byCode={};
   for(let i=M.hi+1;i<rows.length;i++){
@@ -2589,6 +2638,21 @@ function _applySheet(engId, rows){
     if(!cod || /^#/.test(cod)) continue;
     byCode[cod]=r;
   }
+  // códigos que están en la hoja pero no en los datos embebidos: antes se
+  // perdían, ahora se dan de alta
+  let nuevos=0;
+  const tengo=new Set(eng.items.map(it=>it[0]));
+  Object.keys(byCode).forEach(cod=>{
+    if(tengo.has(cod)) return;
+    const r=byCode[cod];
+    const gv=(j)=>(j<0||r[j]==null||r[j]==='')?null:r[j];
+    eng.items.push([cod, String(gv(M.desc)||'—'), _n(gv(M.need)), _n(gv(M.alm01)), _n(gv(M.repos)),
+      _n(gv(M.arriola)), _n(gv(M.trasl)), _n(gv(M.comprar)), 'S', _n(gv(M.kitsPrin)),
+      (gv(M.stockMin)==null||/n\/d/i.test(String(gv(M.stockMin))))?null:_n(gv(M.stockMin)),
+      _comer(gv(M.comer)), 0, _n(gv(M.transito)), 'Otros',
+      _n(gv(M.enStock)), _n(gv(M.aqp)), _n(gv(M.hch))]);
+    nuevos++;
+  });
   let upd=0;
   eng.items.forEach(it=>{
     const r=byCode[it[0]]; if(!r) return;
@@ -2610,20 +2674,32 @@ function _applySheet(engId, rows){
     if(M.hch>=0)     it[17]=_n(g(M.hch,it[17]));
     upd++;
   });
-  return {ok:true, upd, total:eng.items.length};
+  return {ok:true, upd, nuevos, creado, total:eng.items.length};
 }
 
-let SYNC_STATE={done:false, results:{}, at:null};
+let SYNC_STATE={done:false, results:{}, at:null, edit:null};
+/* Días desde la última edición de las hojas a partir de los cuales el dato
+   se considera viejo. El stock se mueve a diario, una semana ya es mucho. */
+const SHEET_DIAS_OK=7;
 async function syncSheets(){
   const ids=Object.keys(SHEET_LINKS);
   if(!ids.length){ SYNC_STATE.done=true; return; }
+  SYNC_STATE.edit=null;
   await Promise.all(ids.map(async id=>{
     try{
       const res=await fetch(SHEET_LINKS[id], {cache:'no-store'});
       if(!res.ok) throw new Error('HTTP '+res.status);
+      // Last-Modified es de las cabeceras que sí se pueden leer entre orígenes:
+      // dice cuándo se editó la hoja, no cuándo la leímos nosotros.
+      const lm=res.headers.get('last-modified');
+      const t=lm? Date.parse(lm) : NaN;
       const txt=await res.text();
       const rows=parseCSV(txt);
       const r=_applySheet(id, rows);
+      if(Number.isFinite(t)){
+        r.edit=t;
+        if(!SYNC_STATE.edit || t>SYNC_STATE.edit) SYNC_STATE.edit=t;   // la más reciente de todas
+      }
       SYNC_STATE.results[id]=r;
     }catch(e){
       SYNC_STATE.results[id]={ok:false, msg:e.message};
@@ -3019,7 +3095,7 @@ function EngineStockFlow(e, idx){
           onclick="flowToggle('${e.id}')"
           aria-label="${_esc(nom)}, ${fmt(d.t.nec)} unidades en ${d.piezas} piezas, ${ST_LABEL[st]}, ${pct}% cubierto. ${abierta?'Contraer':'Desplegar'} el origen del stock.">
         <svg class="fl-cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
-        <span class="fl-av">${_esc(e.icon)}</span>
+        <span class="fl-av"><img src="img/motor.png" alt="" loading="lazy" decoding="async"></span>
         <span class="fl-tt"><h3>${_esc(nom)}</h3>
           <span class="sub">${fmt(d.t.nec)} unidades · ${d.piezas} piezas</span></span>
         <span class="mc-badge ${st}">${ST_LABEL[st]}</span>
@@ -5929,19 +6005,50 @@ function abrirDrawer(){ $('#sidebar').classList.add('open'); $('#sbScrim').class
 function cerrarDrawer(){ $('#sidebar').classList.remove('open'); $('#sbScrim').classList.remove('on'); }
 
 /* ═════════ ESTADO DE SINCRONIZACIÓN SAP ═════════ */
+/* Cuántos días hace que se editaron las hojas del Drive. Devuelve null si
+   Google no mandó la fecha de edición, para no inventarla. */
+function sheetDias(){
+  if(!SYNC_STATE.edit) return null;
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const d=new Date(SYNC_STATE.edit); d.setHours(0,0,0,0);
+  return Math.max(0, Math.round((hoy-d)/86400000));
+}
+function sheetFecha(){
+  return SYNC_STATE.edit
+    ? new Date(SYNC_STATE.edit).toLocaleDateString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric'})
+    : null;
+}
 function renderSap(){
   const ids=Object.keys(SHEET_LINKS);
   const oks=ids.filter(id=>SYNC_STATE.results[id] && SYNC_STATE.results[id].ok).length;
-  const dot=$('#sapDot'), txt=$('#sapTxt');
+  const dot=$('#sapDot'), txt=$('#sapTxt'), btn=$('#sapBtn');
   if(!dot) return;
   const hora=SYNC_STATE.at ? new Date(SYNC_STATE.at).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
-  if(!SYNC_STATE.done){ dot.className='sap-dot warn'; txt.innerHTML='Sincronizando…'; return; }
-  if(oks===ids.length && ids.length){
-    dot.className='sap-dot'; txt.innerHTML='Sincronizado<br><b>'+hora+'</b>';
-  }else if(oks>0){
-    dot.className='sap-dot warn'; txt.innerHTML='Parcial · '+oks+' de '+ids.length+'<br><b>'+hora+'</b>';
+  if(!SYNC_STATE.done){ dot.className='sap-dot warn'; txt.innerHTML='Leyendo…'; return; }
+  if(!oks){
+    dot.className='sap-dot bad';
+    txt.innerHTML='Sin conexión · datos guardados<br><b>Clic para reintentar</b>';
+    if(btn) btn.title='No se pudo leer Google Sheets · clic para reintentar';
+    return;
+  }
+  const dias=sheetDias(), fecha=sheetFecha();
+  const parcial = oks<ids.length ? `Parcial · ${oks} de ${ids.length}<br>` : '';
+  if(dias===null){
+    // Google no devolvió la fecha de edición: se dice cuándo LEÍMOS, no cuándo se editó
+    dot.className = parcial? 'sap-dot warn':'sap-dot';
+    txt.innerHTML = parcial+`Leído <b>${hora}</b>`;
+    if(btn) btn.title='Google no informa la fecha de edición de las hojas; se muestra cuándo se leyeron por última vez.';
+    return;
+  }
+  const cuando = dias===0 ? 'hoy' : dias===1 ? 'ayer' : `hace ${dias} días`;
+  if(dias<=SHEET_DIAS_OK){
+    dot.className = parcial? 'sap-dot warn':'sap-dot';
+    txt.innerHTML = parcial+`Actualizado ${cuando}<br><b>${fecha}</b>`;
+    if(btn) btn.title=`Las hojas del Drive se editaron el ${fecha} · leídas ${hora}`;
   }else{
-    dot.className='sap-dot bad'; txt.innerHTML='Sin conexión · datos guardados<br><b>Clic para reintentar</b>';
+    dot.className='sap-dot bad';
+    txt.innerHTML = parcial+`<b>Falta actualizar</b><br>sin cambios ${cuando} (${fecha})`;
+    if(btn) btn.title=`Las hojas del Drive no se editan desde el ${fecha}. Actualízalas en Google Sheets y vuelve a leer.`;
   }
 }
 
@@ -5994,17 +6101,13 @@ function TowerKpiCards(L){
                     {nec:0,alm:0,arr:0,buy:0});
   const cub=t.alm+t.arr;
   const p=v=>t.nec>0? Math.round(v/t.nec*100):0;      // sin divisiones por cero
-  const SV=d=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+  const IM=n=>`<img src="img/${n}.png" alt="" loading="lazy" decoding="async">`;
   const k=(cls,ic,l,v,s)=>`<div class="tw-k ${cls}"><span class="ic">${ic}</span>
       <span class="tx"><span class="l">${l}</span><span class="v">${v}</span><span class="s">${s}</span></span></div>`;
-  return k('', SV('<rect x="3" y="4" width="18" height="5" rx="1.6"/><rect x="3" y="11" width="18" height="5" rx="1.6"/><path d="M7 6.5h.01M7 13.5h.01M6 18h12"/>'),
-            'Motores', fmt(L.length), 'en planificación')
-       + k('', SV('<path d="M14.7 6.3a4 4 0 0 0 5 5l-9.6 9.6a2.1 2.1 0 0 1-3-3z"/><path d="M14.7 6.3 18 3l3 3-3.3 3.3"/>'),
-            'Unidades requeridas', fmt(t.nec), 'suma de todos los kits')
-       + k('ok', SV('<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>'),
-            'Cubierto con stock', fmt(cub), `${p(cub)}% del total · ALM01 ${fmt(t.alm)} + Arriola ${fmt(t.arr)}`)
-       + k('buy', SV('<path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/>'),
-            'Pendiente de compra', fmt(t.buy), `${p(t.buy)}% del total`);
+  return k('', IM('motor'), 'Motores', fmt(L.length), 'en planificación')
+       + k('', IM('llave'), 'Unidades requeridas', fmt(t.nec), 'suma de todos los kits')
+       + k('ok', IM('caja'), 'Cubierto con stock', fmt(cub), `${p(cub)}% del total · ALM01 ${fmt(t.alm)} + Arriola ${fmt(t.arr)}`)
+       + k('buy', IM('carro'), 'Pendiente de compra', fmt(t.buy), `${p(t.buy)}% del total`);
 }
 /* ── EngineAccordion ── */
 function twBuscar(v){ TW.q=v; renderTowerPlan(); }

@@ -363,6 +363,8 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .cur-tog button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .kit-sub{display:block;font-size:10.5px;color:var(--ink3);margin-top:4px;font-variant-numeric:tabular-nums}
 .kit-sub.warn-x{color:var(--amber)}
+.d-filt{display:inline-flex;align-items:center;padding:1px 8px;border-radius:12px;background:var(--brand-bg);
+ border:1px solid var(--brand-line);color:var(--brand);font-weight:700;font-size:11px}
 .cost-tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line2)}
 .ct{background:var(--card);padding:13px 16px}
 .ct .l{font-size:11px;color:var(--ink2);font-weight:600}
@@ -1566,6 +1568,12 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .fl-tab.arr.on{background:var(--amber);border-color:var(--amber)}
 .fl-tab.buy.on{background:var(--red);border-color:var(--red)}
 .fl-tab:disabled{opacity:.45;cursor:default}
+.fl-tabs .cb-seg{padding:2px}
+.fl-tabs .cb-seg button{padding:5px 9px;font-size:11px}
+.fl-tabs .cb-seg .wh-n{margin-left:5px;height:15px;min-width:15px;font-size:9.5px}
+.fl-tabs .cb-seg button.on{background:var(--navy);color:#fff}
+.fl-tabs .cb-seg button.on .wh-n{background:rgba(255,255,255,.24);color:#fff}
+.fl-tabs .cb-seg button:disabled{opacity:.42;cursor:default}
 .fl-find{display:flex;align-items:center;gap:6px;height:29px;padding:0 10px;margin-left:auto;
  border:1px solid var(--line);border-radius:18px;background:var(--card);min-width:150px;
  transition:border-color .15s,box-shadow .15s}
@@ -1663,21 +1671,25 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .cap-pz .bar i{display:block;height:100%;background:var(--teal)}
 /* simulador de reparto */
 .cap-sim{display:grid;grid-template-columns:minmax(250px,320px) 1fr;gap:16px;align-items:start}
+.cap-cab{display:flex;align-items:flex-end;gap:8px;padding:0 9px 6px;font-size:10px;font-weight:800;
+ letter-spacing:.35px;text-transform:uppercase;color:var(--ink3)}
+.cap-cab .c1{margin-left:auto;width:78px;text-align:center}
+.cap-cab .c2{width:96px;text-align:center}
+.cap-cab small{display:block;font-size:9.5px;font-weight:600;letter-spacing:0;text-transform:none;
+ color:var(--ink3);margin-top:1px}
 .cap-pick{display:flex;flex-direction:column;gap:6px;max-height:420px;overflow:auto;padding-right:3px}
 .cap-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--line);border-radius:var(--r-sm);
  background:var(--card);transition:border-color .15s,background .15s}
 .cap-row.on{border-color:var(--brand);background:var(--brand-bg)}
-.cap-row .pr{width:19px;text-align:center;font-size:10.5px;font-weight:800;color:var(--ink3);flex:0 0 auto;
- font-variant-numeric:tabular-nums}
+
 .cap-row .lb{display:flex;align-items:center;gap:7px;flex:1;min-width:0;cursor:pointer}
 .cap-row .lb input{width:15px;height:15px;accent-color:var(--brand);cursor:pointer;flex:0 0 auto}
 .cap-row .lb .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cap-row.on .lb .nm{color:var(--brand)}
-.cap-mv{display:flex;flex-direction:column;gap:1px;flex:0 0 auto}
-.cap-mv button{width:18px;height:11px;border:0;background:none;color:var(--ink3);cursor:pointer;line-height:1;
- font-size:9px;padding:0;display:flex;align-items:center;justify-content:center;border-radius:3px}
-.cap-mv button:hover:not(:disabled){background:var(--card3);color:var(--ink)}
-.cap-mv button:disabled{opacity:.3;cursor:default}
+
+
+
+
 .cap-res{min-width:0}
 .cap-tbl{width:100%;border-collapse:collapse;font-size:12px}
 .cap-tbl th{text-align:left;padding:8px 10px;font-size:10.5px;font-weight:800;letter-spacing:.35px;text-transform:uppercase;
@@ -1691,6 +1703,30 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .cap-tbl .por{color:var(--ink2);white-space:normal;line-height:1.5;font-size:11.5px}
 .cap-tbl .por code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;background:var(--card3);
  padding:1px 5px;border-radius:4px;color:var(--ink)}
+.cap-vp{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:4px 10px;border-radius:14px;
+ border:1px solid var(--line);background:var(--card);font-family:var(--font);font-size:11px;font-weight:700;
+ color:var(--brand);cursor:pointer}
+.cap-vp:hover{background:var(--brand-bg);border-color:var(--brand-line)}
+.cap-tbl tr.ab td{background:var(--brand-bg)}
+.cap-sub td{background:var(--card2);padding:12px 14px !important}
+.cap-sub-h{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:9px}
+.cap-sub-h b{font-size:12.5px}
+.cap-sub-h .cb-seg{padding:2px}
+.cap-sub-h .cb-seg button{padding:5px 9px;font-size:11px}
+.cap-sub-h .cb-seg button.on{background:var(--navy);color:#fff}
+.cap-sub-h .cb-seg button.on .wh-n{background:rgba(255,255,255,.24);color:#fff}
+.cap-sub-h .cb-seg button:disabled{opacity:.42;cursor:default}
+.cap-ptbl{width:100%;border-collapse:collapse;font-size:11.5px;background:var(--card);
+ border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden}
+.cap-ptbl th{text-align:left;padding:7px 9px;font-size:10px;font-weight:800;letter-spacing:.3px;
+ text-transform:uppercase;color:var(--ink2);background:var(--card2);border-bottom:1px solid var(--line);white-space:nowrap}
+.cap-ptbl td{padding:6px 9px;border-bottom:1px solid var(--line2);white-space:nowrap}
+.cap-ptbl tr:last-child td{border-bottom:0}
+.cap-ptbl .num{text-align:right;font-variant-numeric:tabular-nums}
+.cap-ptbl .ko{color:var(--red);font-weight:700}
+.cap-ptbl .z{color:var(--ink3)}
+.cap-ptbl .cod{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10.5px;font-weight:600}
+.cap-ptbl .ds{max-width:230px;overflow:hidden;text-overflow:ellipsis;color:var(--ink2)}
 .cap-tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line2);
  border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;margin-bottom:12px}
 .cap-tot .c{background:var(--card);padding:10px 13px}
@@ -2586,6 +2622,28 @@ function _mapCols(rows){
   };
 }
 
+/* El CSV de una hoja publicada NO trae el nombre de su pestaña. Pero la
+   página pubhtml del libro sí: lleva un menú con todas las pestañas y su gid.
+   Con una sola petición sabemos cómo se llama cada motor. */
+let SHEET_NOMBRES=null;
+function _gidDe(url){ const m=String(url).match(/[?&]gid=(\d+)/); return m? m[1] : null; }
+async function _cargarNombresHojas(){
+  if(SHEET_NOMBRES) return SHEET_NOMBRES;
+  SHEET_NOMBRES={};
+  const alguno=Object.values(SHEET_LINKS)[0]; if(!alguno) return SHEET_NOMBRES;
+  const base=String(alguno).split('/pub')[0]+'/pubhtml';
+  try{
+    const res=await fetch(base,{cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const doc=new DOMParser().parseFromString(await res.text(),'text/html');
+    doc.querySelectorAll('[id^="sheet-button-"]').forEach(li=>{
+      const gid=li.id.replace('sheet-button-','');
+      const nombre=(li.textContent||'').trim();
+      if(gid && nombre) SHEET_NOMBRES[gid]=nombre;
+    });
+  }catch(e){ /* sin nombres: se usa el título de la hoja como respaldo */ }
+  return SHEET_NOMBRES;
+}
 /* Nombre del motor a partir de lo que hay ENCIMA de la tabla en la hoja
    (normalmente el título con la cotización). Si no hay nada usable, se
    devuelve null y quien llama decide el respaldo. */
@@ -2612,12 +2670,14 @@ function _cotiHoja(rows, hi){
    hojas nuevas que se añaden a SHEET_LINKS: antes se descartaban con
    "motor no encontrado" y el motor no aparecía nunca. */
 function _nuevoMotor(engId, rows, M){
-  const titulo=_tituloHoja(rows, M.hi);
+  const gid=_gidDe(SHEET_LINKS[engId]||'');
+  const pestania = (SHEET_NOMBRES && gid && SHEET_NOMBRES[gid]) ? SHEET_NOMBRES[gid] : null;
+  const titulo=pestania || _tituloHoja(rows, M.hi);
   // del título se saca un nombre corto: "COT 00543 - MOTOR 3208" → "3208"
   let nombre = titulo ? titulo.replace(/cot[.\s]*(?:izaci[óo]n)?[.\s:#-]*[0-9]{3,8}/ig,'')
                                .replace(/motor|kit|repuestos?|lista|de\s*$/ig,'')
                                .replace(/[-–—|]/g,' ').replace(/\s+/g,' ').trim() : '';
-  if(!nombre || nombre.length<2) nombre = engId.replace(/^G\d+$/,'') || engId;
+  if(!nombre || nombre.length<2) nombre = /^G\d+$/.test(engId) ? 'nuevo '+(ENGINES.length+1) : engId;
   const eng={ id:engId, label:'Motor '+nombre, grupo:nombre, coti:_cotiHoja(rows,M.hi)||'—',
     icon:nombre.slice(0,5), nuevo:true,
     kpi:{items:0,comprar_items:0,comprar_uds:0,trasl_items:0,trasl_uds:0,exceso_items:0,
@@ -2631,6 +2691,12 @@ function _applySheet(engId, rows){
   const M=_mapCols(rows); if(!M||M.cod<0) return {ok:false,msg:'no encontré la tabla SAP en la hoja'};
   let eng=ENGINES.find(e=>e.id===engId), creado=false;
   if(!eng){ eng=_nuevoMotor(engId, rows, M); creado=true; }
+  else{
+    // si la pestaña se renombró en el Drive, el motor sigue el nombre
+    const gid=_gidDe(SHEET_LINKS[engId]||'');
+    const pes=(SHEET_NOMBRES && gid) ? SHEET_NOMBRES[gid] : null;
+    if(pes && eng.nuevo) eng.label='Motor '+pes.replace(/^motor\s+/i,'');
+  }
   // construir mapa código→fila del CSV
   const byCode={};
   for(let i=M.hi+1;i<rows.length;i++){
@@ -2685,6 +2751,7 @@ async function syncSheets(){
   const ids=Object.keys(SHEET_LINKS);
   if(!ids.length){ SYNC_STATE.done=true; return; }
   SYNC_STATE.edit=null;
+  await _cargarNombresHojas();     // gid → nombre de la pestaña, para los motores nuevos
   await Promise.all(ids.map(async id=>{
     try{
       const res=await fetch(SHEET_LINKS[id], {cache:'no-store'});
@@ -2904,7 +2971,7 @@ function mcardHTML(e,i){
    (los actuales y los que lleguen por Google Sheets). El reparto se hace
    CÓDIGO POR CÓDIGO y luego se suma: el sobrante de una pieza nunca cubre
    la falta de otra. Reutiliza calc(), que ya aplica exactamente esta regla. */
-const FLOW={abierto:new Set(), fuente:{}, todas:{}, solo:false, orden:{}, busq:{}};
+const FLOW={abierto:new Set(), fuente:{}, todas:{}, solo:false, orden:{}, busq:{}, comer:{}};
 /* arriolaOf() depende de OTROS, que se inicializa más abajo en el archivo:
    hasta el primer renderAll() el diagrama no se puede calcular todavía. */
 var FLOW_OK=false;
@@ -2940,7 +3007,8 @@ function flowRows(i){
     const usados = (deAlm>0?1:0)+(deArr>0?1:0)+(compra>0?1:0);
     const est = usados>1 ? 'mix' : compra>0 ? 'buy' : deArr>0 ? 'move' : 'ok';
     return {cod:r[0], desc:r[1]||'—', fam:r[14]||'Otros', nec, alm, arr,
-            deAlm, deArr, compra, est, sobra:Math.max(0,alm-nec)};
+            deAlm, deArr, compra, est, sobra:Math.max(0,alm-nec),
+            comer:comerNorm(r[11])};
   }));
 }
 function flowData(i){
@@ -2993,8 +3061,13 @@ function EngineSummaryNode(e, d, idx, activa){
 /* ── PartsDetailTable ── */
 function PartsDetailTable(idx){
   const d=flowData(idx), f=FLOW.fuente[idx]||'', q=(FLOW.busq[idx]||'').trim().toLowerCase();
+  const fc=FLOW.comer[idx]||'';
   const filtra=x=> f==='alm'? x.deAlm>0 : f==='arr'? x.deArr>0 : f==='buy'? x.compra>0 : true;
   let todas=d.rows.filter(filtra);
+  // los conteos de comerciable se sacan ANTES de aplicar su propio filtro
+  const nSI=todas.filter(x=>x.comer==='SI').length, nNO=todas.filter(x=>x.comer==='NO').length;
+  const sinDato=todas.length-nSI-nNO;
+  if(fc) todas=todas.filter(x=>x.comer===fc);
   if(q) todas=todas.filter(x=>x.cod.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q));
   // orden por columna; por defecto lo más urgente arriba
   const o=FLOW.orden[idx];
@@ -3011,8 +3084,15 @@ function PartsDetailTable(idx){
   const ver=FLOW.todas[idx] ? todas : todas.slice(0,FL_TOPE);
   const tab=(k,l,n)=>`<button type="button" class="fl-tab ${k||''}${f===k?' on':''}" ${n===0&&k?'disabled':''}
       onclick="flowFuente(${idx},'${k}')" aria-pressed="${f===k}">${l}<span class="n">${fmt(n)}</span></button>`;
+  const cm=(v,l,n)=>`<button type="button" class="${fc===v?'on':''}" ${n===0&&v?'disabled':''}
+      onclick="flowComer(${idx},'${v}')" aria-pressed="${fc===v}">${l}<span class="wh-n">${fmt(n)}</span></button>`;
   const cab=`<div class="fl-tabs" role="group" aria-label="Filtrar piezas por origen">
       ${tab('','Todos',d.piezas)}${tab('alm','ALM01',d.cuenta.alm)}${tab('arr','Arriola',d.cuenta.arr)}${tab('buy','Comprar',d.cuenta.buy)}
+      <span class="cb-seg" role="group" aria-label="Filtrar por comerciable"
+        title="${sinDato? sinDato+' pieza(s) sin un Sí/No cargado en la hoja de SAP: solo salen en «Todos»':'Todas las piezas tienen el dato cargado'}">
+        <span class="cb-seg-l">Comerciable</span>
+        ${cm('','Todos',nSI+nNO+sinDato)}${cm('SI','Sí',nSI)}${cm('NO','No',nNO)}
+      </span>
       <label class="fl-find">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         <input type="search" value="${_esc(FLOW.busq[idx]||'')}" placeholder="Buscar pieza…"
@@ -3020,7 +3100,9 @@ function PartsDetailTable(idx){
       </label></div>`;
   if(!todas.length) return cab+`<div class="empty-st sm"><div class="ic">${ic(I.search)}</div>
       <h4>Ninguna pieza coincide</h4>
-      <p>${q? `Nada con «${_esc(q)}»${f?' en '+flSrcMeta(f).nm:''}.` : 'Ninguna pieza de este kit entra en esa categoría.'}</p>
+      <p>${q? `Nada con «${_esc(q)}»${f?' en '+flSrcMeta(f).nm:''}${fc?', comerciable '+(fc==='SI'?'sí':'no'):''}.`
+             : fc? `Ninguna pieza${f?' de '+flSrcMeta(f).nm:''} está marcada como comerciable ${fc==='SI'?'sí':'no'}.`
+             : 'Ninguna pieza de este kit entra en esa categoría.'}</p>
       <button class="xbtn" onclick="flowLimpiar(${idx})">Ver todas las piezas</button></div>`;
   const th=(col,l,cls)=>{
     const act=o&&o.col===col, dir=act? o.dir:'';
@@ -3044,7 +3126,7 @@ function PartsDetailTable(idx){
     ${todas.length>ver.length
       ? `<div class="fl-more"><span>Mostrando ${ver.length} de ${todas.length} piezas</span>
            <button class="lnk" onclick="flowTodas(${idx})">Ver las ${todas.length} →</button></div>`
-      : `<div class="fl-more"><span>${todas.length} pieza${todas.length===1?'':'s'}${f?' de '+flSrcMeta(f).nm:''}${q?` con «${_esc(q)}»`:''}</span></div>`}`;
+      : `<div class="fl-more"><span>${todas.length} pieza${todas.length===1?'':'s'}${f?' de '+flSrcMeta(f).nm:''}${fc?`, comerciable ${fc==='SI'?'sí':'no'}`:''}${q?` con «${_esc(q)}»`:''}</span></div>`}`;
 }
 function flowOrden(idx,col){
   const o=FLOW.orden[idx];
@@ -3058,7 +3140,12 @@ function flowBuscar(idx,v){
   flowPintar(idx);
   const el=$('#flc-'+idx+' .fl-find input'); if(el){ el.focus(); el.setSelectionRange(v.length,v.length); }
 }
-function flowLimpiar(idx){ FLOW.busq[idx]=''; FLOW.fuente[idx]=''; FLOW.todas[idx]=false; flowPintar(idx); }
+function flowComer(idx,v){
+  FLOW.comer[idx] = (FLOW.comer[idx]===v) ? '' : v;   // volver a pulsar lo quita
+  FLOW.todas[idx]=false;
+  flowPintar(idx);
+}
+function flowLimpiar(idx){ FLOW.busq[idx]=''; FLOW.fuente[idx]=''; FLOW.comer[idx]=''; FLOW.todas[idx]=false; flowPintar(idx); }
 /* ── EngineStockFlow: la tarjeta completa ── */
 function EngineStockFlow(e, idx){
   const d=flowData(idx), st=engStatus(e), abierta=FLOW.abierto.has(e.id), f=FLOW.fuente[idx]||'';
@@ -3279,14 +3366,23 @@ function openEngine(i){
   window.scrollTo({top:0,behavior:'smooth'});
   refreshEngine();
 }
+/* El filtro Comerciable de la cabecera manda en TODO el detalle: indicadores,
+   pestañas, listas de abajo, gráfico y costeo. Antes solo afectaba al costeo
+   y los números de arriba no cuadraban con las listas de abajo. */
+function comerActivo(){ const el=$('#mComer'); return el? el.value : ''; }
+function piezasComer(items){
+  const f=comerActivo();
+  return f ? items.filter(r=>comerNorm(r[11])===f) : items;
+}
 // Recalcula KPIs, pestañas, listas, gráfico y costeo para los N kits vigentes
 function refreshEngine(){
   const e=ENGINES[curIdx], N=KITS();
-  const C=e.items.map(r=>calc(r,N));
+  const ITEMS=piezasComer(e.items);
+  const C=ITEMS.map(r=>calc(r,N));
   const comprar=C.filter(c=>c.comprar>0), trasl=C.filter(c=>c.trasl>0);
   const exceso =C.filter(c=>c.exceso>0);
   const suf    =C.filter(c=>c.comprar===0&&c.trasl===0&&c.exceso===0);
-  const kitsArmables = Math.min(...e.items.map(r=> r[2]>0 ? Math.floor(r[3]/r[2]) : 999));
+  const kitsArmables = ITEMS.length ? Math.min(...ITEMS.map(r=> r[2]>0 ? Math.floor(r[3]/r[2]) : 999)) : 0;
   const sfx = N>1 ? ` · para <b>${N}</b> kits` : '';
   $('#dKpis').innerHTML=[
     ['k','Kits armables',kitsArmables,'con stock principal'],
@@ -3297,7 +3393,7 @@ function refreshEngine(){
   ].map(([c,l,v,s])=>`<div class="dk ${c}"><div class="lab">${l}</div><div class="val">${fmt(v)}</div><div class="sub">${s}</div></div>`).join('');
   $('#dTabs').innerHTML=TABS.map(([id,lab])=>{
     let n=0;
-    if(id==='all')n=e.items.length;
+    if(id==='all')n=ITEMS.length;
     else if(id==='C')n=comprar.length; else if(id==='T')n=trasl.length;
     else if(id==='E')n=exceso.length; else if(id==='S')n=suf.length;
     return `<div class="tab ${id===curTab?'active':''}" onclick="setTab('${id}')">${lab} <span class="c">(${n})</span></div>`;
@@ -3305,7 +3401,9 @@ function refreshEngine(){
   const warn = e.id==='CONS' ? ' · <span class="warn-need">⚠ cantidades por confirmar</span>' : '';
   // resumen del motor: cotización, piezas, faltantes, traslados y exceso de un vistazo
   const nf=comprar.reduce((a,c)=>a+c.comprar,0), nt=trasl.reduce((a,c)=>a+c.trasl,0), ne=exceso.reduce((a,c)=>a+c.exceso,0);
-  $('#dMeta').innerHTML=`${e.grupo} · ${e.coti!=='—'?'Cot. <b>'+e.coti+'</b>':'Sin cotización'} · ${e.kpi.items} ítems${sfx}`
+  const fc=comerActivo();
+  const chipF = fc ? ` · <span class="d-filt">viendo solo comerciable ${fc==='SI'?'sí':'no'} · ${fmt(ITEMS.length)} de ${fmt(e.items.length)} piezas</span>` : '';
+  $('#dMeta').innerHTML=`${e.grupo} · ${e.coti!=='—'?'Cot. <b>'+e.coti+'</b>':'Sin cotización'} · ${fmt(ITEMS.length)}${fc?'':''} ítems${sfx}${chipF}`
     + ` · <span style="color:var(--red)">faltan ${fmt(nf)}</span>`
     + ` · <span style="color:var(--amber)">${nt? 'trasladar '+fmt(nt) : 'sin traslados'}</span>`
     + ` · <span style="color:var(--blue)">exceso ${fmt(ne)}</span> uds.${warn}`;
@@ -3508,7 +3606,7 @@ function section(id,cls,icon,title,desc,rows,render,forceOpen){
 function renderActions(){
   const e=ENGINES[curIdx]; const q=($('#dSearch').value||'').trim().toUpperCase();
   const match=r=> !q || r[0].toUpperCase().includes(q) || (r[1]||'').toUpperCase().includes(q);
-  const it=e.items.filter(match); const N=KITS();
+  const it=piezasComer(e.items).filter(match); const N=KITS();
   const comprar=it.filter(r=>calc(r,N).comprar>0);
   const trasl  =it.filter(r=>calc(r,N).trasl>0);
   const exceso =it.filter(r=>calc(r,N).exceso>0);
@@ -3523,7 +3621,7 @@ function renderActions(){
         exceso,r=>arow('e',r), curTab==='E');
   if(show('S')) out+=section('s','on-s',ICON.check,'Suficiente','Cubiertos con el stock principal, sin sobrante',
         suf,r=>arow('s',r), curTab==='S');
-  $('#actWrap').innerHTML=out||'<div class="act-sec"><div class="act-empty">No hay ítems que coincidan con la búsqueda.</div></div>';
+  $('#actWrap').innerHTML=out||`<div class="act-sec"><div class="act-empty">No hay ítems que coincidan${comerActivo()?' con el filtro de comerciable y la búsqueda':' con la búsqueda'}.</div></div>`;
 }
 // DONUT Chart.js
 function drawChart(nc,nt,ne,ns){
@@ -3532,7 +3630,8 @@ function drawChart(nc,nt,ne,ns){
   const labs=['Comprar','Trasladar de Arriola','En exceso','Suficiente (justo)'];
   const cols=['#DC2626','#D97706','#2563EB','#059669'];
   const N=KITS();
-  $('#chartHint').textContent=`${k.items} ítems del kit de ${e.label}, clasificados por acción${N>1?' para '+N+' kits':''}.`;
+  const fc=comerActivo(), vis=piezasComer(e.items).length;
+  $('#chartHint').textContent=`${vis} ítems${fc?` comerciable ${fc==='SI'?'sí':'no'} (de ${k.items})`:''} del kit de ${e.label}, clasificados por acción${N>1?' para '+N+' kits':''}.`;
   if(chart)chart.destroy();
   // si Chart.js no cargó (sin internet), la leyenda de abajo sigue mostrando los números
   if(typeof Chart==='function'){
@@ -3638,17 +3737,18 @@ function _descargar(header, rows, sheetName, filename, titulo, sub){
   }catch(err){ _toast('No se pudo descargar aquí. Abre el archivo en tu navegador.'); console.error(err); }
 }
 function exportMotor(kind){
-  const e=ENGINES[curIdx], it=e.items, m=e.label;
+  // lo que se descarga es lo que se ve: el filtro Comerciable también manda aquí
+  const e=ENGINES[curIdx], it=piezasComer(e.items), m=e.label;
   let header, rows, sName, fname;
   if(kind==='compra'){
     header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','A COMPRAR'];
     rows=it.filter(r=>r[7]>0).sort((a,b)=>b[7]-a[7]).map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[7]]);
-    sName='Compra'; fname=`Compra_${m}_${_hoy()}.xls`;
+    sName='Compra'; fname=`Compra_${m}${comerActivo()?'_comerciable_'+comerActivo():''}_${_hoy()}.xls`;
     if(!rows.length){_toast('Este motor no tiene ítems por comprar.');return;}
   } else if(kind==='traslado'){
     header=['Motor','Código SAP','Descripción','Necesita','Stock ALM01','En Arriola','TRASLADAR DE ARRIOLA'];
     rows=it.filter(r=>r[6]>0).sort((a,b)=>b[6]-a[6]).map(r=>[m,r[0],r[1],r[2],r[3],r[5],r[6]]);
-    sName='Traslados'; fname=`Traslados_${m}_${_hoy()}.xls`;
+    sName='Traslados'; fname=`Traslados_${m}${comerActivo()?'_comerciable_'+comerActivo():''}_${_hoy()}.xls`;
     if(!rows.length){_toast('Este motor no tiene traslados sugeridos.');return;}
   } else {
     const stName={C:'Comprar',T:'Trasladar',S:'Suficiente'};
@@ -3851,7 +3951,7 @@ function costRows(){
 function setComer(v){
   const inp=$('#mComer'); if(inp) inp.value=v;
   syncComerTog();
-  renderCost();
+  refreshEngine();      // indicadores, pestañas, listas, gráfico y costeo a la vez
 }
 function syncComerTog(){
   const tog=$('#mComerTog'), inp=$('#mComer'); if(!tog||!inp) return;
@@ -6443,7 +6543,7 @@ function exportTrans(){
    2) si quieres varios motores a la vez, el stock es compartido y el primero
       que consume deja al siguiente sin piezas. Eso lo resuelve el simulador.
    No cambia ningún cálculo de reposición: solo lee el stock real. */
-const CAP={modo:'both', reparto:'kits', sel:null, orden:null, pedidos:null};
+const CAP={modo:'both', reparto:'kits', sel:null, det:null, detComer:'', orden:null, pedidos:null};
 /* Stock por código, una sola vez: el mismo código es la misma pieza física
    aunque aparezca en varios motores. */
 function capStock(){
@@ -6497,7 +6597,10 @@ function capSimular(){
       const d=disp(r[0]);
       if(d>=nec) listas++;
       const k=Math.floor(d/nec);
-      kits.push({cod:r[0], desc:r[1]||'—', nec, disp:d, k});
+      // lo que falta para los kits PEDIDOS, no solo para uno
+      const necTot=nec*(pide||0);
+      kits.push({cod:r[0], desc:r[1]||'—', nec, necTot, disp:d, k,
+                 falta:Math.max(0, necTot-d), comer:comerNorm(r[11])});
       if(k<min) min=k;
     });
     if(min===Infinity) min=0;
@@ -6513,16 +6616,22 @@ function capSimular(){
       p.arr-=usaArr; uds+=usaAlm+usaArr;
     });
     const solo=capIndiv(i,modo);
+    const faltantes=kits.filter(x=>x.falta>0).sort((a,b)=>b.falta-a.falta);
     res.push({e, i, pos:pos+1, pide, solo:solo.kits, soloListas:solo.completas,
-              puede:min, arma, falta:Math.max(0,pide-arma), frenos, uds, listas, total});
+              puede:min, arma, falta:Math.max(0,pide-arma), frenos, uds, listas, total, faltantes});
   });
   return {res, pool};
 }
+/* La prioridad es el orden en que marcas los motores: el primero que marcas
+   se sirve primero. Antes había una columna de flechas para reordenar y era
+   ruido; el número de turno se sigue viendo en la tabla de resultado. */
 function capOrden(){
-  if(!CAP.orden) CAP.orden=ENGINES.map(e=>e.id);
+  if(!CAP.orden) CAP.orden=[];
   const ids=ENGINES.map(e=>e.id);
-  CAP.orden=CAP.orden.filter(id=>ids.includes(id)).concat(ids.filter(id=>!CAP.orden.includes(id)));
-  return CAP.orden;
+  CAP.orden=CAP.orden.filter(id=>ids.includes(id));
+  // los que estén marcados sin haber pasado por el selector van al final
+  ENGINES.forEach(e=>{ if((capPedidos()[e.id]||0)>0 && !CAP.orden.includes(e.id)) CAP.orden.push(e.id); });
+  return CAP.orden.concat(ids.filter(id=>!CAP.orden.includes(id)));
 }
 function capPedidos(){
   if(!CAP.pedidos) CAP.pedidos={};
@@ -6531,16 +6640,20 @@ function capPedidos(){
 }
 function capModo(m){ CAP.modo=m; renderCap(); }
 function capVer(id){ CAP.sel = (CAP.sel===id) ? null : id; renderCap(); }
+function capDet(id){ CAP.det = (CAP.det===id) ? null : id; renderCap(); }
+function capDetComer(v){ CAP.detComer = (CAP.detComer===v) ? '' : v; renderCap(); }
 function capReparto(m){ CAP.reparto=m; renderCap(); }
-function capTog(id){ const P=capPedidos(); P[id]= (P[id]||0)>0 ? 0 : 1; renderCap(); }
-function capSet(id,v){ capPedidos()[id]=Math.max(0,Math.min(99,Math.round(+v)||0)); renderCap(); }
-function capPaso(id,d){ const P=capPedidos(); P[id]=Math.max(0,Math.min(99,(P[id]||0)+d)); renderCap(); }
-function capMover(id,d){
-  const o=capOrden(), i=o.indexOf(id), j=i+d;
-  if(i<0||j<0||j>=o.length) return;
-  o.splice(j,0,o.splice(i,1)[0]);
+function capTog(id){
+  const P=capPedidos(), marcado=(P[id]||0)>0;
+  P[id]= marcado ? 0 : 1;
+  if(!CAP.orden) CAP.orden=[];
+  if(marcado) CAP.orden=CAP.orden.filter(x=>x!==id);   // al desmarcar pierde su turno
+  else if(!CAP.orden.includes(id)) CAP.orden.push(id); // al marcar se pone a la cola
   renderCap();
 }
+function capSet(id,v){ capPedidos()[id]=Math.max(0,Math.min(99,Math.round(+v)||0)); renderCap(); }
+function capPaso(id,d){ const P=capPedidos(); P[id]=Math.max(0,Math.min(99,(P[id]||0)+d)); renderCap(); }
+
 function renderCap(){
   const modo=CAP.modo, S=capStock(), P=capPedidos();
   const fuente = modo==='alm' ? 'solo con ALM01' : 'con ALM01 + lo que se puede traer de Arriola';
@@ -6557,7 +6670,9 @@ function renderCap(){
     const fr=c.frenos.slice(0,3);
     return `<div class="cap-det">
       <div class="cap-det-h"><b>${_esc(e.label.replace('Motor ','Kit '))}</b>
-        <span>${c.kits>0? `${c.kits} kit${c.kits===1?'':'s'} completo${c.kits===1?'':'s'} ${fuente}` : `todavía no sale un kit completo ${fuente}`}</span>
+        <span>${c.kits>0
+          ? `tengo <b>todas las piezas</b> para armar <b>${c.kits}</b> kit${c.kits===1?'':'s'} completo${c.kits===1?'':'s'} ${fuente}`
+          : `todavía <b>no</b> tengo todas las piezas para armar ni un kit completo ${fuente}`}</span>
         <span class="sp" style="flex:1"></span>
         <button class="xbtn" onclick="openEngine(${elegido.i})">Ver detalle del motor</button></div>
       <div class="cap-pz"><span>${c.completas} de ${c.total} piezas con stock para 1 kit</span>
@@ -6567,22 +6682,18 @@ function renderCap(){
     </div>`;
   })();
 
-  const lista=capOrden().map((id,pos)=>{
+  const lista=ind.map(({e:eng})=>eng.id).map((id,pos)=>{
     const e=ENGINES.find(x=>x.id===id); if(!e) return '';
     const q=P[id]||0, nom=e.label.replace('Motor ','');
     const cap=ind.find(x=>x.e.id===id);
     const kits=cap? cap.c.kits:0;
     return `<div class="cap-row ${q?'on':''}${CAP.sel===id?' sel':''}">
-      <span class="pr">${pos+1}</span>
-      <span class="cap-mv">
-        <button onclick="capMover('${id}',-1)" ${pos===0?'disabled':''} aria-label="Subir la prioridad de ${_esc(nom)}">▲</button>
-        <button onclick="capMover('${id}',1)" ${pos===capOrden().length-1?'disabled':''} aria-label="Bajar la prioridad de ${_esc(nom)}">▼</button>
-      </span>
       <label class="lb"><input type="checkbox" ${q?'checked':''} onchange="capTog('${id}')"
           aria-label="Incluir ${_esc(nom)} en el reparto">
         <span class="nm" title="${_esc(e.label)}">${_esc(nom)}</span></label>
       <button class="cap-cap ${kits>0?'si':''}" onclick="capVer('${id}')" aria-pressed="${CAP.sel===id}"
-        title="${_esc(nom)} armaría ${kits} kit(s) si tuviera todo el stock para él — clic para ver qué lo frena">${fmt(kits)}</button>
+        aria-label="${_esc(nom)}: tengo todas las piezas para ${kits} kit${kits===1?'':'s'}"
+        title="Para ${_esc(nom)} tengo todas las piezas para armar ${kits} kit(s) completo(s) — clic para ver qué lo frena">${fmt(kits)}</button>
       <span class="pp-pk-q">
         <button class="stp" onclick="capPaso('${id}',-1)" ${q<=0?'disabled':''} aria-label="Un kit menos de ${_esc(nom)}">−</button>
         <input class="num" type="number" min="0" max="99" value="${q}" onchange="capSet('${id}',this.value)"
@@ -6602,14 +6713,52 @@ function renderCap(){
       nota+=` Se queda sin ${x.frenos.slice(0,2).map(f=>`<code>${_esc(f.cod)}</code> (quedan ${fmt(f.disp)}, el kit pide ${fmt(f.nec)})`).join(' ni ')}.`;
     if(perdio>0)   nota+=` Por su cuenta habría armado ${fmt(x.solo)}: los motores de arriba ya se llevaron esas piezas.`;
     else if(perdioPz>0) nota+=` Los motores de arriba le quitaron <b>${fmt(perdioPz)}</b> pieza(s) que sí tenía cubiertas.`;
-    return `<tr>
+    const abierto = CAP.det===x.e.id;
+    const nF=x.faltantes.length;
+    const fila=`<tr class="${abierto?'ab':''}">
       <td class="mot">${x.pos}. ${_esc(x.e.label.replace('Motor ','Kit '))}</td>
       <td class="num">${fmt(x.pide)}</td>
       <td class="num">${fmt(x.solo)}</td>
       <td class="num ${ok?'ok':'ko'}">${fmt(x.arma)}</td>
       <td class="num ${perdioPz>0?'ko':''}">${fmt(x.listas)}/${fmt(x.total)}${perdioPz>0?` <small style="color:var(--ink3)">(solo: ${fmt(x.soloListas)})</small>`:''}</td>
-      <td class="por">${nota}</td>
+      <td class="por">${nota}
+        ${nF? `<button class="cap-vp" onclick="capDet('${x.e.id}')" aria-expanded="${abierto}">
+          ${abierto?'Ocultar':'Ver'} las ${fmt(nF)} piezas que faltan ${abierto?'▲':'▼'}</button>`:''}</td>
     </tr>`;
+    if(!abierto) return fila;
+    // qué piezas y cuántas faltan para los kits pedidos, con su filtro
+    const fc=CAP.detComer;
+    const nSI=x.faltantes.filter(f=>f.comer==='SI').length, nNO=x.faltantes.filter(f=>f.comer==='NO').length;
+    const sinD=nF-nSI-nNO;
+    const ver=fc? x.faltantes.filter(f=>f.comer===fc) : x.faltantes;
+    const cm=(v,l,n)=>`<button class="${fc===v?'on':''}" ${n===0&&v?'disabled':''}
+        onclick="capDetComer('${v}')" aria-pressed="${fc===v}">${l}<span class="wh-n">${fmt(n)}</span></button>`;
+    const totalFalta=ver.reduce((a,f)=>a+f.falta,0);
+    return fila+`<tr class="cap-sub"><td colspan="6">
+      <div class="cap-sub-h">
+        <b>Para los ${fmt(x.pide)} kit${x.pide===1?'':'s'} de ${_esc(x.e.label.replace('Motor ','Kit '))} te faltan ${fmt(totalFalta)} unidades</b>
+        <span class="cb-seg" role="group" aria-label="Filtrar por comerciable"
+          title="${sinD? sinD+' pieza(s) sin un Sí/No cargado en la hoja':'Todas tienen el dato cargado'}">
+          <span class="cb-seg-l">Comerciable</span>${cm('','Todas',nF)}${cm('SI','Sí',nSI)}${cm('NO','No',nNO)}
+        </span>
+      </div>
+      ${ver.length? `<table class="cap-ptbl">
+        <thead><tr><th>Código</th><th>Descripción</th><th class="num">Pide el kit</th>
+          <th class="num">Para ${fmt(x.pide)} kit${x.pide===1?'':'s'}</th><th class="num">Hay</th>
+          <th class="num">Faltan</th><th>Comerciable</th></tr></thead>
+        <tbody>${ver.slice(0,40).map(f=>`<tr>
+          <td class="cod">${_esc(f.cod)}</td>
+          <td class="ds" title="${_esc(f.desc)}">${_esc(f.desc)}</td>
+          <td class="num">${fmt(f.nec)}</td>
+          <td class="num">${fmt(f.necTot)}</td>
+          <td class="num${f.disp?'':' z'}">${fmt(f.disp)}</td>
+          <td class="num ko">${fmt(f.falta)}</td>
+          <td>${f.comer? `<span class="chip ${f.comer==='SI'?'ok':'buy'}">${f.comer==='SI'?'Sí':'No'}</span>`
+                       : '<span style="color:var(--ink3);font-size:11px">sin dato</span>'}</td>
+        </tr>`).join('')}</tbody></table>
+        ${ver.length>40? `<div class="fl-more"><span>Mostrando 40 de ${fmt(ver.length)} piezas — el Excel las lleva todas</span></div>`:''}`
+      : `<div class="fl-more"><span>Ninguna de las piezas que faltan está marcada como comerciable ${fc==='SI'?'sí':'no'}.</span></div>`}
+    </td></tr>`;
   }).join('');
 
   $('#capBody').innerHTML=`
@@ -6637,7 +6786,11 @@ function renderCap(){
         </div>
         <div class="cap-sim">
           <div>
-            <div class="fl-sec-t">Motores, prioridad y cantidad</div>
+            <div class="fl-sec-t">Motores y cantidad</div>
+            <div class="cap-cab">
+              <span class="c1">Puedo armar<small>con las piezas que tengo</small></span>
+              <span class="c2">Quiero armar<small>kits a reponer</small></span>
+            </div>
             <div class="cap-pick">${lista}</div>
             ${detalle}
           </div>
@@ -6650,7 +6803,7 @@ function renderCap(){
                 <tbody>${filas}</tbody></table></div>
               <div class="fl-more" style="margin-top:9px"><span><b>Solo</b> = los kits que armaría ese motor si tuviera todo el stock para él.
                 <b>Piezas listas</b> = cuántas de sus piezas siguen teniendo stock para un kit cuando le toca su turno.
-                Cambia el orden con ▲▼ para ver a quién le conviene ir primero.</span></div>`
+                El turno es el orden en que marcas los motores: desmarca y vuelve a marcar para mandar uno al final.</span></div>`
             : `<div class="empty-st"><div class="ic">${ic(I.layers)}</div><h4>Elige cuántos kits quieres</h4>
                 <p>Marca los motores de la izquierda e indica cuántos kits de cada uno para ver cómo se reparte el stock.</p></div>`}
           </div>
@@ -6669,12 +6822,28 @@ function exportCap(){
             f? f.cod:'', f? f.desc:'', f? f.disp:'', f? f.nec:'',
             s.pos, s.pide, s.arma, s.falta];
   });
+  // y debajo, pieza por pieza, lo que falta para los kits pedidos
+  const pz=[];
+  sim.res.filter(x=>x.pide>0 && x.faltantes.length).forEach(x=>{
+    x.faltantes.forEach(f=>pz.push([x.e.label, f.cod, f.desc, f.nec, x.pide, f.necTot, f.disp, f.falta,
+      f.comer==='SI'?'Sí':f.comer==='NO'?'No':'sin dato']));
+  });
+  const cols=13;
+  const rel=r=>r.concat(new Array(Math.max(0,cols-r.length)).fill(''));
+  const body=filas.map(rel);
+  if(pz.length){
+    body.push(rel([]));
+    body.push(rel(['PIEZAS QUE FALTAN PARA LOS KITS PEDIDOS']));
+    body.push(rel(['Motor','Código SAP','Descripción','Pide el kit','Kits pedidos','Necesita en total','Hay disponible','FALTAN','Comerciable']));
+    pz.forEach(r=>body.push(rel(r)));
+  }
   _descargar(['Motor','Familia','Piezas del kit','Piezas con stock para 1 kit','Kits si usa todo el stock',
     'Pieza que lo frena','Descripción','Disponible','Pide el kit',
     'Prioridad en el reparto','Kits pedidos','Kits que se arman','Kits sin piezas'],
-    filas,'Capacidad',`Kits_que_puedo_armar_${_hoy()}.xls`,
+    body,'Capacidad',`Kits_que_puedo_armar_${_hoy()}.xls`,
     'KITS QUE PUEDO ARMAR CON EL STOCK ACTUAL',
-    `Peru Tractor S.R.L. · Stock considerado: ${fuente} · El reparto se calcula pieza por pieza · Generado ${_hoy()}`);
+    `Peru Tractor S.R.L. · Stock considerado: ${fuente} · El reparto se calcula pieza por pieza${
+      pz.length? ' · incluye las '+pz.length+' piezas que faltan':''} · Generado ${_hoy()}`);
 }
 
 /* ═════════ PLAN DE COMPRA ═════════

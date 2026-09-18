@@ -359,6 +359,10 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .cur-tog{display:flex;background:var(--card3);border-radius:10px;padding:3px;gap:2px}
 .cur-tog button{border:none;background:transparent;font-size:11.5px;font-weight:700;padding:7px 12px;border-radius:8px;color:var(--ink2);transition:.15s}
 .cur-tog button.on{background:var(--card);color:var(--brand);box-shadow:var(--sh-sm)}
+.cur-tog button{cursor:pointer;font-family:var(--font)}
+.cur-tog button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.kit-sub{display:block;font-size:10.5px;color:var(--ink3);margin-top:4px;font-variant-numeric:tabular-nums}
+.kit-sub.warn-x{color:var(--amber)}
 .cost-tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line2)}
 .ct{background:var(--card);padding:13px 16px}
 .ct .l{font-size:11px;color:var(--ink2);font-weight:600}
@@ -1185,6 +1189,10 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .wh-chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
 .wh-chip.alt{background:var(--card2);color:var(--ink2);font-weight:700}
 .wh-chip.alt:hover{background:var(--card3);color:var(--ink)}
+.wh-n{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:16px;padding:0 5px;
+ margin-left:6px;border-radius:9px;background:var(--card3);color:var(--ink2);font-size:10px;font-weight:800;
+ font-variant-numeric:tabular-nums}
+.wh-chip.on .wh-n{background:rgba(255,255,255,.24);color:#fff}
 .wh-sep{width:1px;align-self:stretch;background:var(--line);margin:0 4px}
 .wh-f{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin:0 0 14px}
 .wh-f-l{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2)}
@@ -1285,6 +1293,15 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .pp-warn{display:flex;gap:10px;align-items:flex-start;margin:12px 16px 0;padding:10px 13px;border-radius:var(--r-sm);
  background:var(--amber-bg);border:1px solid var(--amber-line);font-size:12px;color:var(--ink2)}
 /* aviso de cuadre entre los totales de arriba y la lista de abajo */
+/* filtros en botones: se ve de un vistazo qué está activo, sin abrir nada */
+.cb-seg{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:9px;background:var(--card3)}
+.cb-seg-l{font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--ink2);
+ padding:0 7px 0 5px}
+.cb-seg button{border:0;background:transparent;font-family:var(--font);font-size:11.5px;font-weight:700;
+ padding:6px 11px;border-radius:7px;color:var(--ink2);cursor:pointer;transition:background .15s,color .15s;white-space:nowrap}
+.cb-seg button:hover:not(.on){color:var(--ink)}
+.cb-seg button.on{background:var(--card);color:var(--brand);box-shadow:var(--sh-sm)}
+.cb-seg button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .cb-cap{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:8px 16px;font-size:11.5px;
  color:var(--ink2);border-bottom:1px solid var(--line2);background:var(--card2)}
 .cb-cap b{color:var(--ink)}
@@ -1608,7 +1625,20 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
 .cap-seg button{padding:6px 13px;border:0;border-radius:7px;background:none;font-family:var(--font);font-size:12px;
  font-weight:600;color:var(--ink2);cursor:pointer}
 .cap-seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 2px rgba(16,24,40,.08)}
-.cap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:11px}
+/* los kits que da cada motor por su cuenta, en la propia fila del reparto */
+.cap-cap{min-width:26px;height:22px;padding:0 7px;border-radius:12px;border:1px solid var(--line);
+ background:var(--card3);color:var(--ink3);font-family:var(--font);font-size:12px;font-weight:800;
+ font-variant-numeric:tabular-nums;cursor:pointer;flex:0 0 auto;transition:background .15s,color .15s,border-color .15s}
+.cap-cap:hover{border-color:var(--ink3);color:var(--ink)}
+.cap-cap.si{background:var(--teal-bg);border-color:var(--teal-line);color:var(--teal)}
+.cap-cap:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.cap-row.sel{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand-bg)}
+.cap-row.sel .cap-cap{background:var(--brand);border-color:var(--brand);color:#fff}
+.cap-det{margin-top:13px;padding:13px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--card2)}
+.cap-det-h{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-bottom:9px}
+.cap-det-h .xbtn{align-self:center}
+.cap-det-h b{font-size:13.5px}
+.cap-det-h>span{font-size:12px;color:var(--ink2)}
 .cap-c{border:1px solid var(--line);border-radius:var(--r);background:var(--card);padding:13px 14px}
 .cap-c.si{border-color:var(--teal-line)}
 .cap-c-h{display:flex;align-items:center;gap:9px;margin-bottom:9px}
@@ -1940,13 +1970,20 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
         <option value="NET">Solo NET</option>
         <option value="OEM">Solo OEM</option>
       </select>
-      <select class="cb-sel" id="cbComer" onchange="onComerFilter()" title="Filtrar por comerciable">
-        <option value="">Comerciable: todos</option>
-        <option value="SI">Solo comerciables (SI)</option>
-        <option value="NO">Solo NO comerciables</option>
-        <option value="DUDA">Solo DUDA</option>
-        <option value="__none">Sin dato aún</option>
-      </select>
+      <span class="cb-seg" role="group" aria-label="Filtrar por comerciable">
+        <span class="cb-seg-l">Comerciable</span>
+        <button data-v="" class="on" onclick="cbSetComer('')">Todos</button>
+        <button data-v="SI" onclick="cbSetComer('SI')">Sí</button>
+        <button data-v="NO" onclick="cbSetComer('NO')">No</button>
+      </span>
+      <input type="hidden" id="cbComer" value="">
+      <span class="cb-seg" id="cbExisTog" role="group" aria-label="Filtrar por existencias">
+        <span class="cb-seg-l">Existencias</span>
+        <button data-v="" class="on" onclick="cbSetExis('')">Todas</button>
+        <button data-v="stock" onclick="cbSetExis('stock')" title="Hay unidades en ALM01 o en Arriola">Con stock</button>
+        <button data-v="min" onclick="cbSetExis('min')" title="El stock de ALM01 está por debajo del mínimo de SAP">Bajo mínimo</button>
+        <button data-v="tra" onclick="cbSetExis('tra')" title="Ya hay unidades en camino">En tránsito</button>
+      </span>
       <select class="cb-sel" id="cbSort" onchange="renderComb()" title="Ordenar la tabla">
         <option value="">Orden: mayor impacto en compra</option>
         <option value="cod-asc">Código: A → Z</option>
@@ -1987,6 +2024,7 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
       </button>
     </div>
   </div>
+  <div class="wh-pick" id="trPick" role="group" aria-label="Filtrar traslados por motor"></div>
   <div class="bmets" id="trMets"></div>
   <div class="pnl">
     <div class="pnl-h"><div><h3>Traslados sugeridos</h3><p id="trSub"></p></div></div>
@@ -2217,13 +2255,13 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
       </div>
       <div>
         <span class="kit-lbl">Comerciable</span>
-        <select class="cb-sel" id="mComer" onchange="renderCost()" title="Filtrar por comerciable" style="min-width:150px">
-          <option value="">Todos</option>
-          <option value="SI">Solo comerciables (SI)</option>
-          <option value="NO">Solo NO comerciables</option>
-          <option value="DUDA">Solo DUDA</option>
-          <option value="__none">Sin dato aún</option>
-        </select>
+        <div class="cur-tog" id="mComerTog" role="group" aria-label="Filtrar por comerciable">
+          <button data-v="" class="on" onclick="setComer('')">Todos</button>
+          <button data-v="SI" onclick="setComer('SI')">Sí</button>
+          <button data-v="NO" onclick="setComer('NO')">No</button>
+        </div>
+        <input type="hidden" id="mComer" value="">
+        <span class="kit-sub" id="mComerN"></span>
       </div>
     </div>
     <div class="cost-tot" id="costTot"></div>
@@ -3704,11 +3742,8 @@ function costRows(){
   });
   // filtro comerciable (aplica a render y exportaciones)
   const fCom = (typeof document!=='undefined' && $('#mComer')) ? $('#mComer').value : '';
-  let filtered = out;
-  if(fCom){
-    if(fCom==='__none') filtered = out.filter(x=>!comerNorm(x.com));
-    else filtered = out.filter(x=>comerNorm(x.com)===fCom);
-  }
+  costRows.__todas = out;                        // referencia sin filtrar, para la nota
+  const filtered = fCom ? out.filter(x=>comerNorm(x.com)===fCom) : out;
   const key=SORT.key, dir=SORT.dir==='asc'?1:-1;
   const val=x=>{
     const b=PRICEBOOK[x.cod]||{};
@@ -3734,12 +3769,46 @@ function costRows(){
     return (va-vb)*dir;
   });
 }
+/* El filtro Comerciable es un control segmentado igual que Objetivo:
+   Todos / Sí / No. Los códigos "en duda" o sin dato solo salen en Todos, así
+   que se dice cuántos quedan fuera en vez de esconderlos en silencio. */
+function setComer(v){
+  const inp=$('#mComer'); if(inp) inp.value=v;
+  syncComerTog();
+  renderCost();
+}
+function syncComerTog(){
+  const tog=$('#mComerTog'), inp=$('#mComer'); if(!tog||!inp) return;
+  const v=['','SI','NO'].includes(inp.value) ? inp.value : '';
+  inp.value=v;                                   // normaliza valores antiguos (DUDA, __none)
+  tog.querySelectorAll('button').forEach(b=>{
+    const on=b.dataset.v===v;
+    b.classList.toggle('on',on);
+    b.setAttribute('aria-pressed',String(on));
+  });
+}
 function renderCost(){
   if($('#viewDetail').classList.contains('hidden')) return;
   const rows=costRows(), N=parseInt($('#kitQty').value)||1;
   const e=ENGINES[curIdx];
   let total=0, sinPrecio=0, uds=0;
   rows.forEach(x=>{ if(EXCL[x.cod]) return; const p=priceOf(x.cod), q=qtyOf(x); total+=p*q; uds+=q; if(!p)sinPrecio++; });
+  // cuántas piezas entran con el filtro actual y cuáles no tienen un Sí/No claro
+  const nota=$('#mComerN');
+  if(nota){
+    const todas=costRows.__todas||[];
+    const n=v=>todas.filter(x=>comerNorm(x.com)===v).length;
+    const otras=todas.length-n('SI')-n('NO');
+    const f=$('#mComer').value;
+    nota.textContent = todas.length
+      ? (f ? `${fmt(rows.length)} de ${fmt(todas.length)} piezas` : `${fmt(todas.length)} piezas`)
+      : '';
+    nota.title = otras
+      ? `${otras} pieza(s) sin un Sí/No cargado en la hoja de SAP: solo aparecen en «Todos».`
+      : 'Todas las piezas tienen el dato cargado.';
+    nota.classList.toggle('warn-x', !!(f && otras));
+    if(f && otras) nota.textContent += ` · ${fmt(otras)} sin dato`;
+  }
   const sinMin = e.items.filter(r=>r[10]===null||r[10]===undefined).length;
   const objetivo = MODE==='min'
       ? `llegar al <b>stock mínimo</b>`
@@ -4560,7 +4629,18 @@ function cbToggleExcl(cod){
   cbPintarFila(cod);
 }
 function cbQtyOf(x){ return CB_QTY[x.cod]!==undefined ? CB_QTY[x.cod] : x.comprar; }
-function onComerFilter(){ renderComb(); }
+let CB_EXIS='';                      // '' | stock | min | tra
+function cbSetComer(v){ $('#cbComer').value=v; cbSyncSeg(); renderComb(); }
+function cbSetExis(v){ CB_EXIS=v; cbSyncSeg(); renderComb(); }
+function cbSyncSeg(){
+  const marca=(tog,v)=>{ if(!tog) return; tog.querySelectorAll('button').forEach(b=>{
+    const on=b.dataset.v===v; b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on)); }); };
+  const inp=$('#cbComer');
+  if(inp){ if(!['','SI','NO'].includes(inp.value)) inp.value='';   // normaliza DUDA / __none antiguos
+    marca(inp.previousElementSibling, inp.value); }
+  marca($('#cbExisTog'), CB_EXIS);
+}
+function onComerFilter(){ cbSyncSeg(); renderComb(); }
 function onKitToggle(){
   const kit=document.getElementById('cbKit').checked;
   const buy=document.getElementById('cbBuy');
@@ -4698,7 +4778,7 @@ function llenarMarcas(){
   if(marcas.includes(actual)) sel.value=actual;   // conservar selección si sigue válida
 }
 function closeComb(){ goView('list'); }
-function cbToggle(id){ CB_SEL[id] = CB_SEL[id] ? 0 : 1; renderPick(); renderComb(); }
+function cbToggle(id){ CB_SEL[id] = CB_SEL[id] ? 0 : 1; renderComb(); }
 function cbKits(id,v){ CB_SEL[id] = Math.max(0, parseInt(v)||0); renderComb(); }
 function renderPick(){
   $('#cbPick').innerHTML = ENGINES.map(e=>{
@@ -4802,6 +4882,7 @@ function combRows(seleccion){
     const comprar = Math.max(0, falta - arr);
     const nMot    = Object.keys(m.por).length;
     return {...m, alm, arr, aqp, hch, tra, deArr, comprar, nMot,
+            smin: (r[10]===null||r[10]===undefined) ? null : r[10],
             precio: priceOf(m.cod)||0,
             marca: marcaOf(m.cod), oem: oemOf(m.cod), comer: comerOf(r), zona: zonaOf(m.cod)};
   }).sort((a,b)=> b.comprar*b.precio - a.comprar*a.precio || b.nMot-a.nMot);
@@ -4810,12 +4891,20 @@ function combRows(seleccion){
    KPIs contaban TODO mientras la tabla y el Excel mostraban lo filtrado, así
    que los totales de arriba no cuadraban con la lista de abajo. Ahora hay un
    único filtro y todos leen de él. */
+function cbExisTest(x,f){
+  if(f==='stock') return (x.alm||0)+(x.arr||0) > 0;          // algo tuyo disponible
+  if(f==='min')   return x.smin!=null && (x.alm||0) < x.smin; // por debajo del mínimo de SAP
+  if(f==='tra')   return (x.tra||0) > 0;                      // ya viene en camino
+  return true;
+}
 function cbFiltrar(rows){
   if($('#cbBuy').checked) rows = rows.filter(x=>x.comprar>0);
-  const fMarca=$('#cbMarca').value, fOem=$('#cbOem').value, fComer=$('#cbComer').value;
+  const fMarca=$('#cbMarca').value, fOem=$('#cbOem').value,
+        fComer=$('#cbComer').value, fExis=CB_EXIS;
   if(fMarca) rows = rows.filter(x=>x.marca===fMarca);
   if(fOem)   rows = rows.filter(x=>x.oem===fOem);
-  if(fComer){ if(fComer==='__none') rows=rows.filter(x=>!x.comer); else rows = rows.filter(x=>x.comer===fComer); }
+  if(fComer) rows = rows.filter(x=>comerNorm(x.comer)===fComer);
+  if(fExis)  rows = rows.filter(x=>cbExisTest(x,fExis));
   const q = ($('#cbFind').value||'').toLowerCase().trim();
   if(q) rows = rows.filter(x=> x.cod.toLowerCase().includes(q) || (x.desc||'').toLowerCase().includes(q));
   return rows;
@@ -4866,11 +4955,14 @@ function cbFiltrosActivos(){
   if($('#cbMarca').value) f.push('Marca '+$('#cbMarca').value);
   if($('#cbOem').value)   f.push('Precio '+$('#cbOem').value);
   const c=$('#cbComer').value;
-  if(c) f.push('Comerciable '+(c==='__none'?'sin dato':c));
+  if(c) f.push('Comerciable '+(c==='SI'?'sí':'no'));
+  const EX={stock:'Con stock', min:'Bajo mínimo', tra:'En tránsito'};
+  if(CB_EXIS) f.push(EX[CB_EXIS]||CB_EXIS);
   return f;
 }
 function cbLimpiarFiltros(){
   $('#cbFind').value=''; $('#cbMarca').value=''; $('#cbOem').value=''; $('#cbComer').value='';
+  CB_EXIS=''; cbSyncSeg();
   $('#cbBuy').checked=true;
   renderComb();
 }
@@ -4923,6 +5015,8 @@ function cbKpis(D){
 }
 function renderComb(){
   if(!Object.keys(CB_SEL).length) cbInit();      // se puede entrar directo por la barra lateral
+  renderPick();                                  // los chips de motores deben estar siempre
+  cbSyncSeg();
   const D=cbDatos(), sel=D.sel, all=D.all, rows=D.rows, inc=D.inc;
   const wrap=document.querySelector('.cb-wrap'), scroll=wrap? wrap.scrollTop:0;
   if(wrap) requestAnimationFrame(()=>{ wrap.scrollTop=scroll; });   // no saltar al principio
@@ -5568,6 +5662,7 @@ function openReal(){
     if(s.kits)  $('#kitQty').value=Math.min(99,Math.max(1,parseInt(s.kits)||1));
     if(s.tc)    $('#tcIn').value=s.tc;
     if(s.comer!=null) $('#mComer').value=s.comer;
+    try{ syncComerTog(); }catch(_){}
     if(s.cur==='USD'||s.cur==='PEN') setCur(s.cur);
     if(s.mode==='kit'||s.mode==='min') setMode(s.mode);
     if(s.home){
@@ -6158,24 +6253,48 @@ function renderSysZone(){
 }
 
 /* ═════════ TRANSFERENCIAS ═════════ */
+/* Filtro por motor: el almacén trabaja motor por motor, no con la lista entera. */
+let TR_MOT='';
+function trMotor(id){ TR_MOT = (TR_MOT===id) ? '' : id; renderTrans(); }
 function renderTrans(){
-  const t=MK.traslados(1), g=MK.global(1), ah=MK.ahorroTraslado(1);
-  $('#trSub').textContent=`${t.length} ${t.length===1?'pieza':'piezas'} con stock en Arriola que evitan una compra`;
+  const todos=MK.traslados(1);
+  if(TR_MOT && !todos.some(x=>x.eng.id===TR_MOT)) TR_MOT='';   // el motor dejó de tener traslados
+  const t = TR_MOT ? todos.filter(x=>x.eng.id===TR_MOT) : todos;
+  const g=MK.global(1), ah=MK.ahorroTraslado(1);
+  // los indicadores describen lo que se está viendo
+  const uds=t.reduce((a,x)=>a+x.mover,0);
+  const mot=new Set(t.map(x=>x.eng.id)).size;
+  const conP=t.filter(x=>x.precio>0).length, ahorro=t.reduce((a,x)=>a+x.mover*x.precio,0);
+  // un chip por motor con traslados, con sus unidades
+  const porMot={};
+  todos.forEach(x=>{ const k=x.eng.id;
+    (porMot[k]=porMot[k]||{e:x.eng,uds:0,pz:0}); porMot[k].uds+=x.mover; porMot[k].pz++; });
+  const lista=Object.values(porMot).sort((a,b)=>b.uds-a.uds);
+  $('#trPick').innerHTML = lista.length
+    ? `<button class="wh-chip ${TR_MOT?'alt':'on'}" aria-pressed="${!TR_MOT}" onclick="trMotor('')">
+         Todos<span class="wh-n">${fmt(todos.length)}</span></button>`
+      + lista.map(m=>`<button class="wh-chip ${TR_MOT===m.e.id?'on':''}" aria-pressed="${TR_MOT===m.e.id}"
+          onclick="trMotor('${m.e.id}')" title="${m.pz} pieza(s) · ${fmt(m.uds)} unidades a trasladar">
+          ${_esc(m.e.label.replace('Motor ',''))}<span class="wh-n">${fmt(m.pz)}</span></button>`).join('')
+    : '';
+  $('#trSub').textContent = TR_MOT
+    ? `${t.length} ${t.length===1?'pieza':'piezas'} de ${lista.find(m=>m.e.id===TR_MOT).e.label.replace('Motor ','')} con stock en Arriola`
+    : `${t.length} ${t.length===1?'pieza':'piezas'} con stock en Arriola que evitan una compra`;
   $('#trMets').innerHTML=`
     <div class="bmet move"><span class="bmet-ic">${ic(I.swap)}</span><div class="bmet-b">
-      <div class="l">Unidades a trasladar</div><div class="v">${fmt(g.trasl)} uds.</div>
-      <div class="s">${g.conTraslado} ${g.conTraslado===1?'motor':'motores'} se benefician</div></div></div>
+      <div class="l">Unidades a trasladar</div><div class="v">${fmt(uds)} uds.</div>
+      <div class="s">${mot} ${mot===1?'motor se beneficia':'motores se benefician'}${TR_MOT?` · de ${fmt(g.trasl)} uds. en total`:''}</div></div></div>
     <div class="bmet info"><span class="bmet-ic">${ic(I.box)}</span><div class="bmet-b">
       <div class="l">Piezas involucradas</div><div class="v">${fmt(t.length)}</div>
-      <div class="s">códigos distintos</div></div></div>
+      <div class="s">códigos distintos${TR_MOT?` · de ${fmt(todos.length)} en total`:''}</div></div></div>
     <div class="bmet buy"><span class="bmet-ic">${ic(I.cart)}</span><div class="bmet-b">
-      <div class="l">Compra evitada</div><div class="v">${ah.conPrecio? money(ah.usd) : '—'}</div>
-      <div class="s">${ah.conPrecio? ah.conPrecio+' de '+ah.total+' piezas con precio cargado' : 'sin precios cargados para valorizar'}</div></div></div>`;
+      <div class="l">Compra evitada</div><div class="v">${conP? money(ahorro) : '—'}</div>
+      <div class="s">${conP? conP+' de '+t.length+' piezas con precio cargado' : 'sin precios cargados para valorizar'}</div></div></div>`;
   if(!t.length){
     $('#trWrap').innerHTML=`<div class="empty-st"><div class="ic">${ic(I.swap)}</div>
       <h4>No hay traslados disponibles</h4>
-      <p>Ninguna pieza faltante tiene stock en Arriola en este momento. Todo lo que falta debe comprarse.</p>
-      <button class="xbtn" onclick="goView('list')">Ver el plan de reposición</button></div>`;
+      <p>${TR_MOT? 'Este motor no tiene piezas que se puedan cubrir desde Arriola.' : 'Ninguna pieza faltante tiene stock en Arriola en este momento. Todo lo que falta debe comprarse.'}</p>
+      <button class="xbtn" onclick="${TR_MOT?"trMotor('')":"goView('list')"}">${TR_MOT?'Ver todos los motores':'Ver el plan de reposición'}</button></div>`;
     return;
   }
   $('#trWrap').innerHTML=`<table class="ptbl" aria-label="Traslados sugeridos desde Arriola">
@@ -6199,16 +6318,20 @@ function renderTrans(){
   });
 }
 function exportTrans(){
-  const t=MK.traslados(1);
+  // se exporta lo mismo que se está viendo, con o sin filtro de motor
+  const todos=MK.traslados(1);
+  const t = TR_MOT ? todos.filter(x=>x.eng.id===TR_MOT) : todos;
   if(!t.length){ _toast('No hay traslados que exportar.'); return; }
   const header=['Código SAP','Descripción','Categoría','Motor','Necesita','Stock ALM01','En Arriola','TRASLADAR','Precio unit. (USD)','Compra evitada (USD)'];
   const body=t.map(x=>[x.cod,x.desc||'',x.fam,x.eng.label,x.need,x.alm,x.arr,x.mover,
     x.precio? +x.precio.toFixed(2):'', x.precio? +(x.mover*x.precio).toFixed(2):'']);
-  const ah=MK.ahorroTraslado(1);
-  body.push(['','','','','','','','TOTAL '+fmt(t.reduce((a,x)=>a+x.mover,0)),'',+ah.usd.toFixed(2)]);
-  _descargar(header,body,'Traslados',`Traslados_internos_${_hoy()}.xls`,
+  const uds=t.reduce((a,x)=>a+x.mover,0), ah=t.reduce((a,x)=>a+x.mover*x.precio,0);
+  body.push(['','','','','','','','TOTAL '+fmt(uds),'',+ah.toFixed(2)]);
+  const mot = TR_MOT ? (ENGINES.find(e=>e.id===TR_MOT)||{label:TR_MOT}).label.replace('Motor ','') : '';
+  _descargar(header,body,'Traslados',
+    `Traslados_internos${mot? '_'+mot.replace(/[^\w]/g,'_'):''}_${_hoy()}.xls`,
     'TRASLADOS INTERNOS SUGERIDOS — ARRIOLA → ALM01',
-    `Peru Tractor S.R.L. · ${t.length} piezas · ${fmt(MK.global(1).trasl)} unidades · Generado ${_hoy()}`);
+    `Peru Tractor S.R.L.${mot? ' · Motor '+mot : ''} · ${t.length} piezas · ${fmt(uds)} unidades · Generado ${_hoy()}`);
 }
 
 /* ═════════ KITS QUE PUEDO ARMAR ═════════
@@ -6217,7 +6340,7 @@ function exportTrans(){
    2) si quieres varios motores a la vez, el stock es compartido y el primero
       que consume deja al siguiente sin piezas. Eso lo resuelve el simulador.
    No cambia ningún cálculo de reposición: solo lee el stock real. */
-const CAP={modo:'both', reparto:'kits', orden:null, pedidos:null};
+const CAP={modo:'both', reparto:'kits', sel:null, orden:null, pedidos:null};
 /* Stock por código, una sola vez: el mismo código es la misma pieza física
    aunque aparezca en varios motores. */
 function capStock(){
@@ -6304,6 +6427,7 @@ function capPedidos(){
   return CAP.pedidos;
 }
 function capModo(m){ CAP.modo=m; renderCap(); }
+function capVer(id){ CAP.sel = (CAP.sel===id) ? null : id; renderCap(); }
 function capReparto(m){ CAP.reparto=m; renderCap(); }
 function capTog(id){ const P=capPedidos(); P[id]= (P[id]||0)>0 ? 0 : 1; renderCap(); }
 function capSet(id,v){ capPedidos()[id]=Math.max(0,Math.min(99,Math.round(+v)||0)); renderCap(); }
@@ -6324,28 +6448,28 @@ function renderCap(){
   const armaTot=sim.res.reduce((a,x)=>a+x.arma,0);
   const sinServir=sim.res.filter(x=>x.falta>0);
 
-  const tarjeta=({e,i,c})=>{
-    const si=c.kits>0, pct=c.total? Math.round(c.completas/c.total*100):0;
-    const fr=c.frenos.slice(0,2);
-    return `<div class="cap-c ${si?'si':''}">
-      <div class="cap-c-h"><span class="av">${_esc(e.icon)}</span>
-        <div><h4>${_esc(e.label.replace('Motor ','Kit '))}</h4>
-          <small>${c.total} piezas distintas</small></div></div>
-      <div class="cap-n ${si?'si':'no'}"><b>${fmt(c.kits)}</b><span>kit${c.kits===1?'':'s'} completo${c.kits===1?'':'s'}</span></div>
-      <div class="cap-sub">${si
-        ? `Con el stock actual ${fuente} puedes armarlo ${c.kits} ${c.kits===1?'vez':'veces'} de principio a fin.`
-        : `Todavía no sale un kit completo ${fuente}.`}</div>
+  const elegido = CAP.sel ? ind.find(x=>x.e.id===CAP.sel) : null;
+  const detalle = !elegido ? '' : (()=>{
+    const {e,c}=elegido, pct=c.total? Math.round(c.completas/c.total*100):0;
+    const fr=c.frenos.slice(0,3);
+    return `<div class="cap-det">
+      <div class="cap-det-h"><b>${_esc(e.label.replace('Motor ','Kit '))}</b>
+        <span>${c.kits>0? `${c.kits} kit${c.kits===1?'':'s'} completo${c.kits===1?'':'s'} ${fuente}` : `todavía no sale un kit completo ${fuente}`}</span>
+        <span class="sp" style="flex:1"></span>
+        <button class="xbtn" onclick="openEngine(${elegido.i})">Ver detalle del motor</button></div>
       <div class="cap-pz"><span>${c.completas} de ${c.total} piezas con stock para 1 kit</span>
         <span class="bar"><i style="width:${pct}%"></i></span><span>${pct}%</span></div>
-      ${fr.length? `<div class="cap-fr">Lo frena ${fr.map(x=>`<code>${_esc(x.cod)}</code> (hay ${fmt(x.disp)}, el kit pide ${fmt(x.nec)})`).join(' y ')}${
+      ${fr.length? `<div class="cap-fr">Lo frena ${fr.map(x=>`<code>${_esc(x.cod)}</code> (hay ${fmt(x.disp)}, el kit pide ${fmt(x.nec)})`).join(', ')}${
         c.frenos.length>fr.length? ` y ${c.frenos.length-fr.length} pieza(s) más`:''}.</div>`:''}
     </div>`;
-  };
+  })();
 
   const lista=capOrden().map((id,pos)=>{
     const e=ENGINES.find(x=>x.id===id); if(!e) return '';
     const q=P[id]||0, nom=e.label.replace('Motor ','');
-    return `<div class="cap-row ${q?'on':''}">
+    const cap=ind.find(x=>x.e.id===id);
+    const kits=cap? cap.c.kits:0;
+    return `<div class="cap-row ${q?'on':''}${CAP.sel===id?' sel':''}">
       <span class="pr">${pos+1}</span>
       <span class="cap-mv">
         <button onclick="capMover('${id}',-1)" ${pos===0?'disabled':''} aria-label="Subir la prioridad de ${_esc(nom)}">▲</button>
@@ -6354,6 +6478,8 @@ function renderCap(){
       <label class="lb"><input type="checkbox" ${q?'checked':''} onchange="capTog('${id}')"
           aria-label="Incluir ${_esc(nom)} en el reparto">
         <span class="nm" title="${_esc(e.label)}">${_esc(nom)}</span></label>
+      <button class="cap-cap ${kits>0?'si':''}" onclick="capVer('${id}')" aria-pressed="${CAP.sel===id}"
+        title="${_esc(nom)} armaría ${kits} kit(s) si tuviera todo el stock para él — clic para ver qué lo frena">${fmt(kits)}</button>
       <span class="pp-pk-q">
         <button class="stp" onclick="capPaso('${id}',-1)" ${q<=0?'disabled':''} aria-label="Un kit menos de ${_esc(nom)}">−</button>
         <input class="num" type="number" min="0" max="99" value="${q}" onchange="capSet('${id}',this.value)"
@@ -6388,14 +6514,10 @@ function renderCap(){
       <button class="${modo==='both'?'on':''}" onclick="capModo('both')">ALM01 + Arriola</button>
       <button class="${modo==='alm'?'on':''}" onclick="capModo('alm')">Solo ALM01</button>
     </div>
-    <div class="pnl" style="margin-bottom:14px">
-      <div class="pnl-h"><div><h3>Si dedicas todo el stock a un solo motor</h3>
-        <p>Cuántos kits completos salen de cada motor ${fuente}, sin contar a los demás. ${armables} de ${ENGINES.length} motores dan al menos un kit.</p></div></div>
-      <div style="padding:13px 15px 15px"><div class="cap-grid">${ind.map(tarjeta).join('')}</div></div>
-    </div>
     <div class="pnl">
-      <div class="pnl-h"><div><h3>Pero el stock es compartido</h3>
-        <p>Elige cuántos kits quieres de cada motor y en qué orden se sirven. El primero consume las piezas; al siguiente le toca lo que quedó.</p></div>
+      <div class="pnl-h"><div><h3>Reparto del stock compartido</h3>
+        <p>El número al lado de cada motor son los kits que armaría <b>si tuviera todo el stock para él solo</b> ${fuente};
+        ${armables} de ${ENGINES.length} dan al menos uno. Pero el stock es compartido: elige cuántos quieres y en qué orden se sirven.</p></div>
         <span class="sp" style="flex:1"></span>
         <div class="cap-seg" style="margin:0" role="group" aria-label="Forma de repartir el stock">
           <button class="${CAP.reparto==='kits'?'on':''}" onclick="capReparto('kits')"
@@ -6412,8 +6534,9 @@ function renderCap(){
         </div>
         <div class="cap-sim">
           <div>
-            <div class="fl-sec-t">Prioridad y cantidad</div>
+            <div class="fl-sec-t">Motores, prioridad y cantidad</div>
             <div class="cap-pick">${lista}</div>
+            ${detalle}
           </div>
           <div class="cap-res">
             <div class="fl-sec-t">Resultado del reparto</div>
@@ -6789,10 +6912,8 @@ function whyDatos(){
   // demanda consolidada de los motores elegidos contra un único stock
   const todas=combRows(whySelMap());
   // conteo por valor ANTES de filtrar: así el selector muestra qué hay de verdad
-  const cuenta={}; todas.forEach(x=>{ const k=x.comer||'__none'; cuenta[k]=(cuenta[k]||0)+1; });
-  const rows = WHY_COMER
-    ? todas.filter(x=> WHY_COMER==='__none' ? !x.comer : x.comer===WHY_COMER)
-    : todas;
+  const cuenta={}; todas.forEach(x=>{ const k=comerNorm(x.comer)||'__none'; cuenta[k]=(cuenta[k]||0)+1; });
+  const rows = WHY_COMER ? todas.filter(x=>comerNorm(x.comer)===WHY_COMER) : todas;
   const g={ok:[],move:[],buy:[],info:[]};
   const t={need:0,almUsado:0,trasl:0,comprar:0,exceso:0,almFisico:0,compartidas:0};
   rows.forEach(x=>{
@@ -6853,33 +6974,32 @@ function renderWhy(){
   const nombres=sel.map(i=>ENGINES[i].label.replace('Motor ','')).join(' + ');
 
   // ── filtro comerciable: con el conteo real, para que se vea qué hay ──
-  const ETI={SI:'Sí',NO:'No',DUDA:'En duda','1 VENTA':'1 venta',__none:'Sin dato'};
-  const ORD=['SI','NO','DUDA','1 VENTA'];
-  const valores=Object.keys(cuenta).filter(k=>k!=='__none')
-    .sort((a,b)=>{const ia=ORD.indexOf(a),ib=ORD.indexOf(b);return (ia<0?99:ia)-(ib<0?99:ib)||a.localeCompare(b);});
-  const opciones=[['','Todos',total]].concat(
-    valores.map(v=>[v, ETI[v]||v, cuenta[v]]),
-    cuenta.__none? [['__none',ETI.__none,cuenta.__none]] : []);
-  const conDato=total-(cuenta.__none||0);
+  // Todos / Sí / No, igual que en el resto de la aplicación. Cualquier otro
+  // valor de la hoja (o un código sin dato) solo sale en "Todos", y se dice.
+  const nSI=cuenta.SI||0, nNO=cuenta.NO||0, otras=total-nSI-nNO;
+  const opciones=[['','Todos',total],['SI','Sí',nSI],['NO','No',nNO]];
+  const conDato=nSI+nNO;
   const filtro=`<div class="wh-f">
     <span class="wh-f-l">Comerciable</span>
-    <div class="seg">${opciones.map(([v,l,n])=>
+    <div class="cb-seg" role="group" aria-label="Filtrar por comerciable">${opciones.map(([v,l,n])=>
       `<button class="${WHY_COMER===v?'on':''}" ${n?'':'disabled'} aria-pressed="${WHY_COMER===v}"
-         onclick="whyComer('${v}')">${l} <i>${fmt(n)}</i></button>`).join('')}</div>
+         onclick="whyComer('${v}')">${l}<span class="wh-n">${fmt(n)}</span></button>`).join('')}</div>
     ${WHY_COMER? `<span class="wh-f-n">Mostrando <b>${fmt(piezas)}</b> de ${fmt(total)} piezas</span>`:''}
+    ${otras? `<span class="wh-f-n" title="Vienen de la columna Comerciable? de la hoja de SAP sin un Sí/No claro">
+        <b>${fmt(otras)}</b> sin Sí/No — solo salen en «Todos»</span>`:''}
   </div>
   ${conDato===0? `<div class="wh-key">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg>
       <div><b>Estos motores no tienen cargado el campo Comerciable</b>
-      <p>El dato viene de la columna <code>Comerciable?</code> de la hoja de SAP. Hoy solo el kit C9 la tiene completa;
-      al llenarla en el resto de hojas, este filtro empezará a funcionar en ellos.</p></div></div>`:''}`;
+      <p>El dato viene de la columna <code>Comerciable?</code> de la hoja de SAP. En cuanto la llenes,
+      este filtro empezará a funcionar en ellos.</p></div></div>`:''}`;
 
   if(!piezas){
     $('#whBody').innerHTML = filtro + `<div class="pnl"><div class="empty-st">
       <div class="ic">${ic(I.box)}</div>
       <h4>Ninguna pieza con ese valor</h4>
       <p>Los motores elegidos tienen ${fmt(total)} piezas, pero ninguna tiene
-      <b>Comerciable = ${WHY_COMER==='__none'?'sin dato':(ETI[WHY_COMER]||WHY_COMER)}</b>.</p>
+      <b>Comerciable = ${WHY_COMER==='SI'?'sí':'no'}</b>.</p>
       <button class="xbtn primary" onclick="whyComer('')">Ver todas</button></div></div>`;
     return;
   }
@@ -6956,7 +7076,7 @@ function renderWhy(){
 
   $('#whBody').innerHTML = filtro + eq + aviso + compart + arbol;
 }
-function whyComer(v){ WHY_COMER=v; WHY_TODO={}; renderWhy(); }
+function whyComer(v){ WHY_COMER=['','SI','NO'].includes(v)?v:''; WHY_TODO={}; renderWhy(); }
 function whyPick(i){
   if(WHY_SEL.has(i)) WHY_SEL.delete(i); else WHY_SEL.add(i);
   WHY_TODO={}; renderWhy();
@@ -6994,7 +7114,7 @@ function exportWhy(){
     'Demanda consolidada','Stock ALM01','En Arriola','Acción','Cantidad','Cómo se calcula'],
     filas,'Desglose',`Desglose_${sel.length}motores_${_hoy()}.xls`,
     `DESGLOSE — POR QUÉ SE COMPRA CADA PIEZA`,
-    `Peru Tractor S.R.L. · ${nombres} · ${piezas}${WHY_COMER?' de '+total:''} piezas${WHY_COMER?' (comerciable: '+WHY_COMER+')':''} · piden ${fmt(t.need)} uds · ALM01 ${fmt(t.almUsado)} · Arriola ${fmt(t.trasl)} · comprar ${fmt(t.comprar)} · Generado ${_hoy()}`);
+    `Peru Tractor S.R.L. · ${nombres} · ${piezas}${WHY_COMER?' de '+total:''} piezas${WHY_COMER?' (comerciable: '+(WHY_COMER==='SI'?'sí':'no')+')':''} · piden ${fmt(t.need)} uds · ALM01 ${fmt(t.almUsado)} · Arriola ${fmt(t.trasl)} · comprar ${fmt(t.comprar)} · Generado ${_hoy()}`);
 }
 
 /* ═════════ REPINTADO GLOBAL ═════════ */

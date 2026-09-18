@@ -3025,6 +3025,15 @@ function flowRows(i){
 /* Un solo filtro de comerciable para toda la pantalla: afecta al diagrama, a
    los totales del motor, a los KPI de arriba y a la tabla de piezas. Antes
    había uno por tarjeta y tocaba ir motor por motor. */
+/* Totales del motor sin ningún filtro. Ordenar por estos y no por los datos
+   filtrados es lo que mantiene las tarjetas quietas al cambiar Todos/Sí/No. */
+function flowBase(i){
+  return flMemo('flb@'+i, ()=>{
+    const rows=flowRows(i), t={nec:0,alm:0,arr:0,buy:0};
+    rows.forEach(x=>{ t.nec+=x.nec; t.alm+=x.deAlm; t.arr+=x.deArr; t.buy+=x.compra; });
+    return {t, piezas:rows.length, cob: t.nec>0 ? (t.alm+t.arr)/t.nec : 1};
+  });
+}
 function flowData(i){
   return flMemo('fld@'+i+'@'+FLOW.comer, ()=>{
     const todas=flowRows(i);
@@ -3115,6 +3124,10 @@ function PartsDetailTable(idx){
         <input type="search" value="${_esc(FLOW.busq[idx]||'')}" placeholder="Buscar pieza…"
           aria-label="Buscar código o descripción en este kit" oninput="flowBuscar(${idx},this.value)">
       </label></div>`;
+  if(!d.rows.length && fc) return cab+`<div class="empty-st sm"><div class="ic">${ic(I.search)}</div>
+      <h4>Ninguna pieza comerciable ${fc==='SI'?'sí':'no'}</h4>
+      <p>Este kit tiene ${d.piezasTodas} piezas, pero ninguna está marcada así en la hoja de SAP.</p>
+      <button class="xbtn" onclick="flowComer('')">Ver todas las piezas</button></div>`;
   if(!todas.length) return cab+`<div class="empty-st sm"><div class="ic">${ic(I.search)}</div>
       <h4>Ninguna pieza coincide</h4>
       <p>${q? `Nada con «${_esc(q)}»${f?' en '+flSrcMeta(f).nm:''}${fc?', comerciable '+(fc==='SI'?'sí':'no'):''}.`
@@ -6201,22 +6214,25 @@ function twCoincide(e,i,q){
 }
 function twFilas(){
   const q=TW.q.trim().toLowerCase();
-  let L=ENGINES.map((e,i)=>({e,i,d:flowData(i),st:engStatus(e)}))
+  let L=ENGINES.map((e,i)=>({e,i,d:flowData(i),b:flowBase(i),st:engStatus(e)}))
     .filter(r=>{
       if(TW.estado==='buy'  && r.d.t.buy<=0) return false;
       if(TW.estado==='move' && !(r.d.t.arr>0 && r.d.t.buy<=0)) return false;
       if(TW.estado==='done' && r.d.t.buy>0) return false;
-      // con el filtro puesto, un motor sin piezas de ese tipo no aporta nada
-      if(FLOW.comer && r.d.piezas===0) return false;
+      // con el filtro puesto, un motor sin piezas de ese tipo no aporta nada,
+      // salvo el que tengas abierto: no puede desaparecerte bajo el cursor
+      if(FLOW.comer && r.d.piezas===0 && !FLOW.abierto.has(r.e.id)) return false;
       return twCoincide(r.e,r.i,q);
     });
   const cmp={
-    buy:(a,b)=>b.d.t.buy-a.d.t.buy,
-    cov:(a,b)=>a.d.cob-b.d.cob,
-    need:(a,b)=>b.d.t.nec-a.d.t.nec,
+    buy:(a,b)=>b.b.t.buy-a.b.t.buy,
+    cov:(a,b)=>a.b.cob-b.b.cob,
+    need:(a,b)=>b.b.t.nec-a.b.t.nec,
     name:(a,b)=>a.e.label.localeCompare(b.e.label,'es',{numeric:true}),
-  }[TW.sort]||((a,b)=>b.d.t.buy-a.d.t.buy);
-  return L.sort(cmp);
+  }[TW.sort]||((a,b)=>b.b.t.buy-a.b.t.buy);
+  // desempate por nombre: sin él, dos motores con el mismo valor pueden
+  // intercambiarse entre repintados
+  return L.sort((a,b)=>cmp(a,b) || a.e.label.localeCompare(b.e.label,'es',{numeric:true}));
 }
 /* ── TowerKpiCards ── */
 function TowerKpiCards(L){
@@ -6246,6 +6262,11 @@ function twLimpiar(){
   renderTowerPlan();
 }
 function renderTowerPlan(){
+  // si hay una tarjeta abierta, se queda donde está: al filtrar pueden
+  // desaparecer motores de arriba y la lista se te movía bajo el cursor
+  const ancla=$('#twAcc .fl-card.open');
+  const antes=ancla? ancla.getBoundingClientRect().top : null;
+  const anclaId=ancla? ancla.id : null;
   const L=twFilas();
   $('#twKpis').innerHTML=TowerKpiCards(L);
   const host=$('#twAcc');
@@ -6269,6 +6290,13 @@ function renderTowerPlan(){
     const on=b.dataset.v===FLOW.comer;
     b.classList.toggle('on',on); b.setAttribute('aria-pressed',String(on));
   });
+  if(anclaId && antes!==null){
+    const ahora=$('#'+anclaId);
+    if(ahora){
+      const d=ahora.getBoundingClientRect().top-antes;
+      if(Math.abs(d)>1) window.scrollBy({top:d, behavior:'auto'});
+    }
+  }
   const piezas=L.reduce((a,r)=>a+r.d.piezas,0);
   const sinNada = FLOW.comer ? ENGINES.length-L.length : 0;
   $('#twRes').textContent = FLOW.comer

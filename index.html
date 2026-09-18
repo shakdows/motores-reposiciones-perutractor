@@ -1167,6 +1167,12 @@ mark{background:var(--amber-bg);color:inherit;padding:0 2px;border-radius:3px}
  font-size:12.5px;font-weight:600;color:var(--ink2);transition:.15s;white-space:nowrap}
 .wh-chip:hover{border-color:var(--brand);color:var(--brand)}
 .wh-chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.wh-chip.alt{background:var(--card2);color:var(--ink2);font-weight:700}
+.wh-chip.alt:hover{background:var(--card3);color:var(--ink)}
+.wh-sep{width:1px;align-self:stretch;background:var(--line);margin:0 4px}
+.wh-key.info{background:var(--blue-bg);border-color:var(--blue-line)}
+.wh-key.info svg{color:var(--blue)}
+.tr-leaf .cod .rep-b{margin-left:5px}
 .wh-chip:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .wh-key{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:var(--r);
  background:var(--amber-bg);border:1px solid var(--amber-line);margin:0 0 14px}
@@ -5259,7 +5265,7 @@ function renderRec(){
     <div class="rec-t">Origen del stock recomendado</div>
     ${allocSVG(m)}
     <p class="wh-note">Suma de <b>${m.items} piezas distintas</b>: el sobrante de un código no cubre la falta de otro.
-      <button class="lnk" onclick="WHY_MOT=${SEL_MOTOR};goView('why')">Ver por qué, pieza por pieza →</button></p>
+      <button class="lnk" onclick="WHY_SEL=new Set([${SEL_MOTOR}]);goView('why')">Ver por qué, pieza por pieza →</button></p>
     <div class="alloc-l">
       <span><i style="background:var(--teal)"></i>ALM01 ${fmt(m.almUsado)}</span>
       <span><i style="background:var(--amber)"></i>Arriola ${fmt(m.trasl)}</span>
@@ -5643,101 +5649,165 @@ function fullExec(){
 }
 
 /* ═════════ DESGLOSE DEL KIT — el árbol del porqué ═════════
-   Responde a la pregunta "si tengo stock, ¿por qué compro?".
-   La clave: los totales son la suma de piezas DISTINTAS. El sobrante
-   de un código no cubre la falta de otro, así que se puede tener
-   mucho stock y aun así faltar piezas. */
-let WHY_MOT=null;
+   Responde a "si tengo stock, ¿por qué compro?".
+   Dos ideas que la interfaz debe dejar claras:
+   1) Cada código es una pieza distinta: el sobrante de una no cubre
+      la falta de otra, por eso se compra aun teniendo stock.
+   2) Con varios motores el stock es UNO SOLO. Se usa combRows(), el
+      mismo cálculo de la demanda combinada, para no contarlo dos veces. */
+let WHY_SEL=null;                                   // Set de índices de motor
 const WHY_ABIERTO={buy:true,move:true,ok:false,info:false};
-function whyDatos(i){
-  const e=ENGINES[i], N=1;
+let WHY_TODO={};
+
+function whySelMap(){
+  const m={};
+  ENGINES.forEach((e,i)=>{ if(WHY_SEL.has(i)) m[e.id]=1; });
+  return m;
+}
+function whyDatos(){
+  // demanda consolidada de los motores elegidos contra un único stock
+  const rows=combRows(whySelMap());
   const g={ok:[],move:[],buy:[],info:[]};
-  e.items.forEach(r=>{
-    const c=calc(r,N);
-    const base={cod:r[0], desc:r[1]||'—', fam:r[14]||'Otros', nec:c.need, alm:c.alm, arr:c.arr,
-                compra:c.comprar, trasl:c.trasl, sobra:c.exceso, usaAlm:Math.min(c.alm,c.need)};
-    if(c.comprar>0)                  g.buy.push(base);
-    if(c.trasl>0)                    g.move.push(base);   // puede coincidir con compra
-    if(c.comprar===0 && c.trasl===0) g.ok.push(base);
-    if(c.exceso>0)                   g.info.push(base);
+  const t={need:0,almUsado:0,trasl:0,comprar:0,exceso:0,almFisico:0,compartidas:0};
+  rows.forEach(x=>{
+    const usaAlm=Math.min(x.alm,x.total), sobra=Math.max(0,x.alm-x.total);
+    const base={cod:x.cod, desc:x.desc||'—', fam:x.fam||'Otros', nec:x.total, alm:x.alm, arr:x.arr,
+                compra:x.comprar, trasl:x.deArr, sobra, usaAlm, nMot:x.nMot, por:x.por};
+    if(x.comprar>0)                    g.buy.push(base);
+    if(x.deArr>0)                      g.move.push(base);
+    if(x.comprar===0 && x.deArr===0)   g.ok.push(base);
+    if(sobra>0)                        g.info.push(base);
+    t.need+=x.total; t.almUsado+=usaAlm; t.trasl+=x.deArr; t.comprar+=x.comprar;
+    t.exceso+=sobra; t.almFisico+=x.alm; if(x.nMot>1) t.compartidas++;
   });
   g.buy.sort((a,b)=>b.compra-a.compra);
   g.move.sort((a,b)=>b.trasl-a.trasl);
   g.ok.sort((a,b)=>b.usaAlm-a.usaAlm);
   g.info.sort((a,b)=>b.sobra-a.sobra);
-  return g;
+  return {g,t,piezas:rows.length};
+}
+function whyLeaf(x,tipo,varios){
+  let mat;
+  if(tipo==='buy')       mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> − Arriola <b>${fmt(x.trasl)}</b> = comprar <span class="r">${fmt(x.compra)}</span>`;
+  else if(tipo==='move') mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> → trasladar <span class="r">${fmt(x.trasl)}</span> de Arriola${x.compra?` y comprar ${fmt(x.compra)}`:''}`;
+  else if(tipo==='ok')   mat=`necesita <b>${fmt(x.nec)}</b> · ALM01 <b>${fmt(x.alm)}</b> = <span class="r">cubierto</span>`;
+  else                   mat=`ALM01 <b>${fmt(x.alm)}</b> − necesita <b>${fmt(x.nec)}</b> = sobran <span class="r">${fmt(x.sobra)}</span>`;
+  const rep = (varios && x.nMot>1)
+    ? `<span class="rep-b" title="${Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);return e.label.replace('Motor ','')+' '+x.por[id];}).join(' · ')}">×${x.nMot}</span>` : '';
+  return `<div class="tr-leaf"><span class="cod">${x.cod}${rep}</span>
+    <span class="des" title="${_esc(x.desc)}">${_esc(x.desc)}</span>
+    <span class="mat">${mat}</span></div>`;
 }
 function renderWhy(){
-  if(WHY_MOT===null || !ENGINES[WHY_MOT]) WHY_MOT = (SEL_MOTOR!==null? SEL_MOTOR : prioridad()[0].i);
-  // selector de motor
-  $('#whPick').innerHTML=MK.all(1).map(m=>
-    `<button class="wh-chip ${m.i===WHY_MOT?'on':''}" role="tab" aria-selected="${m.i===WHY_MOT}"
-       onclick="WHY_MOT=${m.i};renderWhy()">${m.label}</button>`).join('');
+  if(!WHY_SEL) WHY_SEL=new Set([ SEL_MOTOR!==null? SEL_MOTOR : prioridad()[0].i ]);
+  const sel=[...WHY_SEL].sort((a,b)=>a-b), varios=sel.length>1;
 
-  const m=MK.motor(WHY_MOT,1), g=whyDatos(WHY_MOT), e=ENGINES[WHY_MOT];
-  const almFisico=e.items.reduce((a,r)=>a+(r[3]||0),0);
+  // selector múltiple
+  $('#whPick').innerHTML =
+    `<button class="wh-chip alt" onclick="whyTodos(true)">Todos</button>
+     <button class="wh-chip alt" onclick="whyTodos(false)">Ninguno</button>
+     <span class="wh-sep"></span>` +
+    MK.all(1).map(m=>{
+      const on=WHY_SEL.has(m.i);
+      return `<button class="wh-chip ${on?'on':''}" role="checkbox" aria-checked="${on}"
+        onclick="whyPick(${m.i})">${on?'✓ ':''}${m.label}</button>`;
+    }).join('');
+
+  if(!sel.length){
+    $('#whBody').innerHTML=`<div class="pnl"><div class="empty-st">
+      <div class="ic">${ic(I.box)}</div>
+      <h4>No hay motores seleccionados</h4>
+      <p>Marca uno o varios motores arriba. Si eliges varios, la demanda se suma contra un solo stock.</p>
+      <button class="xbtn primary" onclick="whyTodos(true)">Seleccionar todos</button></div></div>`;
+    return;
+  }
+
+  const {g,t,piezas}=whyDatos();
+  const nombres=sel.map(i=>ENGINES[i].label.replace('Motor ','')).join(' + ');
+  const titulo = varios ? `${sel.length} kits · ${nombres}` : `Kit ${nombres}`;
+  // si se planificara motor por motor, el stock compartido se contaría varias veces
+  const porSeparado = sel.reduce((a,i)=>a+MK.motor(i,1).comprar,0);
   const maxSobra=g.info[0];
 
   const eq=`<div class="wh-eq">
-    <div class="t"><div class="l">El kit pide</div><div class="v">${fmt(m.need)}</div><div class="s">unidades en ${m.items} piezas distintas</div></div>
+    <div class="t"><div class="l">${varios?'Los kits piden':'El kit pide'}</div><div class="v">${fmt(t.need)}</div>
+      <div class="s">unidades en ${piezas} piezas distintas</div></div>
     <div class="op">=</div>
-    <div class="t alm"><div class="l">Ya tienes en ALM01</div><div class="v">${fmt(m.almUsado)}</div><div class="s">${g.ok.length} piezas cubiertas</div></div>
+    <div class="t alm"><div class="l">Ya tienes en ALM01</div><div class="v">${fmt(t.almUsado)}</div>
+      <div class="s">${g.ok.length} ${g.ok.length===1?'pieza cubierta':'piezas cubiertas'}</div></div>
     <div class="op">+</div>
-    <div class="t arr"><div class="l">Traes de Arriola</div><div class="v">${fmt(m.trasl)}</div><div class="s">${g.move.length} ${g.move.length===1?'pieza':'piezas'}</div></div>
+    <div class="t arr"><div class="l">Traes de Arriola</div><div class="v">${fmt(t.trasl)}</div>
+      <div class="s">${g.move.length} ${g.move.length===1?'pieza':'piezas'}</div></div>
     <div class="op">+</div>
-    <div class="t buy"><div class="l">Tienes que comprar</div><div class="v">${fmt(m.comprar)}</div><div class="s">${g.buy.length} ${g.buy.length===1?'pieza':'piezas'}</div></div>
+    <div class="t buy"><div class="l">Tienes que comprar</div><div class="v">${fmt(t.comprar)}</div>
+      <div class="s">${g.buy.length} ${g.buy.length===1?'pieza':'piezas'}</div></div>
   </div>`;
 
   const aviso=`<div class="wh-key">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
     <div><b>Por qué compras aunque tengas stock</b>
     <p>Cada código es una <b>pieza diferente</b>: el sobrante de una no sirve para otra.
-    En ALM01 hay <b>${fmt(almFisico)}</b> unidades de este kit, pero repartidas en ${m.items} códigos.
-    ${maxSobra? `Por ejemplo, de <code>${maxSobra.cod}</code> tienes ${fmt(maxSobra.alm)} y el kit solo pide ${fmt(maxSobra.nec)}: te sobran ${fmt(maxSobra.sobra)} que no cubren ninguna otra pieza.` : ''}
-    Por eso se puede tener stock de sobra y a la vez faltar ${fmt(m.comprar)} unidades.</p></div>
+    En ALM01 hay <b>${fmt(t.almFisico)}</b> unidades de ${varios?'estos kits':'este kit'}, repartidas en ${piezas} códigos.
+    ${maxSobra? `Por ejemplo, de <code>${maxSobra.cod}</code> tienes ${fmt(maxSobra.alm)} y ${varios?'se piden':'el kit solo pide'} ${fmt(maxSobra.nec)}: te sobran ${fmt(maxSobra.sobra)} que no cubren ninguna otra pieza.` : ''}
+    Por eso se puede tener stock de sobra y a la vez faltar ${fmt(t.comprar)} unidades.</p></div>
   </div>`;
 
-  const leaf=(x,tipo)=>{
-    let mat;
-    if(tipo==='buy')       mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> − Arriola <b>${fmt(x.trasl)}</b> = comprar <span class="r">${fmt(x.compra)}</span>`;
-    else if(tipo==='move') mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> → trasladar <span class="r">${fmt(x.trasl)}</span> de Arriola${x.compra?` y comprar ${fmt(x.compra)}`:''}`;
-    else if(tipo==='ok')   mat=`necesita <b>${fmt(x.nec)}</b> · ALM01 <b>${fmt(x.alm)}</b> = <span class="r">cubierto</span>`;
-    else                   mat=`ALM01 <b>${fmt(x.alm)}</b> − necesita <b>${fmt(x.nec)}</b> = sobran <span class="r">${fmt(x.sobra)}</span>`;
-    return `<div class="tr-leaf"><span class="cod">${x.cod}</span>
-      <span class="des" title="${_esc(x.desc)}">${_esc(x.desc)}</span>
-      <span class="mat">${mat}</span></div>`;
-  };
-  const rama=(id,cls,icono,titulo,sub,lista,tipo,total)=>{
+  const compart = varios ? `<div class="wh-key info">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg>
+    <div><b>${t.compartidas} ${t.compartidas===1?'pieza se repite':'piezas se repiten'} entre estos ${sel.length} motores</b>
+    <p>El stock es <b>uno solo</b>: si lo usas en un motor, ya no está para el otro.
+    ${porSeparado!==t.comprar
+      ? `Planificando cada motor por separado saldrían <b>${fmt(porSeparado)}</b> unidades, porque cada uno daría por suyo el mismo stock.
+         Sumando la demanda contra un único inventario hacen falta <b>${fmt(t.comprar)}</b>.`
+      : `Ninguna pieza compartida cambia la cantidad a comprar en este caso.`}</p></div>
+  </div>` : '';
+
+  const rama=(id,cls,icono,titulo2,sub,lista,tipo,total)=>{
     if(!lista.length) return '';
-    const vis=lista.slice(0,12), resto=lista.length-vis.length;
+    const todo=!!WHY_TODO[id], vis=todo?lista:lista.slice(0,12), resto=lista.length-vis.length;
     return `<div class="tr-b ${cls} ${WHY_ABIERTO[id]?'open':''}" id="trb-${id}">
       <button class="tr-h" aria-expanded="${!!WHY_ABIERTO[id]}" aria-controls="trbody-${id}" onclick="whyToggle('${id}')">
         <span class="tr-ic">${icono}</span>
-        <span class="tr-t">${titulo}<small>${sub}</small></span>
+        <span class="tr-t">${titulo2}<small>${sub}</small></span>
         <span class="tr-n">${total}</span>
         <svg class="tr-cv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>
       </button>
-      <div class="tr-body" id="trbody-${id}">${vis.map(x=>leaf(x,tipo)).join('')}
+      <div class="tr-body" id="trbody-${id}">${vis.map(x=>whyLeaf(x,tipo,varios)).join('')}
         ${resto>0?`<div class="tr-leaf tr-more"><button class="lnk" onclick="whyTodo('${id}')">Ver las ${lista.length} piezas →</button></div>`:''}
       </div></div>`;
   };
+  const pl=(n)=>n===1?'pieza':'piezas';
   const arbol=`<div class="pnl"><div class="tree">
-    <div class="tr-root"><span class="dot"></span>Kit ${m.label} · ${fmt(m.need)} unidades en ${m.items} piezas</div>
+    <div class="tr-root"><span class="dot"></span>${titulo} · ${fmt(t.need)} unidades en ${piezas} piezas</div>
     ${rama('buy','buy',ic(I.cart),'Hay que comprar','No hay suficiente ni en ALM01 ni en Arriola',
-      g.buy,'buy',`${g.buy.length} ${g.buy.length===1?'pieza':'piezas'} · ${fmt(m.comprar)} uds.`)}
+      g.buy,'buy',`${g.buy.length} ${pl(g.buy.length)} · ${fmt(t.comprar)} uds.`)}
     ${rama('move','move',ic(I.swap),'Se puede traer de Arriola','Ya es tuyo: muévelo antes de comprar',
-      g.move,'move',`${g.move.length} ${g.move.length===1?'pieza':'piezas'} · ${fmt(m.trasl)} uds.`)}
+      g.move,'move',`${g.move.length} ${pl(g.move.length)} · ${fmt(t.trasl)} uds.`)}
     ${rama('ok','ok',ic(I.check),'Ya cubierto con ALM01','No requiere ninguna acción',
-      g.ok,'ok',`${g.ok.length} ${g.ok.length===1?'pieza':'piezas'} · ${fmt(m.almUsado)} uds.`)}
-    ${rama('info','info',ic(I.layers),'Te sobra, pero no sirve para este kit','Stock por encima de lo que pide el kit, en otros códigos',
-      g.info,'info',`${g.info.length} ${g.info.length===1?'pieza':'piezas'} · ${fmt(m.exceso)} uds.`)}
+      g.ok,'ok',`${g.ok.length} ${pl(g.ok.length)} · ${fmt(t.almUsado)} uds.`)}
+    ${rama('info','info',ic(I.layers),`Te sobra, pero no sirve para ${varios?'estos kits':'este kit'}`,'Stock por encima de lo que se pide, en otros códigos',
+      g.info,'info',`${g.info.length} ${pl(g.info.length)} · ${fmt(t.exceso)} uds.`)}
   </div>
-  <div class="pnl-f"><span class="wh-note">Las cantidades son para <b>1 kit</b>.
-    En el detalle del motor puedes cambiar cuántos kits quieres reponer.</span>
+  <div class="pnl-f"><span class="wh-note">Las cantidades son para <b>1 kit de cada motor</b>.
+    ${varios?'Para repartos distintos usa la demanda combinada.':'En el detalle del motor puedes cambiar cuántos kits reponer.'}</span>
     <span style="flex:1"></span>
-    <button class="xbtn" onclick="openEngine(${WHY_MOT})">Ver detalle del motor</button></div></div>`;
+    ${varios
+      ? `<button class="xbtn" onclick="whyAComb()">Abrir en demanda combinada</button>`
+      : `<button class="xbtn" onclick="openEngine(${sel[0]})">Ver detalle del motor</button>`}</div></div>`;
 
-  $('#whBody').innerHTML = eq + aviso + arbol;
+  $('#whBody').innerHTML = eq + aviso + compart + arbol;
+}
+function whyPick(i){
+  if(WHY_SEL.has(i)) WHY_SEL.delete(i); else WHY_SEL.add(i);
+  WHY_TODO={}; renderWhy();
+}
+function whyTodos(on){
+  WHY_SEL = on ? new Set(ENGINES.map((e,i)=>i)) : new Set();
+  WHY_TODO={}; renderWhy();
+}
+function whyAComb(){
+  CB_SEL={}; ENGINES.forEach((e,i)=>{ CB_SEL[e.id]= WHY_SEL.has(i)?1:0; });
+  openComb();
 }
 function whyToggle(id){
   WHY_ABIERTO[id]=!WHY_ABIERTO[id];
@@ -5745,38 +5815,26 @@ function whyToggle(id){
   b.classList.toggle('open',WHY_ABIERTO[id]);
   b.querySelector('.tr-h').setAttribute('aria-expanded',String(!!WHY_ABIERTO[id]));
 }
-let WHY_TODO={};
-function whyTodo(id){ WHY_TODO[id]=true; renderWhyTodo(id); }
-function renderWhyTodo(id){
-  const g=whyDatos(WHY_MOT), lista=g[id]||[];
-  const body=$('#trbody-'+id); if(!body) return;
-  const tipo=id;
-  const leafs=lista.map(x=>{
-    let mat;
-    if(tipo==='buy')       mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> − Arriola <b>${fmt(x.trasl)}</b> = comprar <span class="r">${fmt(x.compra)}</span>`;
-    else if(tipo==='move') mat=`necesita <b>${fmt(x.nec)}</b> − ALM01 <b>${fmt(x.alm)}</b> → trasladar <span class="r">${fmt(x.trasl)}</span> de Arriola${x.compra?` y comprar ${fmt(x.compra)}`:''}`;
-    else if(tipo==='ok')   mat=`necesita <b>${fmt(x.nec)}</b> · ALM01 <b>${fmt(x.alm)}</b> = <span class="r">cubierto</span>`;
-    else                   mat=`ALM01 <b>${fmt(x.alm)}</b> − necesita <b>${fmt(x.nec)}</b> = sobran <span class="r">${fmt(x.sobra)}</span>`;
-    return `<div class="tr-leaf"><span class="cod">${x.cod}</span>
-      <span class="des" title="${_esc(x.desc)}">${_esc(x.desc)}</span>
-      <span class="mat">${mat}</span></div>`;
-  }).join('');
-  body.innerHTML=leafs;
-}
+function whyTodo(id){ WHY_TODO[id]=true; WHY_ABIERTO[id]=true; renderWhy(); }
 function exportWhy(){
-  const m=MK.motor(WHY_MOT,1), g=whyDatos(WHY_MOT);
+  if(!WHY_SEL || !WHY_SEL.size){ _toast('Elige al menos un motor.'); return; }
+  const {g,t,piezas}=whyDatos();
+  const sel=[...WHY_SEL].sort((a,b)=>a-b);
+  const nombres=sel.map(i=>ENGINES[i].label.replace('Motor ','')).join(' + ');
   const filas=[];
-  const push=(grupo,x,accion,valor)=>filas.push([m.label,grupo,x.cod,x.desc,x.fam,x.nec,x.alm,x.arr,accion,valor,
-    `necesita ${x.nec} − ALM01 ${x.alm} − Arriola ${x.arr}`]);
+  const rep=x=>Object.keys(x.por).map(id=>{const e=ENGINES.find(y=>y.id===id);return e.label.replace('Motor ','')+' ('+x.por[id]+')';}).join(' · ');
+  const push=(grupo,x,accion,valor)=>filas.push([nombres,grupo,x.cod,x.desc,x.fam,x.nMot,rep(x),
+    x.nec,x.alm,x.arr,accion,valor,`necesita ${x.nec} − ALM01 ${x.alm} − Arriola ${x.trasl}`]);
   g.buy.forEach(x=>push('Hay que comprar',x,'COMPRAR',x.compra));
-  g.move.forEach(x=>push('Trasladar de Arriola',x,'TRASLADAR',x.trasl));
+  g.move.forEach(x=>push('Traer de Arriola',x,'TRASLADAR',x.trasl));
   g.ok.forEach(x=>push('Ya cubierto con ALM01',x,'CUBIERTO',0));
-  g.info.forEach(x=>push('Sobrante (no sirve para este kit)',x,'SOBRA',x.sobra));
-  if(!filas.length){ _toast('Este motor no tiene piezas que desglosar.'); return; }
-  _descargar(['Motor','Grupo','Código SAP','Descripción','Categoría','Necesita','Stock ALM01','En Arriola','Acción','Cantidad','Cómo se calcula'],
-    filas,'Desglose',`Desglose_${m.label.replace(/[^\w]/g,'_')}_${_hoy()}.xls`,
-    `DESGLOSE DEL KIT ${m.label.toUpperCase()} — POR QUÉ SE COMPRA CADA PIEZA`,
-    `Peru Tractor S.R.L. · ${m.items} piezas · pide ${fmt(m.need)} uds · ALM01 ${fmt(m.almUsado)} · Arriola ${fmt(m.trasl)} · comprar ${fmt(m.comprar)} · Generado ${_hoy()}`);
+  g.info.forEach(x=>push('Sobrante (no sirve para estos kits)',x,'SOBRA',x.sobra));
+  if(!filas.length){ _toast('No hay piezas que desglosar.'); return; }
+  _descargar(['Motores','Grupo','Código SAP','Descripción','Categoría','En cuántos motores','Reparto por motor',
+    'Demanda consolidada','Stock ALM01','En Arriola','Acción','Cantidad','Cómo se calcula'],
+    filas,'Desglose',`Desglose_${sel.length}motores_${_hoy()}.xls`,
+    `DESGLOSE — POR QUÉ SE COMPRA CADA PIEZA`,
+    `Peru Tractor S.R.L. · ${nombres} · ${piezas} piezas · piden ${fmt(t.need)} uds · ALM01 ${fmt(t.almUsado)} · Arriola ${fmt(t.trasl)} · comprar ${fmt(t.comprar)} · Generado ${_hoy()}`);
 }
 
 /* ═════════ REPINTADO GLOBAL ═════════ */
